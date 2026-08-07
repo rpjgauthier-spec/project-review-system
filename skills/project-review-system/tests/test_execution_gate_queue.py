@@ -91,7 +91,7 @@ class QueueExecutionGateTests(unittest.TestCase):
         gate = selector.build_gate(workload(), CAPABILITY)
         value["execution_gates"]["Adversarial"] = gate
         value["results"]["Adversarial"] = "supported"
-        with self.assertRaisesRegex(ValueError, "without execution completion evidence"):
+        with self.assertRaisesRegex(ValueError, "without an execution completion object"):
             queue.normalize_record(value, MAPPING)
 
     def test_valid_gate_and_completion_are_accepted(self) -> None:
