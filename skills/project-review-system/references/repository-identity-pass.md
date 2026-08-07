@@ -1,14 +1,16 @@
 # Repository Identity Pass
 
-Run this pre-review pass when a repository-wide or full-program review could be materially affected by multiple overlapping projects, workstreams, frameworks, experiments, generated layers, migrations, templates, or other distinct purposes sharing one Git repository.
+Run this pre-review pass for repository-wide or full-program review to determine whether materially distinct purposes coexist in one Git repository and whether those distinctions affect later review interpretation.
 
-The pass is evidence-led. Do not seed candidate identities from user speculation, repository names, prior expectations, or a fixed taxonomy. Collect evidence first; name identities only after the evidence supports them.
+The pass is evidence-led. Do not seed candidate identities from user speculation, repository names, prior expectations, examples, or a fixed taxonomy. Collect evidence first; name identities only after the evidence supports them.
 
 ## Purpose
 
 Determine whether the repository contains one coherent project identity or multiple materially distinct identities whose boundaries affect later review interpretation.
 
-An identity is a coherent body of repository material with a distinguishable purpose, lifecycle, authority model, audience, artifact family, or delivery target. Multiple identities are not automatically defects and do not by themselves justify splitting a repository.
+A repository identity is a coherent body of repository material with a distinguishable purpose, lifecycle, authority model, audience, artifact family, or delivery target. Multiple identities are not automatically defects and do not by themselves justify splitting a repository.
+
+`Repository identity` in this module is a semantic project-interpretation concept. It is distinct from Git object identity, blob identity, commit identity, or other deterministic identifiers used by exhaustive coverage controls.
 
 ## Evidence collection
 
@@ -20,21 +22,19 @@ Collect signals such as:
 - authority and governance boundaries;
 - artifact families and directory structure;
 - lifecycle stages and completion criteria;
-- producers, consumers, audiences, and deployment targets;
+- producers, consumers, audiences, and delivery targets;
 - naming conventions and vocabulary shifts;
-- reusable infrastructure versus domain-specific material;
-- experimental, temporary, migration, archived, generated, or template material;
 - dependencies and cross-links between otherwise distinct clusters;
 - contradictory or competing descriptions of what the repository is for.
 
-Do not treat filename prefixes, directory names, or semantic search clusters as sufficient evidence by themselves.
+Do not treat filename prefixes, directory names, repository names, or semantic search clusters as sufficient evidence by themselves.
 
 ## Discovery procedure
 
 1. **Collect evidence without labels.** Record observations that may indicate distinct purposes or lifecycles before assigning identity names.
-2. **Cluster only after evidence exists.** Group artifacts when multiple independent signals support a coherent purpose, lifecycle, authority, audience, or delivery boundary.
+2. **Cluster only after evidence exists.** Group artifacts when multiple independent signals support a coherent purpose, lifecycle, authority, audience, artifact family, or delivery boundary.
 3. **Separate explicit from inferred identity.** Mark identities explicitly declared by repository authorities separately from reviewer-inferred identities.
-4. **Record overlap.** An artifact may support more than one identity. Shared governance, infrastructure, templates, or evidence may legitimately span identities.
+4. **Record overlap.** An artifact may support more than one identity. Shared material may legitimately span identities.
 5. **Record unassigned material.** Do not force every artifact into an identity when evidence is insufficient. Preserve `unassigned` or `uncertain` status instead of guessing.
 6. **Test materiality.** Retain an identity distinction only when it changes how later review stages should interpret authority, dependencies, normalization, structure, validation, or completion.
 7. **Do not prescribe a split.** Repository separation, merging, archival, or restructuring is a later Structural Optimization question and requires its own evidence.
@@ -48,7 +48,7 @@ For each discovered identity, record:
 - evidence supporting the identity;
 - principal artifact families or representative paths;
 - known authority or lifecycle boundary, when present;
-- overlaps or shared infrastructure;
+- overlaps or shared material;
 - confidence: `high`, `medium`, or `low`;
 - material implications for later review stages.
 
