@@ -2,29 +2,34 @@
 
 ## 0.1.12 — 2026-08-07
 
-Adaptive review-execution release.
+Adaptive review-execution release candidate.
 
 ### Added
 
 - `references/adaptive-execution.md`
 - deterministic `scripts/select_execution_policy.py`
-- conservative default capability envelope
-- workload and validated-capability profile templates
-- adaptive execution evaluation and regression tests
+- deterministic gate/completion validation in `scripts/check_execution_gate.py`
+- artifact-state binding for governed review evidence
+- stage-size assessment and reviewer-capability templates
+- adaptive execution and enforcement evaluations
+- regression coverage for separated default, subdivision, isolated subpasses, FUSED permission, stale artifact state, and completion-plan matching
 
 ### Changed
 
-- broad or multi-stage review now performs an execution preflight after scope/depth are known but before the Identity Pass or first semantic stage
-- execution mode is re-evaluated after the Identity Pass and each completed stage while later work remains
-- `FUSED`, `SEPARATED`, and `ISOLATED` alter context separation only; they do not alter required stages, evaluations, evidence obligations, stage order, or independent-review requirements
-- increasing complexity may tighten separation immediately
-- decreasing workload or a stronger externally validated capability profile may relax remaining work by at most one level per checkpoint
-- model name, advertised context length, and subjective reviewer confidence are not accepted as capability evidence
+- `SEPARATED` is the default semantic-stage execution mode
+- a bounded semantic assessment decides whether an individual stage is suitable for one pass
+- a stage assessed as too broad must be subdivided into bounded passes
+- any subpass declared too broad even after subdivision is mechanically required to run `ISOLATED`
+- `FUSED` is an evidence-backed optimization allowed only by exact pre-existing externally `VALIDATED` permission for the same reviewer/runtime, activity group, and workload class
+- the prior multidimensional workload-envelope selector was removed rather than requiring arbitrary numeric semantic-complexity estimates
+- governed passing stage results require both a current artifact-bound execution gate and execution completion matching every planned pass and context mode
+- execution policy changes context separation only; it does not alter required stages, evaluations, evidence obligations, stage order, or independent-review requirements
 
 ### Revalidation status
 
-- bounded revalidation pending at change creation; completion is recorded in the change-impact record and generated queue
-- this release is same-agent reviewed and does not establish benchmark calibration or independent validation
+- revision 5 reopened ordered revalidation from Adversarial after the execution-policy simplification
+- protected CI currently passes changed-file coverage and all 64 regression tests; the queue remains intentionally blocked until mapped semantic revalidation completes
+- same-agent review does not establish benchmark calibration or independent validation
 
 ## 0.1.11 — 2026-08-07
 
