@@ -49,10 +49,26 @@
           "The selector can validate declared structures and envelopes but cannot prove that workload counts or benchmark evidence are truthful.",
           "Same-reviewer SEPARATED or ISOLATED execution is not independent review."
         ]
+      },
+      "Interdependency": {
+        "mode": "SEPARATED",
+        "findings": [
+          "The initial design did not make workload, capability-profile, selector, decision, and handoff ownership explicit enough.",
+          "Without a producer boundary, a semantic review could create a stronger capability profile and immediately consume it to reduce its own separation."
+        ],
+        "corrections": [
+          "Define workload producer, capability-profile producer, selector, decision consumer, and handoff producer contracts.",
+          "Require capability evidence to pre-exist the semantic review it governs; a stronger profile created or materially changed during that review cannot relax the same review.",
+          "For repository revalidation, derive required stage/evaluation counts from the generated queue and use deterministic inventory/diff/manifest evidence where available for workload measures."
+        ],
+        "residual_conditions": [
+          "Trust in benchmark provenance remains an external evidence boundary rather than something the selector can establish semantically."
+        ]
       }
     }
   },
   "results": {
-    "Adversarial": "supported"
+    "Adversarial": "supported",
+    "Interdependency": "supported"
   }
 }
