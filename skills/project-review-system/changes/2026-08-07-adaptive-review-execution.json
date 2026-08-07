@@ -37,7 +37,100 @@
   "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds adaptive execution before semantic work and at later checkpoints, plus deterministic enforcement so a governed passing stage result cannot be accepted without a current execution gate for that exact stage and review revision. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
   "status": "in_progress",
   "review_revision": 3,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-current-reviewer-runtime",
+        "activity": "Adversarial",
+        "review_revision": 3,
+        "artifact_count": 18,
+        "content_bytes": 1000000,
+        "remaining_stage_count": 5,
+        "remaining_evaluation_count": 12,
+        "dependency_count": 20,
+        "protected_control_count": 3,
+        "unresolved_uncertainty_count": 5,
+        "material_findings_count": 5,
+        "unexpected_dependency_count": 5,
+        "self_referential": true,
+        "exhaustive_claim": false,
+        "checkpoint": "reopened-adversarial-revision-3"
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-conservative-v1",
+        "subject_id": "unmeasured-reviewer-conservative-fallback",
+        "validation_status": "DEFAULT_CONSERVATIVE",
+        "benchmark_suite": "none-default-conservative",
+        "benchmark_evidence": "Built-in conservative fallback; not a claim of measured model capability.",
+        "envelope_model": "rectangular-v1",
+        "fused_limits": {
+          "artifact_count": 5,
+          "content_bytes": 50000,
+          "remaining_stage_count": 1,
+          "remaining_evaluation_count": 3,
+          "dependency_count": 3,
+          "protected_control_count": 0,
+          "unresolved_uncertainty_count": 0,
+          "material_findings_count": 0,
+          "unexpected_dependency_count": 0,
+          "allow_self_referential": false,
+          "allow_exhaustive_claim": false
+        },
+        "separated_limits": {
+          "artifact_count": 25,
+          "content_bytes": 1000000,
+          "remaining_stage_count": 5,
+          "remaining_evaluation_count": 15,
+          "dependency_count": 20,
+          "protected_control_count": 3,
+          "unresolved_uncertainty_count": 5,
+          "material_findings_count": 5,
+          "unexpected_dependency_count": 5,
+          "allow_self_referential": true,
+          "allow_exhaustive_claim": true
+        }
+      },
+      "current_mode": null,
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "selected_mode": "SEPARATED",
+        "base_mode": "SEPARATED",
+        "current_mode": null,
+        "transition_reason": "initial decision",
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-current-reviewer-runtime",
+        "capability_profile_id": "default-conservative-v1",
+        "capability_subject_id": "unmeasured-reviewer-conservative-fallback",
+        "capability_validation_status": "DEFAULT_CONSERVATIVE",
+        "capability_benchmark_suite": "none-default-conservative",
+        "capability_envelope_model": "rectangular-v1",
+        "checkpoint": "reopened-adversarial-revision-3",
+        "workload_sha256": "b19bc7705e3ba6085d24abf2507c2408ccbfcc2abaf3c15f30edbf0b0eed115a",
+        "capability_sha256": "7d0f135fa0c511a297e1627a51d484ee7f12d129ac08f7456a04d6b0adf6128d",
+        "envelope_evidence": {
+          "fused_failures": [
+            {"dimension": "artifact_count", "actual": 18, "limit": 5},
+            {"dimension": "content_bytes", "actual": 1000000, "limit": 50000},
+            {"dimension": "remaining_stage_count", "actual": 5, "limit": 1},
+            {"dimension": "remaining_evaluation_count", "actual": 12, "limit": 3},
+            {"dimension": "dependency_count", "actual": 20, "limit": 3},
+            {"dimension": "protected_control_count", "actual": 3, "limit": 0},
+            {"dimension": "unresolved_uncertainty_count", "actual": 5, "limit": 0},
+            {"dimension": "material_findings_count", "actual": 5, "limit": 0},
+            {"dimension": "unexpected_dependency_count", "actual": 5, "limit": 0},
+            {"dimension": "self_referential", "actual": true, "limit": false}
+          ],
+          "separated_failures": []
+        },
+        "assurance_boundary": "Execution mode changes context separation only; required stages, evaluations, stage order, evidence obligations, and independent-review requirements are unchanged. The selector validates declared workload/profile structure and validated-profile subject binding but cannot prove workload truthfulness, combined-envelope benchmark validity, or reviewer independence."
+      },
+      "gate_sha256": "9555830484616fb836d20dd506d54155f5773fca4559aab5df1c8f7229d62d63"
+    }
+  },
   "execution_evidence": {
     "initial_mode": "SEPARATED",
     "capability_profile": "default-conservative-v1",
