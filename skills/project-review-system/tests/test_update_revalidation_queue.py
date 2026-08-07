@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "scripts" / "update_revalidation_queue.py"
 SPEC = importlib.util.spec_from_file_location("update_revalidation_queue", MODULE_PATH)
@@ -21,6 +22,36 @@ MAPPING = {
         "behavior-neutral": {"stages": [], "evaluations": ["confirm-behavior-neutral"]},
     },
 }
+
+GATED_MAPPING = {
+    **MAPPING,
+    "execution_gate": {"enabled": True, "legacy_exempt_change_ids": []},
+}
+
+
+def partial_record(target_state: str = "sha256:current") -> dict:
+    return {
+        "id": "partial",
+        "summary": "Partial subdivided execution",
+        "changed_files": ["artifact.txt", "skills/project-review-system/changes/partial.json"],
+        "change_classes": ["authorization"],
+        "claimed_earliest_stage": "Adversarial",
+        "status": "in_progress",
+        "review_revision": 3,
+        "results": {},
+        "execution_gates": {
+            "Adversarial": {
+                "gate_sha256": "gate-a",
+            }
+        },
+        "execution_completions": {
+            "Adversarial": {
+                "gate_sha256": "gate-a",
+                "target_state_id": target_state,
+                "passes": [{"pass_id": "subpass-a", "status": "complete"}],
+            }
+        },
+    }
 
 
 class QueueRegressionTests(unittest.TestCase):
@@ -80,6 +111,27 @@ class QueueRegressionTests(unittest.TestCase):
         record = {"id": "change-9", "summary": "Escalate an authorization concern.", "change_classes": ["authorization"], "claimed_earliest_stage": "Adversarial", "status": "escalated", "results": {}}
         with self.assertRaisesRegex(ValueError, "has no escalation object"):
             MODULE.normalize_record(record, MAPPING)
+
+    def test_partial_completed_pass_requires_current_artifact_bound_gate(self) -> None:
+        record = partial_record()
+        with patch.object(MODULE, "current_record_target_state_id", return_value="sha256:current"), patch.object(
+            MODULE.GATE_CHECKER,
+            "validate_execution_gate",
+            side_effect=ValueError("target state mismatch"),
+        ) as validate_gate:
+            with self.assertRaisesRegex(ValueError, "invalid execution gate"):
+                MODULE.normalize_record(record, GATED_MAPPING)
+        validate_gate.assert_called_once()
+
+    def test_partial_completed_pass_rejects_stale_completion_target(self) -> None:
+        record = partial_record(target_state="sha256:old")
+        with patch.object(MODULE, "current_record_target_state_id", return_value="sha256:current"), patch.object(
+            MODULE.GATE_CHECKER,
+            "validate_execution_gate",
+            return_value={},
+        ):
+            with self.assertRaisesRegex(ValueError, "completion target state is stale"):
+                MODULE.normalize_record(record, GATED_MAPPING)
 
 
 if __name__ == "__main__":
