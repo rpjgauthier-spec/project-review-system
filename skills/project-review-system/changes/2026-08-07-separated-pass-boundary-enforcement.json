@@ -85,8 +85,52 @@
       "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78"
     }
   },
-  "execution_completions": {},
-  "results": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78",
+      "target_state_id": "sha256:5d1ca463a56d29b7fa7430183b957e51563b18ca930082a1d9588623bc6892ef",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr6-r7-adversarial-stage-main-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr6-r7-adversarial-1"
+          },
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "No material adversarial defect remains in the corrected pass-boundary design after fixing premature review-completion targeting, closing the historical exemption set, and scoping Git chronology verification to records modified by the current PR.",
+              "The protected workflow now rejects duplicate execution-unit or boundary identities, broken or tampered handoff chains, out-of-order stage credit, missing ISOLATED context declarations, pass credit before the current gate existed durably, and multiple passes first credited in the same change-record commit.",
+              "The prior revision-6 same-response assurance is explicitly superseded for current assurance and is not relied upon by revision 7.",
+              "A repository validator still cannot independently prove a ChatGPT message/context boundary without a trustworthy host boundary identifier; this limitation is explicit and the actual one-pass-per-message discipline remains required."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_pass_boundaries.py",
+              "skills/project-review-system/references/adaptive-execution.md",
+              "skills/project-review-system/evals/pass-boundary-enforcement.md",
+              ".github/workflows/project-review-system-revalidation.yml",
+              "skills/project-review-system/tests/test_pass_boundaries.py",
+              "GitHub Actions run 131: regression suite and pass-boundary enforcement passed; only the intentionally unresolved/stale revalidation queue remained blocking."
+            ],
+            "unresolved_conditions": [
+              "The chat host does not expose a trustworthy message/context boundary identifier to the repository, so host-message separation remains an execution-discipline fact rather than independently repository-provable evidence."
+            ],
+            "sha256": "b4ec64511c5135a048c0f9fbf56e3205918473ee7bfae9a450124339389d9727"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {
+    "Adversarial": "supported"
+  },
   "supersedes_assurance": {
     "change_id": "2026-08-07-adaptive-review-execution",
     "review_revision": 6,
