@@ -109,6 +109,36 @@ def validate_execution_gate(
     return decision
 
 
+def validate_cleanup_record(completion: dict[str, Any]) -> None:
+    """Require scratch-work cleanup or explicit justified durable retention."""
+    scratch_materialized = completion.get("scratch_materialized")
+    if not isinstance(scratch_materialized, bool):
+        raise ValueError("execution completion scratch_materialized must be boolean")
+
+    cleanup_status = completion.get("scratch_cleanup_status")
+    if scratch_materialized:
+        if cleanup_status != "complete":
+            raise ValueError("materialized scratch workspace must be deleted before completion is accepted")
+    elif cleanup_status != "not_applicable":
+        raise ValueError("non-materialized scratch workspace must use cleanup status not_applicable")
+
+    retained = completion.get("retained_subpass_artifacts", [])
+    if not isinstance(retained, list):
+        raise ValueError("retained_subpass_artifacts must be an array")
+    for index, item in enumerate(retained):
+        if not isinstance(item, dict):
+            raise ValueError(f"retained_subpass_artifacts[{index}] must be an object")
+        artifact = item.get("artifact")
+        consumer = item.get("consumer")
+        reason = item.get("reason")
+        if not isinstance(artifact, str) or not artifact.strip():
+            raise ValueError(f"retained_subpass_artifacts[{index}].artifact is required")
+        if not isinstance(consumer, str) or not consumer.strip():
+            raise ValueError(f"retained_subpass_artifacts[{index}].consumer is required")
+        if not isinstance(reason, str) or not reason.strip():
+            raise ValueError(f"retained_subpass_artifacts[{index}].reason is required")
+
+
 def validate_execution_completion(completion: dict[str, Any], gate: dict[str, Any], decision: dict[str, Any] | None = None) -> None:
     """Require recorded completed passes to match the gate's execution plan exactly."""
     if not isinstance(completion, dict):
@@ -136,6 +166,7 @@ def validate_execution_completion(completion: dict[str, Any], gate: dict[str, An
             raise ValueError(f"execution completion pass {required.get('pass_id')!r} used wrong context mode")
         if actual.get("status") != "complete":
             raise ValueError(f"execution completion pass {required.get('pass_id')!r} is not complete")
+    validate_cleanup_record(completion)
 
 
 def main() -> int:
