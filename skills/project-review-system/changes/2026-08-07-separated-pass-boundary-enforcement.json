@@ -25,7 +25,7 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, and immutable completed-pass evidence. Revision-8 Adversarial found and corrected three successive bypasses: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; and an inability to represent subdivided execution honestly because subpasses were only recognized after the enclosing stage result became passing. The corrected model is intended to recognize each completed plan pass as a durable execution occurrence before stage credit, permit only an ordered prefix of a subdivided execution plan to be recorded, require each pass to first complete in its own durable state with its gate already present, and withhold the semantic stage result until the full plan is complete. Completed pass evidence, including its handoff, is intended to be historically immutable. All gates created before these findings were discarded. A fresh revision-8 Adversarial retry is now bound to the current repository state. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, and immutable completed-pass evidence. Revision-8 Adversarial found and corrected three successive bypasses: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; and an inability to represent subdivided execution honestly because subpasses were only recognized after the enclosing stage result became passing. The current implementation recognizes each completed plan pass as a durable execution occurrence before stage credit, permits only an ordered prefix of a subdivided execution plan to be recorded, requires each pass to first complete in its own durable state with its gate already present, and withholds the semantic stage result until the full plan is complete. Completed pass evidence, including its handoff, is historically immutable. Earlier stale gates were discarded. This gate is bound to the current corrected artifact state. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
   "status": "in_progress",
   "review_revision": 8,
   "execution_gates": {
@@ -36,19 +36,19 @@
         "schema_version": 1,
         "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
         "activity": "Adversarial",
-        "target_state_id": "sha256:0ed162c67e4a56d5344d4781605c05e67e026ff8508cbbe38b328a566993f3aa",
+        "target_state_id": "sha256:226465446e496b78c1676371096418eff7d421e7b6ee94b606f64d3f5ab001be",
         "review_revision": 8,
-        "workload_class": "bounded-revalidation-pass-boundary-v5",
+        "workload_class": "bounded-revalidation-pass-boundary-v6",
         "stage_assessment": {
           "single_pass_suitable": true,
           "reasons": [
-            "Revision 8 remains bounded to separated-pass enforcement, durable chronology, handoff integrity, historical execution identity, and honest support for sequential subdivided execution.",
-            "The adversarial retry tests whether the repository state actually contains the claimed corrections and whether any bypass remains; one bounded pass is suitable."
+            "Revision 8 is bounded to the current separated-pass enforcement implementation, including sequential partial subpass recording, immutable execution evidence, historical uniqueness, durable chronology, closed exemptions, and assurance limits.",
+            "The adversarial surfaces are bypass of separation, impossible subdivision semantics, execution identity or handoff mutation, stale state, chronology evasion, isolation mislabeling, exemption self-authorization, and assurance overclaim; one bounded pass is suitable."
           ],
           "subpasses": []
         },
         "fused_authorization": null,
-        "notes": "SEPARATED one-pass Adversarial retry for revision 8; no FUSED permission or subdivision."
+        "notes": "Fresh SEPARATED one-pass Adversarial retry for revision 8 against the current corrected artifact state; no FUSED permission or subdivision."
       },
       "capability": {
         "schema_version": 1,
@@ -62,10 +62,10 @@
       "decision": {
         "schema_version": 1,
         "activity": "Adversarial",
-        "target_state_id": "sha256:0ed162c67e4a56d5344d4781605c05e67e026ff8508cbbe38b328a566993f3aa",
+        "target_state_id": "sha256:226465446e496b78c1676371096418eff7d421e7b6ee94b606f64d3f5ab001be",
         "review_revision": 8,
         "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
-        "workload_class": "bounded-revalidation-pass-boundary-v5",
+        "workload_class": "bounded-revalidation-pass-boundary-v6",
         "selected_mode": "SEPARATED",
         "plan_kind": "ONE_PASS",
         "execution_plan": [
@@ -80,11 +80,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "c81b2ed898691ec413afc69b478a6a8a29ad4d1439eebed608de3657d6e5cebd",
+        "workload_sha256": "d865c96474a59dc659d14424d3725b8ac4534e21bc5989baf6938044482f27b7",
         "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "e100dca6b48aa9a48c7749d042d11a855b2d02af47232f9503d6a739c37d0b1a"
+      "gate_sha256": "abd63c313c93c75b06283837144c7db905c0daf2826a8a7595d865729cc48603"
     }
   },
   "execution_completions": {},
