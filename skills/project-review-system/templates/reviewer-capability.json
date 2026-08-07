@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "profile_id": "replace-with-stable-profile-id",
+  "subject_id": "stable reviewer/runtime identifier the benchmark applies to",
+  "validation_status": "VALIDATED",
+  "benchmark_suite": "stable benchmark suite identifier and version",
+  "benchmark_evidence": "Path, run ID, or other stable reference to evaluation evidence.",
+  "fused_permissions": [
+    {
+      "permission_id": "stable-permission-id",
+      "activities": ["Adversarial", "Interdependency"],
+      "workload_class": "stable externally defined workload class",
+      "benchmark_evidence": "Evidence specifically supporting this fused activity group and workload class."
+    }
+  ]
+}

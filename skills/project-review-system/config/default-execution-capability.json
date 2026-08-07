@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "profile_id": "default-separated-v1",
+  "subject_id": "unmeasured-reviewer-separated-default",
+  "validation_status": "DEFAULT_SEPARATED",
+  "benchmark_suite": "none-default-separated",
+  "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+  "fused_permissions": []
+}

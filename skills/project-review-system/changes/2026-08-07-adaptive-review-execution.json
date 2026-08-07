@@ -1,0 +1,451 @@
+{
+  "id": "2026-08-07-adaptive-review-execution",
+  "summary": "Add separated-default Adaptive Execution with bounded stage subdivision, isolated subpass escalation, evidence-gated FUSED permission, artifact-state binding, deterministic execution-plan completion enforcement, and ephemeral scratch cleanup.",
+  "changed_files": [
+    "skills/project-review-system/CHANGELOG.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/changes/2026-08-07-adaptive-review-execution.json",
+    "skills/project-review-system/config/default-execution-capability.json",
+    "skills/project-review-system/config/revalidation-map.json",
+    "skills/project-review-system/evals/adaptive-execution.md",
+    "skills/project-review-system/evals/execution-gate-enforcement.md",
+    "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/reviews/revalidation-queue.md",
+    "skills/project-review-system/scripts/check_execution_gate.py",
+    "skills/project-review-system/scripts/select_execution_policy.py",
+    "skills/project-review-system/scripts/update_revalidation_queue.py",
+    "skills/project-review-system/templates/review-workload.json",
+    "skills/project-review-system/templates/reviewer-capability.json",
+    "skills/project-review-system/tests/test_check_execution_gate.py",
+    "skills/project-review-system/tests/test_execution_gate_queue.py",
+    "skills/project-review-system/tests/test_execution_policy.py"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "simplification-or-structure",
+    "tracker-or-completion"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "adaptive-execution",
+    "execution-policy-selector",
+    "capability-relaxation",
+    "execution-gate-enforcement"
+  ],
+  "reason": "The original adaptive design became too complex because it attempted to numerically choose among FUSED, SEPARATED, and ISOLATED for every review. The simplified policy makes SEPARATED the safe default, allows semantic judgment to declare when a stage needs bounded subdivision, mechanically requires ISOLATED context for any subpass declared too broad even after subdivision, and permits FUSED only through exact pre-existing externally validated capability permission. Deterministic enforcement is applied at the stage-result boundary: the gate binds the semantic assessment and resulting execution plan to the current artifact state, and a passing result requires completion evidence for every planned pass in the required context mode. Subpass scratch material is ephemeral by default; materialized scratch must be cleaned up before completion is accepted, while any intentionally retained subpass artifact must identify a downstream consumer and retention reason. The controls enforce the recorded plan and cleanup evidence without claiming to prove that the semantic stage-size judgment itself was correct or that an external temporary directory was actually deleted when the validator cannot inspect it.",
+  "status": "complete",
+  "review_revision": 6,
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "The bounded revision-6 change is one coherent execution-control feature; its material threat surfaces are authorization of FUSED execution, stale/tampered gates, incomplete pass completion, cleanup evidence, and deterministic-proof overclaim.",
+            "Those surfaces are directly represented in the selector, gate validator, queue gate, reference rules, and regression suite, so one bounded adversarial pass is sufficient."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default used for this bounded revision-6 revalidation; no FUSED permission requested and no stage subdivision required."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "6c67e85b07ee2ed3031174f22719a1ee4fc7a91c231e0454811acf470d67d93e",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "00674fa8b904c916f2687a0771ebc8475c86384b3bf47e9e48dac7c8b3e554e5"
+    },
+    "Interdependency": {
+      "schema_version": 1,
+      "activity": "Interdependency",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "activity": "Interdependency",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "The affected dependency chain is bounded: semantic assessment → deterministic selector → execution gate → completion evidence → change-impact result → generated queue/advancement gate.",
+            "Authority and producer-consumer ownership are explicit in the shared control model and the revision-6 implementation, so one bounded dependency pass is sufficient."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default used for this bounded revision-6 revalidation; no FUSED permission requested and no stage subdivision required."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Interdependency",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Interdependency",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "ba2c174685d7b957faa1a3c8a4b9b087450709425ba05445472e3a59ad3eca7f",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "403994be3bb07ad681052f98baf977d21bd037c99c126845ef792c997d97b17c"
+    },
+    "Normalization": {
+      "schema_version": 1,
+      "activity": "Normalization",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "activity": "Normalization",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "The review concerns a small canonical vocabulary: SEPARATED, ISOLATED, FUSED, ONE_PASS, SUBDIVIDED, review_revision, target_state_id, gate, and completion.",
+            "The same terms and meanings are used across the skill, reference module, templates, selector, validator, queue, evaluations, and tests; one bounded normalization pass is sufficient."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default used for this bounded revision-6 revalidation; no FUSED permission requested and no stage subdivision required."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Normalization",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Normalization",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "0e67e7b1af490dd6bc7b38444d0f42be4cc3d055f778bb72dae899d44865801f",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "be017748ef83772ff5ab53655811427c018c6cb72b2f719aefab96cf727914c1"
+    },
+    "Structural Optimization": {
+      "schema_version": 1,
+      "activity": "Structural Optimization",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "activity": "Structural Optimization",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 6 already replaced the prior multidimensional workload-scoring design with the simpler separated-default policy and bounded semantic subdivision.",
+            "The remaining artifacts each have a distinct runtime, evaluation, template, or regression consumer, and no additional structural redesign is needed for this bounded change."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default used for this bounded revision-6 revalidation; no FUSED permission requested and no stage subdivision required."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Structural Optimization",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Structural Optimization",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "3e7e42b4e1f09c77fce3e2a3860edb8b913320232aade824bf1ff755fdbedf40",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "c5ae3582f0fde37ea8928b9d9a28a2e4378c86a43d2abfe4ae54b37eaa763c27"
+    },
+    "End-to-end validation": {
+      "schema_version": 1,
+      "activity": "End-to-end validation",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "The integrated path is bounded and deterministic at its enforcement boundary: assess stage size → select plan → bind gate to revision/artifact state → execute planned pass(es) → record completion/cleanup → record stage result → regenerate queue.",
+            "CI has already exercised changed-file coverage and all 69 regression tests; one bounded end-to-end semantic pass is sufficient to verify the integrated control path and assurance limits."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default used for this bounded revision-6 revalidation; no FUSED permission requested and no stage subdivision required."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+        "review_revision": 6,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-github-pr5-revalidation",
+        "workload_class": "bounded-revalidation-adaptive-execution-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "End-to-end validation",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "2d644e429d33426c42e87cc76000f3c6065967000698ddcfd96c34f475aee046",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "23013ca1ea00e60398a093a748001d23ce3c8831ed1bc89483927e3bf3692c76"
+    }
+  },
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "00674fa8b904c916f2687a0771ebc8475c86384b3bf47e9e48dac7c8b3e554e5",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete"
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "Interdependency": {
+      "gate_sha256": "403994be3bb07ad681052f98baf977d21bd037c99c126845ef792c997d97b17c",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete"
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "Normalization": {
+      "gate_sha256": "be017748ef83772ff5ab53655811427c018c6cb72b2f719aefab96cf727914c1",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete"
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "Structural Optimization": {
+      "gate_sha256": "c5ae3582f0fde37ea8928b9d9a28a2e4378c86a43d2abfe4ae54b37eaa763c27",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete"
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "End-to-end validation": {
+      "gate_sha256": "23013ca1ea00e60398a093a748001d23ce3c8831ed1bc89483927e3bf3692c76",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete"
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "execution_evidence": {
+    "policy": "SEPARATED by default; semantic subdivision when one pass is unsuitable; ISOLATED per declared overloaded subpass; FUSED only by exact externally VALIDATED permission; subpass scratch is ephemeral by default.",
+    "deterministic_enforcement": [
+      "Gate hashes bind reviewer, activity, review revision, target artifact state, workload class, semantic stage assessment, capability profile, and execution plan.",
+      "Queue validation rejects passing stage results without the current gate and execution completion evidence.",
+      "Completion must contain every planned pass in order, with exact pass_id, required context_mode, and status complete.",
+      "If scratch was materialized, completion is rejected unless scratch_cleanup_status is complete; if no scratch was materialized, cleanup status must be not_applicable.",
+      "Any retained durable subpass artifact must name an artifact, downstream consumer, and retention reason.",
+      "Artifact-state changes automatically stale prior gates independently of manual review_revision updates."
+    ],
+    "semantic_boundary": "The reviewer may use semantic judgment to decide whether a stage is suitable for one pass and which bounded subpasses require isolation. Deterministic controls enforce the consequences of that recorded judgment and required cleanup evidence but do not prove the judgment was correct or independently verify deletion of an external temporary workspace that the execution environment cannot inspect.",
+    "reopening": {
+      "earliest_reopened_stage": "Adversarial",
+      "current_review_revision": 6,
+      "prior_results_status": "revalidated_revision_6",
+      "reason": "The execution policy was materially simplified from multidimensional workload-envelope selection to separated-default stage decomposition and execution-completion enforcement, then strengthened so subpass scratch material is ephemeral by default and completion requires cleanup evidence.",
+      "next_required_action": "None; ordered revision-6 bounded revalidation is complete."
+    },
+    "revision_6_revalidation": {
+      "reviewer_independence": "Same-agent self-review",
+      "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
+      "execution_mode": "SEPARATED one-pass per semantic stage",
+      "scratch_materialized": false,
+      "stage_conclusions": {
+        "Adversarial": "No material unresolved bypass, stale-state, self-authorization, cleanup, or deterministic-proof-overclaim defect identified in the bounded revision-6 change.",
+        "Interdependency": "Assessment, selector, gate, completion, result, and queue ownership/propagation form a coherent bounded control chain.",
+        "Normalization": "Execution-mode, gate, revision, artifact-state, and completion vocabulary is consistent across normative prose, templates, code, evaluations, and tests.",
+        "Structural Optimization": "The separated-default design is materially simpler than the abandoned numeric selector; retained artifacts have distinct consumers and no further structural change is justified.",
+        "End-to-end validation": "The revision-6 path from stage assessment through queue advancement is coherent; CI independently confirms changed-file coverage and 69/69 regression tests, while semantic correctness remains a same-agent bounded conclusion."
+      },
+      "assurance_limit": "This revalidation is same-agent and does not establish independent validation, benchmark calibration, universal correctness, or proof of semantic judgment quality."
+    }
+  },
+  "results": {
+    "Adversarial": "supported",
+    "Interdependency": "supported",
+    "Normalization": "supported",
+    "Structural Optimization": "supported",
+    "End-to-end validation": "supported",
+    "adaptive-execution": "passed",
+    "artifact-family": "passed",
+    "authority-conflict": "passed",
+    "capability-relaxation": "passed",
+    "duplicate-control": "passed",
+    "execution-gate-enforcement": "passed",
+    "execution-policy-selector": "passed",
+    "premature-completion": "passed",
+    "protected-control-retention": "passed",
+    "reopening-chain": "passed",
+    "status-propagation": "passed",
+    "structural-validator": "passed"
+  }
+}
