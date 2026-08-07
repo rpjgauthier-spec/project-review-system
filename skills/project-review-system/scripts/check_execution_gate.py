@@ -51,39 +51,61 @@ def normalize_repository_path(raw_path: str) -> str:
     return normalized
 
 
+def git_blob_sha1(data: bytes) -> str:
+    """Return the canonical Git blob object ID for exact file bytes."""
+    header = f"blob {len(data)}\0".encode("ascii")
+    return hashlib.sha1(header + data).hexdigest()
+
+
+def repository_artifact_state_from_blob_ids(path_to_blob_id: dict[str, str | None]) -> str:
+    """Hash repository paths plus exact Git blob identities or intentional absence."""
+    digest = hashlib.sha256()
+    normalized_items: list[tuple[str, str | None]] = []
+    for raw_path, blob_id in path_to_blob_id.items():
+        normalized = normalize_repository_path(raw_path)
+        if blob_id is not None:
+            if not isinstance(blob_id, str) or len(blob_id) != 40 or any(c not in "0123456789abcdef" for c in blob_id.lower()):
+                raise ValueError(f"invalid Git blob id for {normalized}")
+            blob_id = blob_id.lower()
+        normalized_items.append((normalized, blob_id))
+
+    for normalized, blob_id in sorted(normalized_items):
+        digest.update(normalized.encode("utf-8"))
+        digest.update(b"\0")
+        if blob_id is None:
+            digest.update(b"ABSENT\0")
+        else:
+            digest.update(b"BLOB\0")
+            digest.update(blob_id.encode("ascii"))
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def repository_artifact_state_sha256(
     repository_relative_paths: Iterable[str], repository_root: Path = REPOSITORY_ROOT
 ) -> str:
-    """Hash exact repository artifact state, including intentional absence.
+    """Hash exact repository artifact state using path-bound Git blob identities.
 
-    The aggregate binds both path and current bytes. Missing paths are represented
-    explicitly so deletion can be a stable reviewed state. Directories are not
-    accepted because change-impact records enumerate files.
+    Git blob IDs are content-addressed over the exact bytes. Missing paths are
+    represented explicitly so deletion can be a stable reviewed state. Directories
+    are not accepted because change-impact records enumerate files.
     """
     root = repository_root.resolve()
-    digest = hashlib.sha256()
-    normalized_paths = sorted({normalize_repository_path(path) for path in repository_relative_paths})
-    for normalized in normalized_paths:
+    states: dict[str, str | None] = {}
+    for raw_path in repository_relative_paths:
+        normalized = normalize_repository_path(raw_path)
         target = (root / normalized).resolve()
         try:
             target.relative_to(root)
         except ValueError as exc:
             raise ValueError(f"artifact path escapes repository root: {normalized!r}") from exc
-
-        digest.update(normalized.encode("utf-8"))
-        digest.update(b"\0")
         if target.exists():
             if not target.is_file():
                 raise ValueError(f"artifact-state path is not a file: {normalized}")
-            data = target.read_bytes()
-            digest.update(b"FILE\0")
-            digest.update(str(len(data)).encode("ascii"))
-            digest.update(b"\0")
-            digest.update(data)
+            states[normalized] = git_blob_sha1(target.read_bytes())
         else:
-            digest.update(b"ABSENT\0")
-        digest.update(b"\0")
-    return digest.hexdigest()
+            states[normalized] = None
+    return repository_artifact_state_from_blob_ids(states)
 
 
 def validate_execution_gate(
