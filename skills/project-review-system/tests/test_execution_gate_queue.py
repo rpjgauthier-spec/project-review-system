@@ -66,6 +66,9 @@ def completion_for(gate):
             {"pass_id": p["pass_id"], "context_mode": p["context_mode"], "status": "complete"}
             for p in gate["decision"]["execution_plan"]
         ],
+        "scratch_materialized": False,
+        "scratch_cleanup_status": "not_applicable",
+        "retained_subpass_artifacts": [],
     }
 
 
@@ -118,6 +121,18 @@ class QueueExecutionGateTests(unittest.TestCase):
         value["execution_completions"]["Adversarial"] = completion_for(gate)
         value["results"]["Adversarial"] = "supported"
         with self.assertRaisesRegex(ValueError, "review_revision 1 does not match"):
+            queue.normalize_record(value, MAPPING)
+
+    def test_materialized_scratch_without_cleanup_is_rejected(self) -> None:
+        value = record()
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["scratch_materialized"] = True
+        completion["scratch_cleanup_status"] = "pending"
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion
+        value["results"]["Adversarial"] = "supported"
+        with self.assertRaisesRegex(ValueError, "must be deleted"):
             queue.normalize_record(value, MAPPING)
 
     def test_legacy_record_remains_exempt(self) -> None:
