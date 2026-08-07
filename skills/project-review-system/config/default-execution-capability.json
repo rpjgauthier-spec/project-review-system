@@ -1,7 +1,9 @@
 {
   "schema_version": 1,
   "profile_id": "default-conservative-v1",
+  "subject_id": "unmeasured-reviewer-conservative-fallback",
   "validation_status": "DEFAULT_CONSERVATIVE",
+  "benchmark_suite": "none-default-conservative",
   "benchmark_evidence": "Built-in conservative fallback; not a claim of measured model capability.",
   "fused_limits": {
     "artifact_count": 5,
