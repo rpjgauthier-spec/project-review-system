@@ -62,6 +62,7 @@ def require_nonempty_string(container: dict[str, Any], key: str, where: str) -> 
 def validate_workload(workload: dict[str, Any]) -> None:
     if workload.get("schema_version") != 1:
         raise ValueError("workload.schema_version must be 1")
+    require_nonempty_string(workload, "reviewer_subject_id", "workload")
     for key in NUMERIC_DIMENSIONS:
         require_nonnegative_int(workload, key, "workload")
     for key in BOOLEAN_DIMENSIONS:
@@ -122,6 +123,18 @@ def validate_capability(capability: dict[str, Any], custom_profile: bool) -> Non
             )
 
 
+def validate_subject_binding(workload: dict[str, Any], capability: dict[str, Any]) -> None:
+    """Prevent validated capability evidence from silently transferring subjects."""
+    if capability["validation_status"] != "VALIDATED":
+        return
+    workload_subject = require_nonempty_string(workload, "reviewer_subject_id", "workload")
+    capability_subject = require_nonempty_string(capability, "subject_id", "capability")
+    if workload_subject != capability_subject:
+        raise ValueError(
+            "validated capability subject does not match workload reviewer_subject_id"
+        )
+
+
 def envelope_failures(
     workload: dict[str, Any], envelope: dict[str, Any]
 ) -> list[dict[str, Any]]:
@@ -171,8 +184,6 @@ def apply_transition_policy(base: str, current: str | None) -> tuple[str, str]:
             return base, "tightened immediately because workload exceeded the current envelope"
         return current, "current mode remains within its envelope"
 
-    # Relax at most one level per checkpoint to avoid oscillation and to ensure
-    # a later checkpoint confirms that lighter execution remains justified.
     relaxed_index = max(base_index, current_index - 1)
     selected = MODES[relaxed_index]
     if selected == base:
@@ -185,6 +196,7 @@ def select_policy(
 ) -> dict[str, Any]:
     validate_workload(workload)
     validate_capability(capability, custom_profile=False)
+    validate_subject_binding(workload, capability)
     base, evidence = base_mode(workload, capability)
     selected, transition = apply_transition_policy(base, current_mode)
     return {
@@ -193,6 +205,7 @@ def select_policy(
         "base_mode": base,
         "current_mode": current_mode,
         "transition_reason": transition,
+        "reviewer_subject_id": workload["reviewer_subject_id"],
         "capability_profile_id": capability["profile_id"],
         "capability_subject_id": capability["subject_id"],
         "capability_validation_status": capability["validation_status"],
@@ -203,8 +216,9 @@ def select_policy(
         "assurance_boundary": (
             "Execution mode changes context separation only; required stages, evaluations, "
             "stage order, evidence obligations, and independent-review requirements are unchanged. "
-            "The selector validates declared workload/profile structure but cannot prove workload "
-            "truthfulness, combined-envelope benchmark validity, or reviewer independence."
+            "The selector validates declared workload/profile structure and validated-profile subject "
+            "binding but cannot prove workload truthfulness, combined-envelope benchmark validity, "
+            "or reviewer independence."
         ),
     }
 
