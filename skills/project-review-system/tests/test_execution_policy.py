@@ -23,6 +23,7 @@ spec.loader.exec_module(selector)
 def workload(**overrides):
     value = {
         "schema_version": 1,
+        "reviewer_subject_id": "test-reviewer-runtime-v2",
         "artifact_count": 1,
         "content_bytes": 1000,
         "remaining_stage_count": 1,
@@ -102,6 +103,20 @@ class ExecutionPolicyTests(unittest.TestCase):
         self.assertEqual(default_decision["selected_mode"], "SEPARATED")
         self.assertEqual(strong_decision["selected_mode"], "FUSED")
 
+    def test_validated_profile_subject_must_match_workload_subject(self) -> None:
+        capability = strong_capability()
+        capability["subject_id"] = "different-reviewer-runtime"
+        with self.assertRaises(ValueError):
+            selector.select_policy(workload(), capability)
+
+    def test_default_conservative_profile_is_generic_fallback(self) -> None:
+        decision = selector.select_policy(
+            workload(reviewer_subject_id="unmeasured-current-reviewer"),
+            self.default_capability,
+        )
+        self.assertEqual(decision["capability_validation_status"], "DEFAULT_CONSERVATIVE")
+        self.assertEqual(decision["reviewer_subject_id"], "unmeasured-current-reviewer")
+
     def test_completed_work_can_enable_later_relaxation(self) -> None:
         initial = selector.select_policy(
             workload(remaining_stage_count=5, remaining_evaluation_count=10, artifact_count=12),
@@ -164,6 +179,11 @@ class ExecutionPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selector.validate_capability(invalid, custom_profile=True)
 
+    def test_workload_requires_reviewer_subject(self) -> None:
+        invalid = workload(reviewer_subject_id="")
+        with self.assertRaises(ValueError):
+            selector.validate_workload(invalid)
+
     def test_unsupported_envelope_model_is_rejected(self) -> None:
         invalid = strong_capability()
         invalid["envelope_model"] = "independent-maxima-v0"
@@ -202,6 +222,7 @@ class ExecutionPolicyTests(unittest.TestCase):
 
     def test_decision_records_capability_subject_and_envelope(self) -> None:
         decision = selector.select_policy(workload(), strong_capability())
+        self.assertEqual(decision["reviewer_subject_id"], "test-reviewer-runtime-v2")
         self.assertEqual(decision["capability_subject_id"], "test-reviewer-runtime-v2")
         self.assertEqual(decision["capability_benchmark_suite"], "fixture-suite-v1")
         self.assertEqual(decision["capability_envelope_model"], "rectangular-v1")
