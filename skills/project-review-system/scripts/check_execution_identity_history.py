@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-"""Reject reuse or mutation of execution identities across review history.
+"""Reject reuse or mutation of execution evidence across review history.
 
 Each completed execution occurrence is identified by review revision, stage,
-planned pass_id, and gate hash. When an occurrence first appears in the durable
-change-record history, its execution_unit_id and boundary identity must never
-have been used by an earlier occurrence, and that occurrence's identities must
-remain unchanged in later snapshots. This applies equally to ordinary stage
-passes, subdivided subpasses, and reopened/redo executions.
+planned pass_id, and gate hash. Completed subpasses are occurrences even before
+the enclosing semantic stage receives a passing result. When an occurrence first
+appears in durable change-record history, its execution_unit_id and boundary must
+never have been used by an earlier occurrence, and the complete recorded pass
+evidence must remain unchanged in later snapshots.
 
-For a PR-scoped check, the history begins with the base-state snapshot when the
-change record already exists there, followed by change-record commits in
-base..head. Including the base snapshot is required to reject identity reuse by
-a reopened change in a later PR.
+For a PR-scoped check, history begins with the base-state snapshot when the change
+record already exists there, followed by change-record commits in base..head.
 """
 
 from __future__ import annotations
@@ -26,11 +24,14 @@ ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = ROOT.parents[1]
 DEFAULT_MAP = ROOT / "config" / "revalidation-map.json"
 CHANGES_PREFIX = "skills/project-review-system/changes/"
-PASS_RESULTS = {"passed", "supported", "complete"}
 
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def canonical_text(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"))
 
 
 def require_string(value: Any, where: str) -> str:
@@ -39,20 +40,16 @@ def require_string(value: Any, where: str) -> str:
     return value.strip()
 
 
-def credited_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...], str, tuple[str, str]]]:
+def completed_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...], str, tuple[str, str], str]]:
     revision = snapshot.get("review_revision")
-    results = snapshot.get("results", {})
     gates = snapshot.get("execution_gates", {})
     completions = snapshot.get("execution_completions", {})
-    if not isinstance(results, dict) or not isinstance(gates, dict) or not isinstance(completions, dict):
+    if not isinstance(gates, dict) or not isinstance(completions, dict):
         return []
 
-    occurrences: list[tuple[tuple[Any, ...], str, tuple[str, str]]] = []
-    for stage, result in results.items():
-        if result not in PASS_RESULTS:
-            continue
+    occurrences: list[tuple[tuple[Any, ...], str, tuple[str, str], str]] = []
+    for stage, completion in completions.items():
         gate = gates.get(stage)
-        completion = completions.get(stage)
         if not isinstance(gate, dict) or not isinstance(completion, dict):
             continue
         gate_sha = gate.get("gate_sha256")
@@ -69,23 +66,22 @@ def credited_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...]
             kind = require_string(boundary.get("kind"), f"{stage}:{pass_id}.boundary.kind")
             boundary_id = require_string(boundary.get("id"), f"{stage}:{pass_id}.boundary.id")
             occurrence = (revision, stage, pass_id, gate_sha)
-            occurrences.append((occurrence, unit_id, (kind, boundary_id)))
+            occurrences.append((occurrence, unit_id, (kind, boundary_id), canonical_text(item)))
     return occurrences
 
 
 def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
-    occurrence_identities: dict[tuple[Any, ...], tuple[str, tuple[str, str]]] = {}
+    occurrence_evidence: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
     used_units: dict[str, tuple[Any, ...]] = {}
     used_boundaries: dict[tuple[str, str], tuple[Any, ...]] = {}
 
     for commit_sha, snapshot in snapshots:
-        for occurrence, unit_id, boundary in credited_occurrences(snapshot):
-            prior_identity = occurrence_identities.get(occurrence)
-            if prior_identity is not None:
-                if prior_identity != (unit_id, boundary):
+        for occurrence, unit_id, boundary, evidence in completed_occurrences(snapshot):
+            prior = occurrence_evidence.get(occurrence)
+            if prior is not None:
+                if prior != (unit_id, boundary, evidence):
                     raise ValueError(
-                        f"record {record_id!r} mutates execution identity for {occurrence!r} at {commit_sha!r}; "
-                        f"first recorded as {prior_identity!r}, later recorded as {(unit_id, boundary)!r}"
+                        f"record {record_id!r} mutates completed pass evidence for {occurrence!r} at {commit_sha!r}"
                     )
                 continue
 
@@ -101,7 +97,7 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                     f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; "
                     f"it was already used by {previous_boundary!r}"
                 )
-            occurrence_identities[occurrence] = (unit_id, boundary)
+            occurrence_evidence[occurrence] = (unit_id, boundary, evidence)
             used_units[unit_id] = occurrence
             used_boundaries[boundary] = occurrence
 
@@ -190,7 +186,7 @@ def main() -> int:
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
-    print("Historical execution-unit and boundary identities are unique and immutable across review occurrences.")
+    print("Completed execution evidence is historically unique and immutable across review occurrences.")
     return 0
 
 
