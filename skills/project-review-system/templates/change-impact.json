@@ -1,0 +1,16 @@
+{
+  "id": "YYYY-MM-DD-short-change-name",
+  "summary": "Describe the change.",
+  "changed_files": [
+    "path/to/changed-file"
+  ],
+  "change_classes": [
+    "authority-or-propagation"
+  ],
+  "claimed_earliest_stage": "Interdependency",
+  "additional_stages": [],
+  "additional_evaluations": [],
+  "reason": "Explain why these classes and stages apply.",
+  "status": "pending",
+  "results": {}
+}
