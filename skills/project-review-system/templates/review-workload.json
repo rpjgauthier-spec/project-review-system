@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "artifact_count": 0,
+  "semantic_units": 0,
+  "required_stage_count": 0,
+  "required_evaluation_count": 0,
+  "dependency_count": 0,
+  "protected_control_count": 0,
+  "unresolved_uncertainty_count": 0,
+  "material_findings_count": 0,
+  "unexpected_dependency_count": 0,
+  "self_referential": false,
+  "exhaustive_claim": false,
+  "checkpoint": "initial-preflight",
+  "notes": "Use observable values where available. Update after Identity Pass and each semantic stage."
+}
