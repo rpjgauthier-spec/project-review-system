@@ -21,11 +21,11 @@
 - **Reason:** The original adaptive design became too complex because it attempted to numerically choose among FUSED, SEPARATED, and ISOLATED for every review. The simplified policy makes SEPARATED the safe default, allows semantic judgment to declare when a stage needs bounded subdivision, mechanically requires ISOLATED context for any subpass declared too broad even after subdivision, and permits FUSED only through exact pre-existing externally validated capability permission. Deterministic enforcement is applied at the stage-result boundary: the gate binds the semantic assessment and resulting execution plan to the current artifact state, and a passing result requires completion evidence for every planned pass in the required context mode. Subpass scratch material is ephemeral by default; materialized scratch must be cleaned up before completion is accepted, while any intentionally retained subpass artifact must identify a downstream consumer and retention reason. The controls enforce the recorded plan and cleanup evidence without claiming to prove that the semantic stage-size judgment itself was correct or that an external temporary directory was actually deleted when the validator cannot inspect it.
 
 Checklist:
-- [ ] Revalidate **Adversarial** with a valid Adaptive Execution gate bound to current artifact state and record the result.
-- [ ] Revalidate **Interdependency** with a valid Adaptive Execution gate bound to current artifact state and record the result.
-- [ ] Revalidate **Normalization** with a valid Adaptive Execution gate bound to current artifact state and record the result.
-- [ ] Revalidate **Structural Optimization** with a valid Adaptive Execution gate bound to current artifact state and record the result.
-- [ ] Revalidate **End-to-end validation** with a valid Adaptive Execution gate bound to current artifact state and record the result.
+- [ ] Revalidate **Adversarial** with a valid artifact-bound execution gate and matching execution completion and record the result.
+- [ ] Revalidate **Interdependency** with a valid artifact-bound execution gate and matching execution completion and record the result.
+- [ ] Revalidate **Normalization** with a valid artifact-bound execution gate and matching execution completion and record the result.
+- [ ] Revalidate **Structural Optimization** with a valid artifact-bound execution gate and matching execution completion and record the result.
+- [ ] Revalidate **End-to-end validation** with a valid artifact-bound execution gate and matching execution completion and record the result.
 - [ ] Run evaluation `adaptive-execution` and record the result.
 - [ ] Run evaluation `artifact-family` and record the result.
 - [ ] Run evaluation `authority-conflict` and record the result.
@@ -163,4 +163,4 @@ python skills/project-review-system/scripts/update_revalidation_queue.py --check
 python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 ```
 
-`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has an absent/stale/invalid gate or artifact-state binding, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.
+`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has absent/stale/invalid gate or completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.
