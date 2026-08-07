@@ -1,28 +1,23 @@
 #!/usr/bin/env python3
 """Reject reuse or mutation of execution evidence across review history.
 
-Each completed execution occurrence is identified by review revision, stage,
-planned pass_id, and gate hash. Completed subpasses are occurrences even before
-the enclosing semantic stage receives a passing result. When an occurrence first
-appears in durable change-record history, its execution_unit_id and boundary must
-never have been used by an earlier occurrence, and the complete recorded pass
-evidence must remain unchanged in later snapshots.
+Completed execution occurrences are tracked by review revision, stage, planned
+pass_id, and gate hash. Once an occurrence receives durable completion evidence,
+its execution identity and complete pass evidence are immutable. A stage/revision
+is also bound to one gate after any pass completes, so changing the gate or plan
+requires a new review revision.
 
-A logical pass slot is the tuple (review_revision, stage, pass_id). Once that slot
-has durable completion evidence, a different gate may not create a replacement
-occurrence in the same review revision. More strongly, once any pass in a stage
-has durable completion evidence, the tuple (review_revision, stage) is bound to
-that gate hash for all later completed subpasses in that revision. Changing the
-stage gate or execution plan after durable completion therefore requires a new
-review revision.
-
-For a PR-scoped check, history begins with the base-state snapshot when the change
-record already exists there, followed by change-record commits in base..head.
+PR commit history alone is not durable across squash/rebase merges. Therefore a
+change record may carry `execution_occurrence_history`, an append-only ledger of
+completed occurrences. The final PR state must preserve every completed occurrence
+observed in the PR history. Future PR base snapshots then retain those identities
+even when the original unsquashed commits are no longer reachable from main.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -40,6 +35,10 @@ def load_json(path: Path) -> Any:
 
 def canonical_text(value: Any) -> str:
     return json.dumps(value, sort_keys=True, separators=(",", ":"))
+
+
+def canonical_sha256(value: Any) -> str:
+    return hashlib.sha256(canonical_text(value).encode("utf-8")).hexdigest()
 
 
 def require_string(value: Any, where: str) -> str:
@@ -74,8 +73,43 @@ def completed_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...
             kind = require_string(boundary.get("kind"), f"{stage}:{pass_id}.boundary.kind")
             boundary_id = require_string(boundary.get("id"), f"{stage}:{pass_id}.boundary.id")
             occurrence = (revision, stage, pass_id, gate_sha)
-            occurrences.append((occurrence, unit_id, (kind, boundary_id), canonical_text(item)))
+            occurrences.append((occurrence, unit_id, (kind, boundary_id), canonical_sha256(item)))
     return occurrences
+
+
+def ledger_occurrences(snapshot: dict[str, Any]) -> dict[tuple[Any, ...], tuple[str, tuple[str, str], str]]:
+    raw = snapshot.get("execution_occurrence_history", [])
+    if raw is None:
+        raw = []
+    if not isinstance(raw, list):
+        raise ValueError("execution_occurrence_history must be an array")
+
+    entries: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
+    for index, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"execution_occurrence_history[{index}] must be an object")
+        revision = item.get("review_revision")
+        if isinstance(revision, bool) or not isinstance(revision, int) or revision < 0:
+            raise ValueError(f"execution_occurrence_history[{index}].review_revision must be a nonnegative integer")
+        stage = require_string(item.get("stage"), f"execution_occurrence_history[{index}].stage")
+        pass_id = require_string(item.get("pass_id"), f"execution_occurrence_history[{index}].pass_id")
+        gate_sha = require_string(item.get("gate_sha256"), f"execution_occurrence_history[{index}].gate_sha256")
+        unit_id = require_string(item.get("execution_unit_id"), f"execution_occurrence_history[{index}].execution_unit_id")
+        boundary = item.get("boundary")
+        if not isinstance(boundary, dict):
+            raise ValueError(f"execution_occurrence_history[{index}].boundary must be an object")
+        kind = require_string(boundary.get("kind"), f"execution_occurrence_history[{index}].boundary.kind")
+        boundary_id = require_string(boundary.get("id"), f"execution_occurrence_history[{index}].boundary.id")
+        evidence_sha = require_string(item.get("pass_evidence_sha256"), f"execution_occurrence_history[{index}].pass_evidence_sha256")
+        if len(evidence_sha) != 64 or any(c not in "0123456789abcdef" for c in evidence_sha.lower()):
+            raise ValueError(f"execution_occurrence_history[{index}].pass_evidence_sha256 must be a SHA-256 hex digest")
+        occurrence = (revision, stage, pass_id, gate_sha)
+        value = (unit_id, (kind, boundary_id), evidence_sha.lower())
+        previous = entries.get(occurrence)
+        if previous is not None and previous != value:
+            raise ValueError(f"execution_occurrence_history contains conflicting entries for {occurrence!r}")
+        entries[occurrence] = value
+    return entries
 
 
 def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
@@ -84,51 +118,79 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
     stage_gates: dict[tuple[Any, ...], str] = {}
     used_units: dict[str, tuple[Any, ...]] = {}
     used_boundaries: dict[tuple[str, str], tuple[Any, ...]] = {}
+    observed_completed: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
+    previous_ledger: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
+    final_ledger: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
+
+    def register(occurrence: tuple[Any, ...], unit_id: str, boundary: tuple[str, str], evidence_sha: str, where: str) -> None:
+        prior = occurrence_evidence.get(occurrence)
+        if prior is not None:
+            if prior != (unit_id, boundary, evidence_sha):
+                raise ValueError(f"record {record_id!r} mutates completed pass evidence for {occurrence!r} at {where!r}")
+            return
+
+        logical_slot = occurrence[:3]
+        previous_occurrence = logical_slots.get(logical_slot)
+        if previous_occurrence is not None and previous_occurrence != occurrence:
+            raise ValueError(
+                f"record {record_id!r} replaces completed logical pass {logical_slot!r} with a different gate "
+                f"at {where!r}; increment review_revision before redoing a durably completed pass"
+            )
+
+        stage_slot = occurrence[:2]
+        gate_sha = occurrence[3]
+        previous_gate = stage_gates.get(stage_slot)
+        if previous_gate is not None and previous_gate != gate_sha:
+            raise ValueError(
+                f"record {record_id!r} changes completed stage gate for {stage_slot!r} from {previous_gate!r} "
+                f"to {gate_sha!r} at {where!r}; increment review_revision before changing the stage gate or execution plan"
+            )
+
+        previous = used_units.get(unit_id)
+        if previous is not None and previous != occurrence:
+            raise ValueError(
+                f"record {record_id!r} reuses execution_unit_id {unit_id!r} for {occurrence!r}; "
+                f"it was already used by {previous!r}"
+            )
+        previous_boundary = used_boundaries.get(boundary)
+        if previous_boundary is not None and previous_boundary != occurrence:
+            raise ValueError(
+                f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; "
+                f"it was already used by {previous_boundary!r}"
+            )
+        occurrence_evidence[occurrence] = (unit_id, boundary, evidence_sha)
+        logical_slots[logical_slot] = occurrence
+        stage_gates[stage_slot] = gate_sha
+        used_units[unit_id] = occurrence
+        used_boundaries[boundary] = occurrence
 
     for commit_sha, snapshot in snapshots:
-        for occurrence, unit_id, boundary, evidence in completed_occurrences(snapshot):
-            prior = occurrence_evidence.get(occurrence)
-            if prior is not None:
-                if prior != (unit_id, boundary, evidence):
-                    raise ValueError(
-                        f"record {record_id!r} mutates completed pass evidence for {occurrence!r} at {commit_sha!r}"
-                    )
-                continue
+        ledger = ledger_occurrences(snapshot)
+        for occurrence, prior_value in previous_ledger.items():
+            if ledger.get(occurrence) != prior_value:
+                raise ValueError(
+                    f"record {record_id!r} removes or mutates durable execution occurrence ledger entry "
+                    f"{occurrence!r} at {commit_sha!r}"
+                )
+        for occurrence, (unit_id, boundary, evidence_sha) in ledger.items():
+            register(occurrence, unit_id, boundary, evidence_sha, commit_sha)
 
-            revision, stage, pass_id, gate_sha = occurrence
-            stage_slot = (revision, stage)
-            previous_gate = stage_gates.get(stage_slot)
-            if previous_gate is not None and previous_gate != gate_sha:
-                raise ValueError(
-                    f"record {record_id!r} replaces the completed stage gate for {stage_slot!r} at {commit_sha!r}; "
-                    f"increment review_revision before changing a stage gate or execution plan after durable completion"
-                )
+        for occurrence, unit_id, boundary, evidence_sha in completed_occurrences(snapshot):
+            register(occurrence, unit_id, boundary, evidence_sha, commit_sha)
+            prior_observed = observed_completed.get(occurrence)
+            if prior_observed is not None and prior_observed != (unit_id, boundary, evidence_sha):
+                raise ValueError(f"record {record_id!r} mutates observed completion {occurrence!r} at {commit_sha!r}")
+            observed_completed[occurrence] = (unit_id, boundary, evidence_sha)
 
-            logical_slot = (revision, stage, pass_id)
-            previous_occurrence = logical_slots.get(logical_slot)
-            if previous_occurrence is not None and previous_occurrence != occurrence:
-                raise ValueError(
-                    f"record {record_id!r} replaces completed logical pass {logical_slot!r} with a different gate "
-                    f"at {commit_sha!r}; increment review_revision before redoing a durably completed pass"
-                )
+        previous_ledger = ledger
+        final_ledger = ledger
 
-            previous = used_units.get(unit_id)
-            if previous is not None and previous != occurrence:
-                raise ValueError(
-                    f"record {record_id!r} reuses execution_unit_id {unit_id!r} for {occurrence!r}; "
-                    f"it was already used by {previous!r}"
-                )
-            previous_boundary = used_boundaries.get(boundary)
-            if previous_boundary is not None and previous_boundary != occurrence:
-                raise ValueError(
-                    f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; "
-                    f"it was already used by {previous_boundary!r}"
-                )
-            occurrence_evidence[occurrence] = (unit_id, boundary, evidence)
-            stage_gates[stage_slot] = gate_sha
-            logical_slots[logical_slot] = occurrence
-            used_units[unit_id] = occurrence
-            used_boundaries[boundary] = occurrence
+    for occurrence, value in observed_completed.items():
+        if final_ledger.get(occurrence) != value:
+            raise ValueError(
+                f"record {record_id!r} does not preserve completed occurrence {occurrence!r} in final "
+                "execution_occurrence_history; PR commit history may disappear after squash/rebase merge"
+            )
 
 
 def changed_record_ids(base: str, head: str) -> set[str]:
@@ -215,7 +277,7 @@ def main() -> int:
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
-    print("Completed execution evidence is historically unique and immutable across review occurrences.")
+    print("Completed execution evidence and its durable occurrence ledger are historically unique and immutable.")
     return 0
 
 
