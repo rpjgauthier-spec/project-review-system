@@ -29,79 +29,22 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, current artifact-state binding for partial subdivided completion, and revision-bound redo semantics. Revision-8 Adversarial has now found and corrected six successive defects or assurance gaps: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; inability to represent subdivided execution honestly because subpasses were only recognized after enclosing-stage credit; failure to validate a partial subpass completion against the current governed artifact state before its handoff could be consumed; a mapped pass-boundary evaluation specification that still described the older credited-pass model; and the ability to replace a durably completed logical pass with a different gate and new execution identities in the same review revision because gate_sha was part of the historical occurrence identity. The sixth finding is already covered by post-credit immutability and reopening semantics. Historical validation now permits only one completed occurrence per logical slot (review_revision, stage, pass_id); a redo after durable completion requires incrementing review_revision. Regression coverage and the mapped evaluation explicitly test that requirement. A fresh revision-8 Adversarial gate is now bound to the current governed artifact state. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, current artifact-state binding for partial subdivided completion, and revision-bound redo semantics. Revision-8 Adversarial has now found and corrected seven successive defects or assurance gaps: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; inability to represent subdivided execution honestly because subpasses were only recognized after enclosing-stage credit; failure to validate a partial subpass completion against the current governed artifact state before its handoff could be consumed; a mapped pass-boundary evaluation specification that still described the older credited-pass model; the ability to replace a durably completed logical pass with a different gate and new execution identities in the same review revision because gate_sha was part of the historical occurrence identity; and the ability to evade that logical-pass protection by replacing the stage gate with a different execution plan using different pass IDs in the same review revision. The seventh finding is already covered by post-credit immutability and reopening semantics. Historical validation now binds a (review_revision, stage) to one gate after any pass of that stage durably completes, so a gate or execution-plan change after durable completion requires incrementing review_revision. Regression coverage and the mapped evaluation explicitly test that requirement. The gate used for this Adversarial attempt became stale when governed files changed and has been discarded. Adversarial remains uncredited pending a fresh retry. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
   "status": "in_progress",
   "review_revision": 8,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
-        "activity": "Adversarial",
-        "target_state_id": "sha256:770b46bbe684b489b6bacb18b8ad1ccd765b6b9ff6612808159830ded2c09fad",
-        "review_revision": 8,
-        "workload_class": "bounded-revalidation-pass-boundary-v8",
-        "stage_assessment": {
-          "single_pass_suitable": true,
-          "reasons": [
-            "Revision 8 remains bounded to separated-pass enforcement after six prior Adversarial findings were corrected.",
-            "The retry explicitly attacks representability, post-credit immutability, one-completion-per-logical-slot/revision, intermediate-state validity, historical/base-state interaction, mapped-evaluation adequacy, separation bypass, stale-state handling, exemption closure, isolation semantics, and assurance limits; one bounded pass is suitable."
-          ],
-          "subpasses": []
-        },
-        "fused_authorization": null,
-        "notes": "Fresh SEPARATED one-pass Adversarial retry for revision 8; no FUSED permission or subdivision."
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-separated-v1",
-        "subject_id": "unmeasured-reviewer-separated-default",
-        "validation_status": "DEFAULT_SEPARATED",
-        "benchmark_suite": "none-default-separated",
-        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
-        "fused_permissions": []
-      },
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "target_state_id": "sha256:770b46bbe684b489b6bacb18b8ad1ccd765b6b9ff6612808159830ded2c09fad",
-        "review_revision": 8,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
-        "workload_class": "bounded-revalidation-pass-boundary-v8",
-        "selected_mode": "SEPARATED",
-        "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
-        ],
-        "fused_permission_id": null,
-        "capability_profile_id": "default-separated-v1",
-        "capability_subject_id": "unmeasured-reviewer-separated-default",
-        "capability_validation_status": "DEFAULT_SEPARATED",
-        "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "4249476cd4f627b8c07c48f4004d42dcd007caf2d48708caf5d3851dbc7a7391",
-        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
-        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
-      },
-      "gate_sha256": "db7319d291d2390ebd450f1b4d46be8e6e7eb119c7e5e5d9bfebeab647cca4f2"
-    }
-  },
+  "execution_gates": {},
   "execution_completions": {},
   "results": {},
   "next_step_plan": {
     "consumer": "next reviewer or assistant message continuing PR #6",
     "retention_reason": "Preserve the exact continuation plan outside chat context so a context-window reset cannot cause the review sequence or reopening state to be lost.",
-    "current_state": "Revision 8 is in progress. Adversarial is uncredited. A fresh Adversarial gate is bound to the current governed artifact state and must pre-exist any completion credit.",
-    "procedure_coverage": "Six revision-8 Adversarial findings have been assessed. The first four drove reusable Adversarial procedure strengthening; findings five and six are already covered by the strengthened procedure under deterministic-check overclaim, intermediate-state validation, post-credit immutability, and reopening semantics.",
+    "current_state": "Revision 8 is in progress. Adversarial is uncredited. The most recent gate is stale because same-revision stage-gate/plan replacement enforcement, its regression coverage, and the mapped evaluation changed; that gate must not be reused.",
+    "procedure_coverage": "Seven revision-8 Adversarial findings have been assessed. The first four drove reusable Adversarial procedure strengthening; findings five through seven are already covered by the strengthened procedure under deterministic-check overclaim, intermediate-state validation, post-credit immutability, and reopening semantics.",
     "next_actions": [
-      "Perform only the revision-8 Adversarial semantic pass against the exact state bound by the current gate.",
+      "Read the current authorities, this change record, historical-identity checker, regression coverage, and expanded pass-boundary evaluation.",
+      "Create a new revision-8 Adversarial execution gate bound to the then-current governed artifact state and commit it before semantic credit.",
+      "Perform only the revision-8 Adversarial semantic pass in that assistant message, including representability, post-credit immutability, one-gate-per-completed-stage/revision, intermediate-state validity, historical/base-state interaction, mapped-evaluation adequacy, separation bypass, stale-state handling, exemption closure, isolation semantics, and assurance limits.",
       "For every material finding, classify it as already covered by the current Adversarial procedure or as a new reusable attack class. If new, update the procedure, invalidate the gate, and stop without credit.",
-      "If a governed artifact changes for any finding, discard this gate and stop without credit.",
       "If no material defect remains, record only the Adversarial completion/result with a new unique execution occurrence identity and bounded handoff to Interdependency. Do not perform Interdependency in the same assistant message.",
       "After Adversarial eventually passes, continue one semantic pass per assistant message in canonical order: Interdependency, Normalization, Structural Optimization, End-to-end validation, then mapped evaluations and final queue/CI clearance."
     ]
