@@ -21,7 +21,7 @@ MODES = ("FUSED", "SEPARATED", "ISOLATED")
 MODE_INDEX = {mode: index for index, mode in enumerate(MODES)}
 NUMERIC_DIMENSIONS = (
     "artifact_count",
-    "semantic_units",
+    "content_bytes",
     "required_stage_count",
     "required_evaluation_count",
     "dependency_count",
