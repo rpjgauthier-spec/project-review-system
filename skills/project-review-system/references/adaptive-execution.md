@@ -76,13 +76,15 @@ For every credited pass, record:
 - `inbound_handoff_sha256`, which is `null` only for the first credited pass and otherwise exactly matches the previous pass handoff;
 - an outbound `handoff` containing its exact downstream consumer, bounded findings, evidence references when applicable, unresolved conditions when applicable, and a canonical SHA-256 over the handoff contents.
 
-The next credited pass must explicitly consume the prior handoff hash. Later required stages may not receive passing credit while an earlier required stage remains unpassed. The final credited pass hands off to `review-completion`.
+The next credited pass must explicitly consume the prior handoff hash. Later required stages may not receive passing credit while an earlier required stage remains unpassed. A handoff from the final pass of a stage targets the next required stage; a handoff between already-planned subpasses targets the exact next subpass. The final credited pass hands off to `review-completion`.
 
 In a chat host where one assistant message is the selected bounded execution unit for `SEPARATED`, perform only one semantic pass per assistant message. Put that pass's findings and bounded handoff in the message itself or in a durable artifact that the next pass reads before beginning. Do not perform several stages in one assistant response and later assign them separate execution-unit identifiers.
 
 `ISOLATED` is not merely another name for subdivision. Subdivision makes the work more granular. An individual subdivided pass uses `ISOLATED` only when it additionally requires a fresh context or equivalent isolation. A credited ISOLATED pass must declare an `isolated-context` boundary.
 
-`scripts/check_pass_boundaries.py` deterministically checks uniqueness, ordering, handoff hashes, handoff consumption, and the ISOLATED boundary declaration. It cannot independently prove that a ChatGPT message boundary or fresh context actually occurred unless the execution host supplies a trustworthy boundary identifier. When the host exposes no such identifier, the recorded boundary remains an attestation and the reviewer must actually follow the required execution discipline.
+`scripts/check_pass_boundaries.py` deterministically checks uniqueness, ordering, handoff hashes, handoff consumption, and the ISOLATED boundary declaration. In Git repository execution it also checks durable chronology: the current gate must already exist in a prior change-record state before a pass first receives credit; two passes may not first receive credit in the same change-record commit; and the exact previous handoff must already be durably recorded before the next pass first receives credit. This prevents several nominally separate passes from being backfilled together in one final record state.
+
+The checker still cannot independently prove that a ChatGPT message boundary or fresh context actually occurred unless the execution host supplies a trustworthy boundary identifier. When the host exposes no such identifier, the recorded boundary remains an attestation and the reviewer must actually follow the required execution discipline.
 
 ## Ephemeral subpass workspace
 
@@ -155,4 +157,4 @@ Adaptive Execution controls context separation. It does not prove:
 - actual deletion of an external scratch workspace the validator cannot inspect; or
 - domain correctness.
 
-It does provide deterministic enforcement that a recorded plan was bound to the current artifact state, that recorded execution units and handoffs form a consistent ordered chain, and that a passing result cannot be accepted unless all required passes were completed in the required context modes with required cleanup evidence.
+It does provide deterministic enforcement that a recorded plan was bound to the current artifact state, that recorded execution units and handoffs form a consistent ordered chain, that repository pass credit follows durable gate-before-credit and one-credit-commit-per-pass chronology, and that a passing result cannot be accepted unless all required passes were completed in the required context modes with required cleanup evidence.
