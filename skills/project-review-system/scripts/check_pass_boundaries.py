@@ -24,6 +24,14 @@ DEFAULT_CHANGES = ROOT / "changes"
 PASS_RESULTS = {"passed", "supported", "complete"}
 BEHAVIOR_NEUTRAL_CLASS = "behavior-neutral"
 BOUNDARY_KINDS = {"host-message", "declared-execution-unit", "external-artifact", "isolated-context"}
+CLOSED_PASS_BOUNDARY_EXEMPTIONS = {
+    "2026-08-07-dot-github-path-normalization",
+    "2026-08-07-exhaustive-semantic-coverage",
+    "2026-08-07-identity-abstraction-boundary",
+    "2026-08-07-public-repository-bootstrap",
+    "2026-08-07-repository-identity-pass",
+    "2026-08-07-adaptive-review-execution",
+}
 
 
 def load_json(path: Path) -> Any:
@@ -39,6 +47,17 @@ def require_string(value: Any, where: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{where} must be a nonempty string")
     return value.strip()
+
+
+def validate_pass_boundary_policy(mapping: dict[str, Any]) -> None:
+    policy = mapping.get("pass_boundary")
+    if not isinstance(policy, dict) or policy.get("enabled") is not True:
+        raise ValueError("pass_boundary policy must be enabled")
+    configured = policy.get("legacy_exempt_change_ids")
+    if not isinstance(configured, list) or not all(isinstance(v, str) and v for v in configured):
+        raise ValueError("pass_boundary legacy_exempt_change_ids must be an array of nonempty strings")
+    if set(configured) != CLOSED_PASS_BOUNDARY_EXEMPTIONS or len(configured) != len(CLOSED_PASS_BOUNDARY_EXEMPTIONS):
+        raise ValueError("pass-boundary legacy exemption list is closed and may contain only the fixed historical records")
 
 
 def required_stages(record: dict[str, Any], mapping: dict[str, Any]) -> list[str]:
@@ -267,21 +286,49 @@ def load_git_history(record_id: str) -> list[tuple[str, dict[str, Any]]]:
     return snapshots
 
 
+def changed_record_ids(base: str, head: str) -> set[str]:
+    try:
+        output = subprocess.run(
+            ["git", "diff", "--name-only", base, head, "--", "skills/project-review-system/changes"],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError("cannot determine change records modified in the current review range") from exc
+    prefix = "skills/project-review-system/changes/"
+    ids: set[str] = set()
+    for raw in output.splitlines():
+        path = raw.strip().replace("\\", "/")
+        if path.startswith(prefix) and path.endswith(".json"):
+            ids.add(path[len(prefix):-5])
+    return ids
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--map", type=Path, default=DEFAULT_MAP)
     parser.add_argument("--changes", type=Path, default=DEFAULT_CHANGES)
+    parser.add_argument("--base")
+    parser.add_argument("--head")
     parser.add_argument("--skip-git-history", action="store_true", help="test-only/portable structural validation without repository chronology")
     args = parser.parse_args()
     try:
+        if bool(args.base) != bool(args.head):
+            raise ValueError("--base and --head must be supplied together")
         mapping = load_json(args.map)
+        validate_pass_boundary_policy(mapping)
         records = [load_json(path) for path in sorted(args.changes.glob("*.json"))]
+        history_ids = changed_record_ids(args.base, args.head) if args.base and args.head else {
+            record.get("id") for record in records if isinstance(record, dict) and record.get("status") != "complete"
+        }
         for record in records:
             if not isinstance(record, dict):
                 raise ValueError("change-impact record must be a JSON object")
             validate_record(record, mapping)
-            if not args.skip_git_history and boundary_required(record, mapping):
-                record_id = require_string(record.get("id"), "record.id")
+            record_id = require_string(record.get("id"), "record.id")
+            if not args.skip_git_history and boundary_required(record, mapping) and record_id in history_ids:
                 validate_history_snapshots(record, mapping, load_git_history(record_id))
     except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
         print(f"ERROR: {exc}")
