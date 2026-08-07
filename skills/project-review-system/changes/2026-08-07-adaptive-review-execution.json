@@ -64,11 +64,22 @@
         "residual_conditions": [
           "Trust in benchmark provenance remains an external evidence boundary rather than something the selector can establish semantically."
         ]
+      },
+      "Normalization": {
+        "mode": "SEPARATED",
+        "findings": [],
+        "corrections": [],
+        "retained_distinctions": [
+          "FUSED, SEPARATED, and ISOLATED consistently describe context separation rather than review verdict or independence state.",
+          "content_bytes is used consistently as the deterministic size dimension; semantic complexity remains represented by separate workload dimensions.",
+          "Capability validation status remains distinct from review-stage status and verdict vocabulary."
+        ]
       }
     }
   },
   "results": {
     "Adversarial": "supported",
-    "Interdependency": "supported"
+    "Interdependency": "supported",
+    "Normalization": "supported"
   }
 }
