@@ -16,12 +16,14 @@
     "changed-file-coverage",
     "workflow-path-normalization"
   ],
-  "reason": "The first standalone public pull-request run showed that normalize_declared used lstrip(\"./\"), which removed the leading dot from .github/... and misclassified the active enforcement workflow as a skill-relative path. The correction removes only an actual ./ prefix and preserves repository-root .github paths. This changes enforcement behavior and therefore receives bounded revalidation rather than being treated as bootstrap-only deployment state.",
-  "status": "in_progress",
+  "reason": "The first standalone public pull-request run showed that normalize_declared used lstrip(\"./\"), which removed the leading dot from .github/... and misclassified the active enforcement workflow as a skill-relative path. The correction removes only an actual ./ prefix and preserves repository-root .github paths. Live GitHub Actions then accepted full changed-file coverage and ran 28 regression tests successfully before the intentionally unresolved queue gate, providing the runtime evidence needed to close this bounded correction.",
+  "status": "complete",
   "results": {
     "Adversarial": "supported",
     "Interdependency": "supported",
+    "End-to-end validation": "supported",
     "authority-conflict": "passed",
+    "changed-file-coverage": "passed",
     "reopening-chain": "passed",
     "status-propagation": "passed",
     "workflow-path-normalization": "passed"
