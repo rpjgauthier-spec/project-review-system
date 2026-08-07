@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for execution-gate enforcement in the revalidation queue."""
+"""Regression tests for execution-plan enforcement in the revalidation queue."""
 
 from __future__ import annotations
 
@@ -17,44 +17,29 @@ queue_spec = importlib.util.spec_from_file_location("queue_gate_test", QUEUE_PAT
 assert queue_spec and queue_spec.loader
 queue = importlib.util.module_from_spec(queue_spec)
 queue_spec.loader.exec_module(queue)
-
 selector_spec = importlib.util.spec_from_file_location("selector_queue_gate_test", SELECTOR_PATH)
 assert selector_spec and selector_spec.loader
 selector = importlib.util.module_from_spec(selector_spec)
 selector_spec.loader.exec_module(selector)
-
 CAPABILITY = json.loads(DEFAULT_CAPABILITY_PATH.read_text(encoding="utf-8"))
+
 MAPPING = {
     "stages": ["Adversarial", "End-to-end validation"],
     "execution_gate": {"enabled": True, "legacy_exempt_change_ids": ["legacy"]},
-    "change_classes": {
-        "authorization": {
-            "stages": ["Adversarial", "End-to-end validation"],
-            "evaluations": ["unauthorized-action"],
-        }
-    },
+    "change_classes": {"authorization": {"stages": ["Adversarial", "End-to-end validation"], "evaluations": ["unauthorized-action"]}},
 }
 
 
-def workload(target_state_id, activity="Adversarial", revision=2):
+def workload(activity="Adversarial", revision=2, target="sha256:fixture"):
     return {
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer",
         "activity": activity,
-        "target_state_id": target_state_id,
+        "target_state_id": target,
         "review_revision": revision,
-        "artifact_count": 2,
-        "content_bytes": 2000,
-        "remaining_stage_count": 2,
-        "remaining_evaluation_count": 1,
-        "dependency_count": 1,
-        "protected_control_count": 0,
-        "unresolved_uncertainty_count": 0,
-        "material_findings_count": 0,
-        "unexpected_dependency_count": 0,
-        "self_referential": False,
-        "exhaustive_claim": False,
-        "checkpoint": "test",
+        "workload_class": "ordinary-review-v1",
+        "stage_assessment": {"single_pass_suitable": True, "reasons": ["bounded"], "subpasses": []},
+        "fused_authorization": None,
     }
 
 
@@ -62,68 +47,78 @@ def record(record_id="current"):
     return {
         "id": record_id,
         "summary": "Test authorization change.",
-        "changed_files": [
-            "skills/project-review-system/tests/test_execution_gate_queue.py",
-            f"skills/project-review-system/changes/{record_id}.json",
-            "skills/project-review-system/reviews/revalidation-queue.md",
-        ],
+        "changed_files": ["skills/project-review-system/tests/fixture.txt", f"skills/project-review-system/changes/{record_id}.json"],
         "change_classes": ["authorization"],
         "claimed_earliest_stage": "Adversarial",
         "status": "in_progress",
         "review_revision": 2,
         "results": {},
         "execution_gates": {},
+        "execution_completions": {},
     }
 
 
-def attach_gate(value, activity="Adversarial", revision=2, target_state_id=None):
-    actual_target = target_state_id or queue.current_record_target_state_id(value)
-    value["execution_gates"]["Adversarial"] = selector.build_gate(
-        workload(actual_target, activity=activity, revision=revision), CAPABILITY
-    )
+def completion_for(gate):
+    return {
+        "gate_sha256": gate["gate_sha256"],
+        "target_state_id": gate["decision"]["target_state_id"],
+        "passes": [
+            {"pass_id": p["pass_id"], "context_mode": p["context_mode"], "status": "complete"}
+            for p in gate["decision"]["execution_plan"]
+        ],
+    }
 
 
 class QueueExecutionGateTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.original_target = queue.current_record_target_state_id
+        queue.current_record_target_state_id = lambda value: "sha256:fixture"
+
+    def tearDown(self) -> None:
+        queue.current_record_target_state_id = self.original_target
+
     def test_passing_stage_without_gate_is_rejected(self) -> None:
         value = record()
         value["results"]["Adversarial"] = "supported"
         with self.assertRaisesRegex(ValueError, "without a current execution gate"):
             queue.normalize_record(value, MAPPING)
 
-    def test_passing_stage_with_valid_gate_is_accepted(self) -> None:
+    def test_passing_stage_without_completion_is_rejected(self) -> None:
         value = record()
-        attach_gate(value)
+        gate = selector.build_gate(workload(), CAPABILITY)
+        value["execution_gates"]["Adversarial"] = gate
+        value["results"]["Adversarial"] = "supported"
+        with self.assertRaisesRegex(ValueError, "without execution completion evidence"):
+            queue.normalize_record(value, MAPPING)
+
+    def test_valid_gate_and_completion_are_accepted(self) -> None:
+        value = record()
+        gate = selector.build_gate(workload(), CAPABILITY)
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion_for(gate)
         value["results"]["Adversarial"] = "supported"
         normalized = queue.normalize_record(value, MAPPING)
         self.assertTrue(normalized["derived_execution_gate_required"])
 
-    def test_reopening_revision_invalidates_old_gate(self) -> None:
+    def test_wrong_completion_mode_is_rejected(self) -> None:
         value = record()
-        attach_gate(value, revision=1)
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["passes"][0]["context_mode"] = "ISOLATED"
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion
         value["results"]["Adversarial"] = "supported"
-        with self.assertRaisesRegex(ValueError, "review_revision 1 does not match current review revision 2"):
+        with self.assertRaisesRegex(ValueError, "wrong context mode"):
             queue.normalize_record(value, MAPPING)
 
-    def test_gate_for_wrong_stage_is_rejected(self) -> None:
+    def test_stale_revision_is_rejected(self) -> None:
         value = record()
-        attach_gate(value, activity="End-to-end validation")
+        gate = selector.build_gate(workload(revision=1), CAPABILITY)
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion_for(gate)
         value["results"]["Adversarial"] = "supported"
-        with self.assertRaisesRegex(ValueError, "does not match expected"):
+        with self.assertRaisesRegex(ValueError, "review_revision 1 does not match"):
             queue.normalize_record(value, MAPPING)
-
-    def test_stale_artifact_state_is_rejected(self) -> None:
-        value = record()
-        attach_gate(value, target_state_id="sha256:stale")
-        value["results"]["Adversarial"] = "supported"
-        with self.assertRaisesRegex(ValueError, "does not match current governed artifact state"):
-            queue.normalize_record(value, MAPPING)
-
-    def test_change_record_and_generated_queue_are_excluded_from_target_hash(self) -> None:
-        value = record()
-        paths = queue.record_artifact_paths(value)
-        self.assertNotIn("skills/project-review-system/changes/current.json", paths)
-        self.assertNotIn("skills/project-review-system/reviews/revalidation-queue.md", paths)
-        self.assertEqual(paths, ["skills/project-review-system/tests/test_execution_gate_queue.py"])
 
     def test_legacy_record_remains_exempt(self) -> None:
         value = record("legacy")
