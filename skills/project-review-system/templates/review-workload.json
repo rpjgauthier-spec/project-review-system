@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "reviewer_subject_id": "stable reviewer/runtime identifier for the execution being governed",
   "artifact_count": 0,
   "content_bytes": 0,
   "remaining_stage_count": 0,
@@ -12,5 +13,5 @@
   "self_referential": false,
   "exhaustive_claim": false,
   "checkpoint": "initial-preflight",
-  "notes": "Use observable values where available. content_bytes is the reproducible byte size of in-scope content used for this decision. remaining_stage_count and remaining_evaluation_count decrease only after work is validly completed and not reopened. Update after Identity Pass and each semantic stage."
+  "notes": "Use observable values where available. reviewer_subject_id identifies the reviewer/runtime actually being governed. content_bytes is the reproducible byte size of in-scope content used for this decision. remaining_stage_count and remaining_evaluation_count decrease only after work is validly completed and not reopened. Update after Identity Pass and each semantic stage."
 }
