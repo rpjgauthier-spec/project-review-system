@@ -1,19 +1,25 @@
 {
   "id": "2026-08-07-adaptive-review-execution",
-  "summary": "Add adaptive preflight and checkpoint selection of FUSED, SEPARATED, or ISOLATED semantic review execution from workload and validated reviewer capability.",
+  "summary": "Add adaptive preflight and checkpoint selection of FUSED, SEPARATED, or ISOLATED semantic review execution from workload and validated reviewer capability, with enforced execution gates for governed stage results.",
   "changed_files": [
-    "skills/project-review-system/SKILL.md",
-    "skills/project-review-system/README.md",
     "skills/project-review-system/CHANGELOG.md",
-    "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/changes/2026-08-07-adaptive-review-execution.json",
     "skills/project-review-system/config/default-execution-capability.json",
+    "skills/project-review-system/config/revalidation-map.json",
+    "skills/project-review-system/evals/adaptive-execution.md",
+    "skills/project-review-system/evals/execution-gate-enforcement.md",
+    "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/reviews/revalidation-queue.md",
+    "skills/project-review-system/scripts/check_execution_gate.py",
+    "skills/project-review-system/scripts/select_execution_policy.py",
+    "skills/project-review-system/scripts/update_revalidation_queue.py",
     "skills/project-review-system/templates/review-workload.json",
     "skills/project-review-system/templates/reviewer-capability.json",
-    "skills/project-review-system/scripts/select_execution_policy.py",
-    "skills/project-review-system/evals/adaptive-execution.md",
-    "skills/project-review-system/tests/test_execution_policy.py",
-    "skills/project-review-system/changes/2026-08-07-adaptive-review-execution.json",
-    "skills/project-review-system/reviews/revalidation-queue.md"
+    "skills/project-review-system/tests/test_check_execution_gate.py",
+    "skills/project-review-system/tests/test_execution_gate_queue.py",
+    "skills/project-review-system/tests/test_execution_policy.py"
   ],
   "change_classes": [
     "authority-or-propagation",
@@ -25,20 +31,30 @@
   "additional_evaluations": [
     "adaptive-execution",
     "execution-policy-selector",
-    "capability-relaxation"
+    "capability-relaxation",
+    "execution-gate-enforcement"
   ],
-  "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds a preflight before the Identity Pass or first semantic stage and checkpoint re-evaluation after Identity Pass and each completed stage. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
+  "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds adaptive execution before semantic work and at later checkpoints, plus deterministic enforcement so a governed passing stage result cannot be accepted without a current execution gate for that exact stage and review revision. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
   "status": "in_progress",
+  "review_revision": 3,
+  "execution_gates": {},
   "execution_evidence": {
     "initial_mode": "SEPARATED",
     "capability_profile": "default-conservative-v1",
-    "basis": "The change is self-referential and requires all five review stages and eleven evaluations; those facts alone exceed the default FUSED envelope while remaining inside the default SEPARATED envelope.",
+    "basis": "The change is self-referential and requires all five review stages and multiple evaluations; those facts exceeded the default FUSED envelope while remaining inside the default SEPARATED envelope.",
     "reopening": {
       "trigger_stage": "End-to-end validation",
       "earliest_reopened_stage": "Adversarial",
-      "reason": "End-to-end validation found that a VALIDATED capability profile carried subject_id provenance but the selector did not compare that subject to the reviewer/runtime actually being governed. Capability evidence for one reviewer/runtime could therefore be consumed by another and reduce separation without validated transfer evidence.",
-      "correction": "Add workload reviewer_subject_id, require exact subject match for VALIDATED profiles, keep the built-in conservative fallback generic, reject mismatched validated profiles explicitly, and add regression/evaluation coverage for subject transfer.",
-      "prior_results_status": "withdrawn_pending_ordered_revalidation"
+      "reason": "End-to-end validation found that validated capability subject provenance was recorded but not enforced. Follow-up inspection also found that Adaptive Execution was still normative: a reviewer could skip preflight and record a passing stage result unless another human noticed.",
+      "corrections": [
+        "Bind VALIDATED capability profiles to workload reviewer_subject_id.",
+        "Add activity-bound verifiable execution gate records that embed workload, capability, selector decision, and hashes.",
+        "Add review_revision so reopening or a correction can invalidate older gates deterministically.",
+        "Make the generated revalidation queue reject passing governed stage results without a current valid gate.",
+        "Grandfather only named pre-enforcement historical change records through the canonical mapping rather than allowing per-record self-exemption."
+      ],
+      "prior_results_status": "withdrawn_pending_ordered_revalidation",
+      "current_review_revision": 3
     },
     "stage_handoffs": {
       "Adversarial": {
@@ -52,10 +68,6 @@
           "Reserve DEFAULT_CONSERVATIVE for default-conservative-v1 in the core validator, not only in the CLI path.",
           "Bind capability profiles to subject_id and benchmark_suite provenance fields.",
           "Replace semantic_units with reproducible content_bytes and state that declared workload truthfulness and benchmark validity remain outside deterministic proof."
-        ],
-        "residual_conditions": [
-          "The selector can validate declared structures and envelopes but cannot prove that workload counts or benchmark evidence are truthful.",
-          "Same-reviewer SEPARATED or ISOLATED execution is not independent review."
         ]
       },
       "Interdependency": {
@@ -64,44 +76,19 @@
         "findings": [
           "The initial design did not make workload, capability-profile, selector, decision, and handoff ownership explicit enough.",
           "Without a producer boundary, a semantic review could create a stronger capability profile and immediately consume it to reduce its own separation."
-        ],
-        "corrections": [
-          "Define workload producer, capability-profile producer, selector, decision consumer, and handoff producer contracts.",
-          "Require capability evidence to pre-exist the semantic review it governs; a stronger profile created or materially changed during that review cannot relax the same review.",
-          "For repository revalidation, derive remaining stage/evaluation counts from unresolved work in the generated queue and use deterministic inventory/diff/manifest evidence where available for workload measures."
-        ],
-        "residual_conditions": [
-          "Trust in benchmark provenance remains an external evidence boundary rather than something the selector can establish semantically."
         ]
       },
       "Normalization": {
         "mode": "SEPARATED",
         "historical": true,
-        "findings": [],
-        "corrections": [],
-        "retained_distinctions": [
-          "FUSED, SEPARATED, and ISOLATED consistently describe context separation rather than review verdict or independence state.",
-          "content_bytes is used consistently as the deterministic size dimension; semantic complexity remains represented by separate workload dimensions.",
-          "Capability validation status remains distinct from review-stage status and verdict vocabulary."
-        ]
+        "findings": []
       },
       "Structural Optimization": {
         "mode": "SEPARATED",
         "historical": true,
-        "checkpoint_mode": "SEPARATED",
         "findings": [
-          "Using original total stage/evaluation counts would prevent the controller from recognizing that valid completion reduces remaining review load, weakening automatic relaxation.",
+          "Using original total stage/evaluation counts would prevent the controller from recognizing that valid completion reduces remaining review load.",
           "Independent per-dimension maxima implicitly formed a rectangular capability envelope without stating that the benchmark must support combinations inside that envelope."
-        ],
-        "corrections": [
-          "Replace total required-stage/evaluation dimensions with remaining_stage_count and remaining_evaluation_count; valid completion decreases them and reopening or newly required work increases them.",
-          "Declare envelope_model rectangular-v1 and require validated capability evidence to support the combined rectangular envelope rather than isolated dimension maxima.",
-          "Add regression cases for completion-driven relaxation, reopening-driven tightening, unsupported envelope models, and explicit combined-envelope assurance limits."
-        ],
-        "checkpoint_basis": "After Structural Optimization, one semantic stage remained but eleven mapped evaluations and twelve changed artifacts remained; these exceeded the default FUSED envelope, so execution stayed SEPARATED for End-to-end validation.",
-        "residual_conditions": [
-          "The built-in conservative envelope remains a policy fallback rather than measured model capability.",
-          "A rectangular validated profile is only as trustworthy as the benchmark evidence supplied by its external capability authority."
         ]
       },
       "End-to-end validation": {
@@ -109,7 +96,7 @@
         "historical": true,
         "verdict": "reopened",
         "finding": "Validated capability subject provenance was recorded but not enforced against the current reviewer/runtime subject.",
-        "action": "Corrected subject binding and reopened ordered revalidation from Adversarial before permitting End-to-end completion."
+        "action": "Corrected subject binding, added deterministic execution-gate enforcement, incremented review_revision, and reopened ordered revalidation from Adversarial."
       }
     }
   },
