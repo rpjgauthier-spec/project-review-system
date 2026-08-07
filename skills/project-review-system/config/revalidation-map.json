@@ -8,6 +8,7 @@
     "End-to-end validation"
   ],
   "execution_gate": {
+    "enabled": true,
     "legacy_exempt_change_ids": [
       "2026-08-07-dot-github-path-normalization",
       "2026-08-07-exhaustive-semantic-coverage",
