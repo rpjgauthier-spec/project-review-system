@@ -24,7 +24,19 @@
     "full-range-coverage",
     "semantic-coverage-boundary"
   ],
-  "reason": "This changes the evidence required for an exhaustive repository-wide coverage claim. The new manifest pins a Git commit and inventories every tracked tree entry; the coverage checker requires matching object identity, assigned semantic method, COMPLETE semantic status, and complete line/byte/object ranges. Search, sampling, snippets, exclusions, and inaccessible entries cannot satisfy an exhaustive claim. Structural Optimization is added because the change introduces a new manifest/ledger artifact pair and deterministic controls whose burden and separation require explicit review.",
-  "status": "in_progress",
-  "results": {}
+  "reason": "This changes the evidence required for an exhaustive repository-wide coverage claim. The new manifest pins a Git commit and inventories every tracked tree entry; the coverage checker requires matching object identity, assigned semantic method, COMPLETE semantic status, and complete line/byte/object ranges. Search, sampling, snippets, exclusions, and inaccessible entries cannot satisfy an exhaustive claim. Bounded same-agent review supported all five review stages and the declared evaluations. A live protected pull-request run passed changed-file coverage and all 37 regression tests before stopping at the intentionally unresolved queue gate. The deterministic coverage controls are explicitly limited to proving inventory identity and declared processing ranges; they do not claim to prove model comprehension or semantic correctness.",
+  "status": "complete",
+  "results": {
+    "Adversarial": "supported",
+    "Interdependency": "supported",
+    "Normalization": "supported",
+    "Structural Optimization": "supported",
+    "End-to-end validation": "supported",
+    "exhaustive-object-inventory": "passed",
+    "full-range-coverage": "passed",
+    "premature-completion": "passed",
+    "reopening-chain": "passed",
+    "semantic-coverage-boundary": "passed",
+    "structural-validator": "passed"
+  }
 }
