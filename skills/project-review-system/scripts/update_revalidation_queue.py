@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 from pathlib import Path
 from typing import Any
@@ -22,6 +23,19 @@ DEFAULT_OUTPUT = ROOT / "reviews" / "revalidation-queue.md"
 VALID_STATUSES = {"pending", "in_progress", "complete", "failed", "escalated"}
 PASS_RESULTS = {"passed", "supported", "complete"}
 BEHAVIOR_NEUTRAL_CLASS = "behavior-neutral"
+GATE_CHECKER_PATH = ROOT / "scripts" / "check_execution_gate.py"
+
+
+def _load_gate_checker():
+    spec = importlib.util.spec_from_file_location("execution_gate_checker_for_queue", GATE_CHECKER_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError("cannot load check_execution_gate.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+GATE_CHECKER = _load_gate_checker()
 
 
 def load_json(path: Path) -> Any:
@@ -35,6 +49,45 @@ def source_hash(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
+
+
+def execution_gate_required(record: dict[str, Any], mapping: dict[str, Any], behavioral: bool) -> bool:
+    if not behavioral:
+        return False
+    exempt = set(mapping.get("execution_gate", {}).get("legacy_exempt_change_ids", []))
+    return record["id"] not in exempt
+
+
+def validate_stage_execution_gates(
+    record: dict[str, Any], mapping: dict[str, Any], stages: list[str], results: dict[str, Any], behavioral: bool
+) -> None:
+    if not execution_gate_required(record, mapping, behavioral):
+        return
+
+    revision = record.get("review_revision")
+    if isinstance(revision, bool) or not isinstance(revision, int) or revision < 0:
+        raise ValueError(
+            f"record {record['id']!r} requires nonnegative integer review_revision for adaptive execution gating"
+        )
+
+    gates = record.get("execution_gates", {})
+    if not isinstance(gates, dict):
+        raise ValueError(f"record {record['id']!r} execution_gates must be an object")
+
+    for stage in stages:
+        if results.get(stage) not in PASS_RESULTS:
+            continue
+        gate = gates.get(stage)
+        if not isinstance(gate, dict):
+            raise ValueError(
+                f"record {record['id']!r} has passing result for {stage!r} without a current execution gate"
+            )
+        try:
+            GATE_CHECKER.validate_execution_gate(gate, stage, revision)
+        except (ValueError, TypeError, RuntimeError) as exc:
+            raise ValueError(
+                f"record {record['id']!r} has invalid execution gate for {stage!r}: {exc}"
+            ) from exc
 
 
 def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[str, Any]:
@@ -79,6 +132,8 @@ def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[st
     if not isinstance(results, dict):
         raise ValueError(f"record {record['id']!r} results must be an object")
 
+    validate_stage_execution_gates(record, mapping, stages, results, behavioral)
+
     required_result_keys = [*stages, *sorted(evaluations)]
     incomplete_results = [
         key for key in required_result_keys if results.get(key) not in PASS_RESULTS
@@ -111,6 +166,7 @@ def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[st
         "derived_evaluations": sorted(evaluations),
         "derived_earliest_stage": earliest,
         "derived_incomplete_results": incomplete_results,
+        "derived_execution_gate_required": execution_gate_required(record, mapping, behavioral),
     }
 
 
@@ -145,6 +201,7 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
                 "",
                 f"- **Status:** `{record['status']}`",
                 f"- **Behavioral:** `{str(record['derived_behavioral']).lower()}` (derived from change classes)",
+                f"- **Execution gate required:** `{str(record['derived_execution_gate_required']).lower()}`",
                 f"- **Change classes:** {', '.join(f'`{c}`' for c in record['change_classes'])}",
                 f"- **Earliest affected stage:** {record['derived_earliest_stage']}",
                 "- **Required stages:** " + (", ".join(record["derived_stages"]) or "None"),
@@ -157,7 +214,8 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
         results = record.get("results", {})
         for stage in record["derived_stages"]:
             mark = "x" if results.get(stage) in PASS_RESULTS else " "
-            lines.append(f"- [{mark}] Revalidate **{stage}** and record the result.")
+            gate_note = " with a valid Adaptive Execution gate" if record["derived_execution_gate_required"] else ""
+            lines.append(f"- [{mark}] Revalidate **{stage}**{gate_note} and record the result.")
         for evaluation in record["derived_evaluations"]:
             mark = "x" if results.get(evaluation) in PASS_RESULTS else " "
             lines.append(f"- [{mark}] Run evaluation `{evaluation}` and record the result.")
@@ -173,7 +231,7 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
             "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'",
             "```",
             "",
-            "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.",
+            "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has an absent/stale/invalid gate, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.",
         ]
     )
     return "\n".join(lines) + "\n"
@@ -197,7 +255,7 @@ def main() -> int:
         mapping = load_json(args.map)
         records = collect_records(args.changes)
         generated = render(mapping, records)
-    except (OSError, json.JSONDecodeError, ValueError, KeyError, TypeError) as exc:
+    except (OSError, json.JSONDecodeError, ValueError, KeyError, TypeError, RuntimeError) as exc:
         print(f"ERROR: {exc}")
         return 2
 
