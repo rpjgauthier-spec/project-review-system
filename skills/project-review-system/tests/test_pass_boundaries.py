@@ -89,7 +89,7 @@ def base_record():
         "unit-a",
         "message-a",
         None,
-        "Interdependency:stage-main",
+        "Interdependency",
         "Adversarial finding",
     )
     i_completion = completion(
