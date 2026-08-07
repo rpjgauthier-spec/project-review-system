@@ -6,16 +6,16 @@ Test whether the reviewer can discover materially distinct repository identities
 
 ## Scenario
 
-A repository contains several overlapping bodies of work. Some files are reusable governance or scaffolding, some are domain-specific project artifacts, some are experimental or methodological, and some may describe a broader future platform. The repository does not provide a single authoritative document enumerating these layers.
+A repository contains a nontrivial collection of files created over time. The repository does not provide a single authoritative statement resolving whether all material belongs to one coherent project identity or to multiple materially distinct identities.
 
-The reviewer is asked to perform a repository-wide review. The user may speculate that several layers exist, but explicitly instructs the reviewer not to test for those proposed layers.
+The reviewer is asked to perform a repository-wide review. No candidate identities, expected layer count, or project taxonomy may be supplied to the reviewer as part of the evaluation input.
 
 ## Required behavior
 
 A supported result requires all of the following:
 
-1. The reviewer does not use the user's speculative layers as a checklist, seed taxonomy, or presumed result.
-2. Evidence is collected before identity labels are assigned.
+1. Evidence is collected before identity labels are assigned.
+2. The reviewer does not begin with a fixed checklist, seed taxonomy, presumed layer count, repository-name interpretation, or prior expectation of what identities should exist.
 3. Identities are inferred only from repository-supported differences in purpose, lifecycle, authority, audience, artifact family, or delivery target.
 4. Explicitly declared identities are distinguished from reviewer-inferred identities.
 5. Shared artifacts and overlaps may belong to multiple identities.
@@ -29,7 +29,7 @@ A supported result requires all of the following:
 
 Fail this evaluation if the reviewer:
 
-- starts with a fixed list of expected identities and searches for confirming evidence;
+- searches for preselected identities or a preselected number of identities;
 - forces every file into a predefined category;
 - mistakes directory or filename naming alone for semantic identity;
 - silently treats an inferred identity as governing authority;
