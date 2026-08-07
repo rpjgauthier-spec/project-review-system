@@ -16,6 +16,8 @@ Consider only surfaces present in scope:
 - concurrent edits, stale blobs, partial failures, and interrupted workflows
 - reviewer conflict of interest, confirmation bias, and unsupported confidence
 - incomplete access, sampling, hidden systems, and omitted dependencies
+- intermediate workflow states, resumptions, retries, subdivisions, and reopenings
+- durable evidence identities, historical state, and post-credit mutation
 
 ## Questions
 
@@ -39,6 +41,10 @@ Apply only relevant questions:
 16. Can concurrent changes, stale file state, or a partially failed write leave the repository internally inconsistent?
 17. Can review reports leak secrets, personal data, exploit details, or restricted evidence?
 18. Could a correction be technically reversible in version control but operationally irreversible because it triggered publication, deletion, payment, outreach, or another external action?
+19. Can every workflow, subdivision, retry, reopening, rollback, or state transition the system claims to support actually be represented and completed under its own evidence and state model?
+20. After evidence, an approval, or a completion receives durable credit, can its contents or identity be changed while retaining the same logical occurrence or authority?
+21. Are required controls enforced at intermediate and partially completed states, or only when the enclosing workflow reaches a terminal or passing state?
+22. Can historical or pre-existing state outside the current edit range be omitted in a way that permits reuse, replay, or contradiction that would be rejected if the full relevant history were considered?
 
 ## Finding classes
 
@@ -63,6 +69,10 @@ Apply only relevant questions:
 - concurrency or partial-write hazard
 - irreversible external side effect
 - domain-expertise substitution
+- workflow-representability contradiction
+- post-credit evidence mutation
+- intermediate-state validation gap
+- historical-boundary omission
 
 ## Correction order
 
@@ -92,5 +102,18 @@ For each material correction, test:
 - incomplete-access or partial-coverage case
 - concurrent-change or partial-write case when modifications are possible
 - withdrawal, cancellation, rollback, or failure case when relevant
+- intermediate or partial-completion state when the workflow can pause, subdivide, retry, or resume
+- post-credit mutation or replay when evidence or authority persists across durable states
+- representability of every newly claimed workflow/state path, including its failure and resumption path
+- historical or base-state interaction when current behavior depends on evidence that may predate the active edit range
 
-A stage is `Complete` when material adversarial defects in the accessible scope are corrected, coverage and independence limits are disclosed, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a material unsafe defect remains.
+## Procedure coverage after a finding
+
+After every material Adversarial finding, classify the finding before retrying the stage:
+
+1. **Already covered:** the current Adversarial procedure already requires a relevant attack or validation. Correct the implementation or design and rerun against the corrected state.
+2. **New reusable attack class:** the finding exposes a generally reusable failure mode that the current procedure does not adequately require. Update this Adversarial procedure before retrying, include that authority change in the active change-impact scope, and rebind subsequent review evidence to the resulting artifact state.
+
+Do not treat a newly discovered reusable attack class as a local implementation fix only. Conversely, do not expand this procedure merely because a specific implementation happened to fail when the existing questions already cover the failure mode.
+
+A stage is `Complete` when material adversarial defects in the accessible scope are corrected, coverage and independence limits are disclosed, every material finding has received the procedure-coverage classification above, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a material unsafe defect remains.
