@@ -21,7 +21,7 @@ Execution mode changes only context separation. All required stages and evaluati
 Before the Identity Pass or first semantic stage:
 
 1. Build a workload record using `templates/review-workload.json`.
-2. Use deterministic or directly observable values where available: artifact count, content bytes, required stages, required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
+2. Use deterministic or directly observable values where available: artifact count, content bytes, remaining required stages, remaining required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
 3. Select a reviewer capability profile. If no externally validated profile is available, use `config/default-execution-capability.json`.
 4. Run `scripts/select_execution_policy.py`.
 5. Record the selected mode and decision evidence in the active review record or bounded working notes.
@@ -33,7 +33,7 @@ Do not infer capability from model name, context-window size, provider marketing
 
 Keep the adaptive execution inputs and decision ownership explicit:
 
-- **Workload producer:** the active review controller/reviewer derives the current workload from the authorized scope and evidence available at that checkpoint. In repository revalidation, `required_stage_count` and `required_evaluation_count` come from the generated revalidation queue; artifact and content-size measures come from the current in-scope inventory, manifest, diff, or equivalent deterministic source when available.
+- **Workload producer:** the active review controller/reviewer derives the current workload from the authorized scope and evidence available at that checkpoint. In repository revalidation, `remaining_stage_count` and `remaining_evaluation_count` come from unresolved work in the generated revalidation queue; artifact and content-size measures come from the current in-scope inventory, manifest, diff, or equivalent deterministic source when available. A valid completion reduces remaining counts; reopening or newly required work increases them again.
 - **Capability-profile producer:** a benchmark/evaluation process or other explicitly trusted capability authority outside the semantic review currently being governed. The current review may consume a pre-existing validated profile but may not raise its own capability limits and immediately use that increase to reduce separation.
 - **Selector:** `scripts/select_execution_policy.py` deterministically consumes the workload and capability profile and produces the execution decision plus envelope-failure evidence.
 - **Decision consumer:** the review scheduler/reviewer applies the selected mode to the Identity Pass and stage execution while preserving the original stage/evaluation obligations.
@@ -47,9 +47,11 @@ Do not duplicate mutable workload facts across several authorities. Keep one cur
 
 A capability profile defines the largest workload envelope demonstrated for `FUSED` and `SEPARATED` execution. Anything outside the separated envelope selects `ISOLATED`.
 
-A non-default profile must be marked `VALIDATED`, identify the reviewer/runtime `subject_id` to which the evidence applies, name the benchmark suite, and identify benchmark evidence. The deterministic selector validates these declared fields and the envelope schema; it does not prove that the benchmark itself was honest or sufficient.
+A non-default profile must be marked `VALIDATED`, identify the reviewer/runtime `subject_id` to which the evidence applies, name the benchmark suite, identify benchmark evidence, and declare the supported envelope model. The deterministic selector validates these declared fields and the envelope schema; it does not prove that the benchmark itself was honest or sufficient.
 
-The built-in `DEFAULT_CONSERVATIVE` status is reserved for `default-conservative-v1`. Other profiles cannot use that status to bypass validation requirements.
+Version 1 supports `envelope_model: rectangular-v1`. Under this model, every workload satisfying every declared limit is treated as inside the envelope. Therefore a benchmark producer that publishes a `VALIDATED` rectangular envelope is asserting support for the **combined envelope**, not merely that each dimension was tested separately in isolation. If the evidence supports only selected workload combinations rather than the full rectangle, do not encode those independent maxima as a rectangular validated profile.
+
+The built-in `DEFAULT_CONSERVATIVE` status is reserved for `default-conservative-v1`. Its thresholds are conservative policy fallback values, not a measured reviewer-capability claim.
 
 As reviewer capability improves, a newly validated profile may raise the fused or separated envelope. The same workload can then automatically select a lighter execution mode without changing review governance.
 
@@ -63,8 +65,8 @@ Current dimensions are:
 
 - `artifact_count`
 - `content_bytes`
-- `required_stage_count`
-- `required_evaluation_count`
+- `remaining_stage_count`
+- `remaining_evaluation_count`
 - `dependency_count`
 - `protected_control_count`
 - `unresolved_uncertainty_count`
@@ -74,6 +76,8 @@ Current dimensions are:
 - `exhaustive_claim`
 
 `content_bytes` is the reproducible byte size of the in-scope content represented by the workload decision. Use the same counting boundary in the workload and the benchmark that produced a capability envelope. Do not replace it with an undefined semantic-unit estimate. When content is added to or removed from scope, update the byte count at the next checkpoint.
+
+`remaining_stage_count` and `remaining_evaluation_count` describe work still required at the checkpoint, not the original total. They decrease only after valid completion and increase again if work is reopened or newly required. This allows the controller to relax later work automatically when the remaining workload genuinely shrinks.
 
 These dimensions are policy inputs, not scientific measures of reasoning difficulty. Capability envelopes should be revised only from evaluation evidence, not tuned merely to obtain a preferred execution mode. The selector validates declared structure but cannot prove that workload counts or benchmark claims are truthful; that remains an evidence and authority boundary.
 
@@ -86,7 +90,7 @@ Re-run the selector after:
 - Interdependency review;
 - Normalization review;
 - Structural Optimization review;
-- any material scope expansion, unexpected dependency discovery, protected-control discovery, or new unresolved uncertainty.
+- any material scope expansion, unexpected dependency discovery, protected-control discovery, new unresolved uncertainty, reopening, or newly required evaluation.
 
 Update the workload record with facts discovered so far before each rerun.
 
@@ -96,7 +100,7 @@ If the new workload exceeds the current mode's validated envelope, increase sepa
 
 ### Relaxation
 
-If the workload falls inside a lighter validated envelope, relaxation applies only to remaining work. Never retroactively treat already-completed combined work as separately reviewed.
+If the remaining workload falls inside a lighter validated envelope, relaxation applies only to remaining work. Never retroactively treat already-completed combined work as separately reviewed.
 
 To reduce mode oscillation, a single checkpoint may relax by at most one level:
 
@@ -140,8 +144,9 @@ Adaptive execution is correctly applied when:
 - the decision used a declared workload and capability profile;
 - input producers and decision consumers were identifiable;
 - the current review did not self-authorize a stronger capability envelope;
+- a validated rectangular profile had evidence intended to support its combined envelope rather than only isolated dimension maxima;
 - mode changes did not remove required stages or evaluations;
-- material discoveries triggered workload updates and re-evaluation;
+- material discoveries, valid completion, reopening, and newly required work updated the remaining workload and triggered re-evaluation;
 - relaxation never retroactively upgraded prior assurance;
 - independent-review requirements remained separate from context-capacity decisions; and
 - the final review record identifies which execution mode was used for each semantic stage or fused group.
