@@ -11,6 +11,7 @@
     "skills/project-review-system/evals/identity-discovery.md",
     "skills/project-review-system/evals/repository-identity-discovery.md",
     "skills/project-review-system/evals/abstraction-boundary.md",
+    "skills/project-review-system/tests/test_identity_abstraction.py",
     "skills/project-review-system/changes/2026-08-07-identity-abstraction-boundary.json",
     "skills/project-review-system/reviews/revalidation-queue.md"
   ],
@@ -26,7 +27,7 @@
     "identity-discovery",
     "semantic-coverage-boundary"
   ],
-  "reason": "Version 0.1.10 correctly made identity discovery evidence-led and non-authoritative, but the semantic capability was unnecessarily framed around Git repositories. That coupling was an implementation-context assumption rather than a functional requirement. This correction separates medium-independent identity semantics from repository-specific evidence and enforcement, renames the semantic module/evaluation accordingly, and strengthens Structural Optimization so future reviews challenge unnecessary platform, storage, domain, artifact-type, or vendor coupling while preserving environment-specific mechanisms whose correctness actually depends on that environment.",
+  "reason": "Version 0.1.10 correctly made identity discovery evidence-led and non-authoritative, but the semantic capability was unnecessarily framed around Git repositories. That coupling was an implementation-context assumption rather than a functional requirement. This correction separates medium-independent identity semantics from repository-specific evidence and enforcement, renames the semantic module/evaluation accordingly, adds deterministic path/boundary regression coverage, and strengthens Structural Optimization so future reviews challenge unnecessary platform, storage, domain, artifact-type, or vendor coupling while preserving environment-specific mechanisms whose correctness actually depends on that environment.",
   "status": "in_progress",
   "results": {}
 }
