@@ -103,7 +103,7 @@ The workflow reports `validate-revalidation-controls` for every pull request and
 
 ## Assurance limits
 
-Version `0.1.9` adds deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls. This feature is undergoing bounded same-agent revalidation before cross-project pilot use.
+Version `0.1.9` adds deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls. Bounded same-agent revalidation covered all five review stages, the exhaustive-object-inventory, full-range-coverage, premature-completion, reopening-chain, semantic-coverage-boundary, and structural-validator evaluations, and a live protected pull-request run in which changed-file coverage and all 37 regression tests passed before the intentionally unresolved queue gate.
 
 Version `0.1.8` completed staged same-agent revalidation and live GitHub Actions runtime validation in its source repository. The standalone public bootstrap subsequently passed 28 regression tests, changed-file coverage, and a clear revalidation-queue check, while also exposing and correcting a `.github` path-normalization portability defect.
 
