@@ -4,17 +4,14 @@
   "activity": "Identity Pass or exact review stage name",
   "target_state_id": "environment-provided stable identity for the exact governed artifact state",
   "review_revision": 0,
-  "artifact_count": 0,
-  "content_bytes": 0,
-  "remaining_stage_count": 0,
-  "remaining_evaluation_count": 0,
-  "dependency_count": 0,
-  "protected_control_count": 0,
-  "unresolved_uncertainty_count": 0,
-  "material_findings_count": 0,
-  "unexpected_dependency_count": 0,
-  "self_referential": false,
-  "exhaustive_claim": false,
-  "checkpoint": "initial-preflight",
-  "notes": "Use observable values where available. reviewer_subject_id identifies the reviewer/runtime actually being governed. activity identifies the semantic activity this decision gates. target_state_id binds the decision to the exact governed artifact state; repository enforcement may derive it automatically from file content. review_revision remains an explicit lifecycle marker, but target-state binding independently invalidates stale gates after artifact changes. content_bytes is the reproducible byte size of in-scope content used for this decision. remaining_stage_count and remaining_evaluation_count decrease only after work is validly completed and not reopened. Update before Identity Pass, before the first or reopened semantic stage, and at later checkpoints."
+  "workload_class": "stable workload class used only for externally validated FUSED permission",
+  "stage_assessment": {
+    "single_pass_suitable": true,
+    "reasons": [
+      "Concise evidence-backed semantic explanation for whether one bounded pass is suitable."
+    ],
+    "subpasses": []
+  },
+  "fused_authorization": null,
+  "notes": "SEPARATED is the default. If single_pass_suitable is false, declare at least two bounded subpasses; each subpass records pass_id, scope, isolation_required, and reasons. Set isolation_required when that bounded unit still needs a fresh context. FUSED is permitted only by an exact pre-existing VALIDATED capability permission matching reviewer subject, activity group, and workload_class."
 }
