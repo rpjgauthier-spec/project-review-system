@@ -7,7 +7,7 @@
   "benchmark_evidence": "Built-in conservative fallback; not a claim of measured model capability.",
   "fused_limits": {
     "artifact_count": 5,
-    "semantic_units": 1000,
+    "content_bytes": 50000,
     "required_stage_count": 1,
     "required_evaluation_count": 3,
     "dependency_count": 3,
@@ -20,7 +20,7 @@
   },
   "separated_limits": {
     "artifact_count": 25,
-    "semantic_units": 10000,
+    "content_bytes": 1000000,
     "required_stage_count": 5,
     "required_evaluation_count": 15,
     "dependency_count": 20,
