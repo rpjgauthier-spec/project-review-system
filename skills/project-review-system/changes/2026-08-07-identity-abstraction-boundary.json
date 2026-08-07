@@ -1,0 +1,32 @@
+{
+  "id": "2026-08-07-identity-abstraction-boundary",
+  "summary": "Generalize semantic identity discovery beyond Git repositories and add a reusable abstraction-boundary check for accidental environment coupling.",
+  "changed_files": [
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/CHANGELOG.md",
+    "skills/project-review-system/references/identity-pass.md",
+    "skills/project-review-system/references/repository-identity-pass.md",
+    "skills/project-review-system/references/structural-optimization-review.md",
+    "skills/project-review-system/evals/identity-discovery.md",
+    "skills/project-review-system/evals/repository-identity-discovery.md",
+    "skills/project-review-system/evals/abstraction-boundary.md",
+    "skills/project-review-system/changes/2026-08-07-identity-abstraction-boundary.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "simplification-or-structure",
+    "module-path-or-stage-name"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "abstraction-boundary",
+    "identity-discovery",
+    "semantic-coverage-boundary"
+  ],
+  "reason": "Version 0.1.10 correctly made identity discovery evidence-led and non-authoritative, but the semantic capability was unnecessarily framed around Git repositories. That coupling was an implementation-context assumption rather than a functional requirement. This correction separates medium-independent identity semantics from repository-specific evidence and enforcement, renames the semantic module/evaluation accordingly, and strengthens Structural Optimization so future reviews challenge unnecessary platform, storage, domain, artifact-type, or vendor coupling while preserving environment-specific mechanisms whose correctness actually depends on that environment.",
+  "status": "in_progress",
+  "results": {}
+}
