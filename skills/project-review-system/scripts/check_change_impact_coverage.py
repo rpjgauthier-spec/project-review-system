@@ -54,7 +54,9 @@ def is_watched(path: str) -> bool:
 
 
 def normalize_declared(path: str) -> str:
-    clean = path.strip().lstrip("./")
+    clean = path.strip()
+    while clean.startswith("./"):
+        clean = clean[2:]
     if clean.startswith(SKILL_PREFIX) or clean.startswith(".github/"):
         return clean
     return SKILL_PREFIX + clean
