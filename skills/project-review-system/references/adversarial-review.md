@@ -116,4 +116,22 @@ After every material Adversarial finding, classify the finding before retrying t
 
 Do not treat a newly discovered reusable attack class as a local implementation fix only. Conversely, do not expand this procedure merely because a specific implementation happened to fail when the existing questions already cover the failure mode.
 
-A stage is `Complete` when material adversarial defects in the accessible scope are corrected, coverage and independence limits are disclosed, every material finding has received the procedure-coverage classification above, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a material unsafe defect remains.
+## Convergence and stopping
+
+Adversarial review must converge on the bounded stage claim rather than continue indefinitely searching for progressively smaller improvements.
+
+Before a retry after repeated corrections, declare the **core invariants** whose failure would invalidate the current stage conclusion. A finding is **blocking** and may force another correction/retry only when it does at least one of the following:
+
+- permits false semantic, stage, pass, authorization, or completion credit;
+- bypasses a required protected control, separation rule, reopening rule, state-binding rule, stop condition, or other core invariant declared for the bounded review;
+- materially overstates the assurance that the reviewed system can support;
+- invalidates a conclusion required by a mapped evaluation or a downstream required stage; or
+- exposes a genuinely new reusable Adversarial attack class that changes this procedure's required coverage.
+
+A finding is **non-blocking** when it is a minor documentation improvement, redundant hardening opportunity, low-impact edge case, stylistic inconsistency, optional diagnostic improvement, or other issue that does not threaten the declared core invariants or bounded stage conclusion. Record or hand off non-blocking findings with an appropriate disposition such as `Defer`; do not change governed artifacts during the current gated pass solely to perfect a non-blocking item, and do not restart Adversarial because of it.
+
+After **three consecutive restart-causing Adversarial attempts** following the most recent material architecture/control-model change, the next retry enters **convergence mode**. In convergence mode every new finding must be explicitly classified `blocking` or `non-blocking` against the predeclared core invariants before any correction is made. Only blocking findings may invalidate the pass. Discovering another implementation variant of an already-covered attack class does not by itself justify expanding this procedure or restarting the stage.
+
+Convergence mode is not permission to ignore defects. A blocking defect still prevents completion regardless of retry count. The retry budget changes the decision threshold for whether an observation is stage-invalidating; it does not weaken protected controls or permit known false credit.
+
+A stage is `Complete` when no blocking adversarial defect remains within the accessible bounded scope, declared core invariants hold, coverage and independence limits are disclosed, every material finding has received the procedure-coverage and blocking/non-blocking classification required above, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a blocking unsafe defect remains.
