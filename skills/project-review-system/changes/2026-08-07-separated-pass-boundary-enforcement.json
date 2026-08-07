@@ -7,6 +7,7 @@
     "skills/project-review-system/config/revalidation-map.json",
     "skills/project-review-system/evals/pass-boundary-enforcement.md",
     "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/references/adversarial-review.md",
     "skills/project-review-system/scripts/check_execution_identity_history.py",
     "skills/project-review-system/scripts/check_pass_boundaries.py",
     "skills/project-review-system/scripts/update_revalidation_queue.py",
@@ -27,12 +28,26 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, and current artifact-state binding for partial subdivided completion. Revision-8 Adversarial found and corrected four successive defects: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; an inability to represent subdivided execution honestly because subpasses were only recognized after the enclosing stage result became passing; and failure to validate a partial subpass completion against the current governed artifact state before that handoff could be consumed. The current model recognizes each completed plan pass before stage credit, permits only an ordered plan prefix, requires one durable state per completed pass with a pre-existing gate, withholds stage credit until the full plan is complete, freezes completed pass evidence historically, and requires every recorded completed pass to remain bound to the current artifact state. The gate used for the latest Adversarial attempt became stale when this correction changed governed files and has been discarded. Adversarial remains uncredited pending a fresh retry. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, and current artifact-state binding for partial subdivided completion. Revision-8 Adversarial found and corrected four successive defects: omission of the PR base snapshot from historical identity checks; mutation of execution identity after durable completion; an inability to represent subdivided execution honestly because subpasses were only recognized after the enclosing stage result became passing; and failure to validate a partial subpass completion against the current governed artifact state before that handoff could be consumed. Procedure-coverage assessment determined that these findings exposed reusable attack classes that were not explicit enough in the Adversarial authority. references/adversarial-review.md now explicitly requires workflow representability, post-credit immutability, intermediate-state validation, historical/base-state interaction, and a procedure-coverage classification after every material Adversarial finding. Because this authority change is governed behavior, Adversarial remains uncredited and the next semantic action is a fresh revision-8 Adversarial retry against the resulting artifact state. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
   "status": "in_progress",
   "review_revision": 8,
   "execution_gates": {},
   "execution_completions": {},
   "results": {},
+  "next_step_plan": {
+    "consumer": "next reviewer or assistant message continuing PR #6",
+    "retention_reason": "Preserve the exact continuation plan outside chat context so a context-window reset cannot cause the review sequence or reopening state to be lost.",
+    "current_state": "Revision 8 is in progress. Adversarial is uncredited. No current execution gate, completion, or semantic result may be reused from earlier attempts.",
+    "procedure_coverage": "The four revision-8 Adversarial findings were assessed for reusable procedure coverage. adversarial-review.md was expanded to require representability, post-credit immutability, intermediate-state validity, historical/base-state interaction, and explicit procedure-coverage classification after each material finding.",
+    "next_actions": [
+      "Read the current SKILL.md, adversarial-review.md, adaptive-execution.md, shared-control-model.md, this change record, and the current PR #6 implementation before beginning the next semantic pass.",
+      "Create a fresh revision-8 Adversarial execution gate bound to the current governed artifact state and commit that gate before semantic credit.",
+      "Perform only the revision-8 Adversarial semantic pass in that assistant message, including the newly added reusable attack classes.",
+      "For every material finding, classify it as already covered by the current Adversarial procedure or as a new reusable attack class. If it is new, update the procedure, invalidate the gate, and stop without credit.",
+      "If no material defect remains, record only the Adversarial completion/result with a new unique execution occurrence identity and a bounded handoff to Interdependency. Do not perform Interdependency in the same assistant message.",
+      "After Adversarial eventually passes, continue one semantic pass per assistant message in canonical order: Interdependency, Normalization, Structural Optimization, End-to-end validation, then mapped evaluations and final queue/CI clearance."
+    ]
+  },
   "supersedes_assurance": [
     {
       "change_id": "2026-08-07-adaptive-review-execution",
