@@ -1,7 +1,9 @@
 {
   "schema_version": 1,
   "profile_id": "replace-with-stable-profile-id",
+  "subject_id": "stable reviewer/runtime identifier the benchmark applies to",
   "validation_status": "VALIDATED",
+  "benchmark_suite": "stable benchmark suite identifier and version",
   "benchmark_evidence": "Path, run ID, or other stable reference to evaluation evidence.",
   "fused_limits": {
     "artifact_count": 0,
