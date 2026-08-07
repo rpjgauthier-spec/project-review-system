@@ -1,6 +1,6 @@
 {
   "id": "2026-08-07-adaptive-review-execution",
-  "summary": "Add adaptive preflight and checkpoint selection of FUSED, SEPARATED, or ISOLATED semantic review execution from workload and validated reviewer capability, with enforced execution gates for governed stage results.",
+  "summary": "Add adaptive preflight and checkpoint selection of FUSED, SEPARATED, or ISOLATED semantic review execution from workload and validated reviewer capability, with enforced execution gates for governed stage results and automatic artifact-state invalidation.",
   "changed_files": [
     "skills/project-review-system/CHANGELOG.md",
     "skills/project-review-system/README.md",
@@ -34,103 +34,10 @@
     "capability-relaxation",
     "execution-gate-enforcement"
   ],
-  "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds adaptive execution before semantic work and at later checkpoints, plus deterministic enforcement so a governed passing stage result cannot be accepted without a current execution gate for that exact stage and review revision. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
+  "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds adaptive execution before semantic work and at later checkpoints, plus deterministic enforcement so a governed passing stage result cannot be accepted without a current execution gate for that exact stage, reviewer/runtime, review generation, and governed artifact state. The semantic controller uses a medium-independent target_state_id; repository enforcement derives and verifies that target state from current governed file contents. Any governed artifact change after gate creation automatically stales the gate even if review_revision was not manually incremented. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
   "status": "in_progress",
-  "review_revision": 3,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-current-reviewer-runtime",
-        "activity": "Adversarial",
-        "review_revision": 3,
-        "artifact_count": 18,
-        "content_bytes": 1000000,
-        "remaining_stage_count": 5,
-        "remaining_evaluation_count": 12,
-        "dependency_count": 20,
-        "protected_control_count": 3,
-        "unresolved_uncertainty_count": 5,
-        "material_findings_count": 5,
-        "unexpected_dependency_count": 5,
-        "self_referential": true,
-        "exhaustive_claim": false,
-        "checkpoint": "reopened-adversarial-revision-3"
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-conservative-v1",
-        "subject_id": "unmeasured-reviewer-conservative-fallback",
-        "validation_status": "DEFAULT_CONSERVATIVE",
-        "benchmark_suite": "none-default-conservative",
-        "benchmark_evidence": "Built-in conservative fallback; not a claim of measured model capability.",
-        "envelope_model": "rectangular-v1",
-        "fused_limits": {
-          "artifact_count": 5,
-          "content_bytes": 50000,
-          "remaining_stage_count": 1,
-          "remaining_evaluation_count": 3,
-          "dependency_count": 3,
-          "protected_control_count": 0,
-          "unresolved_uncertainty_count": 0,
-          "material_findings_count": 0,
-          "unexpected_dependency_count": 0,
-          "allow_self_referential": false,
-          "allow_exhaustive_claim": false
-        },
-        "separated_limits": {
-          "artifact_count": 25,
-          "content_bytes": 1000000,
-          "remaining_stage_count": 5,
-          "remaining_evaluation_count": 15,
-          "dependency_count": 20,
-          "protected_control_count": 3,
-          "unresolved_uncertainty_count": 5,
-          "material_findings_count": 5,
-          "unexpected_dependency_count": 5,
-          "allow_self_referential": true,
-          "allow_exhaustive_claim": true
-        }
-      },
-      "current_mode": null,
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "selected_mode": "SEPARATED",
-        "base_mode": "SEPARATED",
-        "current_mode": null,
-        "transition_reason": "initial decision",
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-current-reviewer-runtime",
-        "capability_profile_id": "default-conservative-v1",
-        "capability_subject_id": "unmeasured-reviewer-conservative-fallback",
-        "capability_validation_status": "DEFAULT_CONSERVATIVE",
-        "capability_benchmark_suite": "none-default-conservative",
-        "capability_envelope_model": "rectangular-v1",
-        "checkpoint": "reopened-adversarial-revision-3",
-        "workload_sha256": "b19bc7705e3ba6085d24abf2507c2408ccbfcc2abaf3c15f30edbf0b0eed115a",
-        "capability_sha256": "7d0f135fa0c511a297e1627a51d484ee7f12d129ac08f7456a04d6b0adf6128d",
-        "envelope_evidence": {
-          "fused_failures": [
-            {"dimension": "artifact_count", "actual": 18, "limit": 5},
-            {"dimension": "content_bytes", "actual": 1000000, "limit": 50000},
-            {"dimension": "remaining_stage_count", "actual": 5, "limit": 1},
-            {"dimension": "remaining_evaluation_count", "actual": 12, "limit": 3},
-            {"dimension": "dependency_count", "actual": 20, "limit": 3},
-            {"dimension": "protected_control_count", "actual": 3, "limit": 0},
-            {"dimension": "unresolved_uncertainty_count", "actual": 5, "limit": 0},
-            {"dimension": "material_findings_count", "actual": 5, "limit": 0},
-            {"dimension": "unexpected_dependency_count", "actual": 5, "limit": 0},
-            {"dimension": "self_referential", "actual": true, "limit": false}
-          ],
-          "separated_failures": []
-        },
-        "assurance_boundary": "Execution mode changes context separation only; required stages, evaluations, stage order, evidence obligations, and independent-review requirements are unchanged. The selector validates declared workload/profile structure and validated-profile subject binding but cannot prove workload truthfulness, combined-envelope benchmark validity, or reviewer independence."
-      },
-      "gate_sha256": "9555830484616fb836d20dd506d54155f5773fca4559aab5df1c8f7229d62d63"
-    }
-  },
+  "review_revision": 4,
+  "execution_gates": {},
   "execution_evidence": {
     "initial_mode": "SEPARATED",
     "capability_profile": "default-conservative-v1",
@@ -138,60 +45,23 @@
     "reopening": {
       "trigger_stage": "End-to-end validation",
       "earliest_reopened_stage": "Adversarial",
-      "reason": "End-to-end validation found that validated capability subject provenance was recorded but not enforced. Follow-up inspection also found that Adaptive Execution was still normative: a reviewer could skip preflight and record a passing stage result unless another human noticed.",
+      "reason": "End-to-end validation found that validated capability subject provenance was recorded but not enforced. Follow-up inspection found two additional enforcement gaps: Adaptive Execution was still normative rather than a hard result gate, and manual review_revision alone could leave stale review evidence valid if a governed artifact changed without the reviewer incrementing the revision.",
       "corrections": [
         "Bind VALIDATED capability profiles to workload reviewer_subject_id.",
         "Add activity-bound verifiable execution gate records that embed workload, capability, selector decision, and hashes.",
-        "Add review_revision so reopening or a correction can invalidate older gates deterministically.",
         "Make the generated revalidation queue reject passing governed stage results without a current valid gate.",
+        "Add medium-independent target_state_id to Adaptive Execution workloads and decisions.",
+        "In repository revalidation, derive target_state_id automatically from exact governed changed-file contents while excluding the active change record and generated queue to avoid self-invalidation.",
+        "Reject a passing stage result when the recorded gate target_state_id differs from the current governed artifact state, so artifact changes invalidate stale review evidence without depending on manual review_revision changes.",
+        "Retain review_revision as a separate lifecycle/reopening marker and increment it for this behavioral correction.",
+        "Preserve leading-dot repository paths when hashing artifact state; remove only a literal ./ prefix.",
         "Grandfather only named pre-enforcement historical change records through the canonical mapping rather than allowing per-record self-exemption."
       ],
       "prior_results_status": "withdrawn_pending_ordered_revalidation",
-      "current_review_revision": 3
+      "current_review_revision": 4,
+      "next_required_action": "Create a fresh artifact-state-bound Adaptive Execution gate for reopened Adversarial, then rerun Adversarial."
     },
-    "stage_handoffs": {
-      "Adversarial": {
-        "mode": "SEPARATED",
-        "historical": true,
-        "findings": [
-          "Library callers could previously pass a non-default profile marked DEFAULT_CONSERVATIVE even though the CLI rejected that custom-profile status.",
-          "The original semantic_units workload dimension lacked a reproducible unit definition."
-        ],
-        "corrections": [
-          "Reserve DEFAULT_CONSERVATIVE for default-conservative-v1 in the core validator, not only in the CLI path.",
-          "Bind capability profiles to subject_id and benchmark_suite provenance fields.",
-          "Replace semantic_units with reproducible content_bytes and state that declared workload truthfulness and benchmark validity remain outside deterministic proof."
-        ]
-      },
-      "Interdependency": {
-        "mode": "SEPARATED",
-        "historical": true,
-        "findings": [
-          "The initial design did not make workload, capability-profile, selector, decision, and handoff ownership explicit enough.",
-          "Without a producer boundary, a semantic review could create a stronger capability profile and immediately consume it to reduce its own separation."
-        ]
-      },
-      "Normalization": {
-        "mode": "SEPARATED",
-        "historical": true,
-        "findings": []
-      },
-      "Structural Optimization": {
-        "mode": "SEPARATED",
-        "historical": true,
-        "findings": [
-          "Using original total stage/evaluation counts would prevent the controller from recognizing that valid completion reduces remaining review load.",
-          "Independent per-dimension maxima implicitly formed a rectangular capability envelope without stating that the benchmark must support combinations inside that envelope."
-        ]
-      },
-      "End-to-end validation": {
-        "mode": "SEPARATED",
-        "historical": true,
-        "verdict": "reopened",
-        "finding": "Validated capability subject provenance was recorded but not enforced against the current reviewer/runtime subject.",
-        "action": "Corrected subject binding, added deterministic execution-gate enforcement, incremented review_revision, and reopened ordered revalidation from Adversarial."
-      }
-    }
+    "historical_stage_handoffs_retained": true
   },
   "results": {}
 }
