@@ -70,7 +70,8 @@ def validate_handoff(handoff: Any, expected_consumer: str, where: str) -> str:
         values = handoff.get(key, [])
         if not isinstance(values, list) or not all(isinstance(v, str) and v.strip() for v in values):
             raise ValueError(f"{where}.handoff.{key} must be an array of nonempty strings")
-    digest = canonical_hash(handoff)
+    payload = {key: value for key, value in handoff.items() if key != "sha256"}
+    digest = canonical_hash(payload)
     if handoff.get("sha256") != digest:
         raise ValueError(f"{where}.handoff.sha256 is stale or invalid")
     return digest
