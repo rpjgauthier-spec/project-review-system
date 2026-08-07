@@ -5,31 +5,12 @@
   "validation_status": "VALIDATED",
   "benchmark_suite": "stable benchmark suite identifier and version",
   "benchmark_evidence": "Path, run ID, or other stable reference to evaluation evidence.",
-  "envelope_model": "rectangular-v1",
-  "fused_limits": {
-    "artifact_count": 0,
-    "content_bytes": 0,
-    "remaining_stage_count": 0,
-    "remaining_evaluation_count": 0,
-    "dependency_count": 0,
-    "protected_control_count": 0,
-    "unresolved_uncertainty_count": 0,
-    "material_findings_count": 0,
-    "unexpected_dependency_count": 0,
-    "allow_self_referential": false,
-    "allow_exhaustive_claim": false
-  },
-  "separated_limits": {
-    "artifact_count": 0,
-    "content_bytes": 0,
-    "remaining_stage_count": 0,
-    "remaining_evaluation_count": 0,
-    "dependency_count": 0,
-    "protected_control_count": 0,
-    "unresolved_uncertainty_count": 0,
-    "material_findings_count": 0,
-    "unexpected_dependency_count": 0,
-    "allow_self_referential": false,
-    "allow_exhaustive_claim": false
-  }
+  "fused_permissions": [
+    {
+      "permission_id": "stable-permission-id",
+      "activities": ["Adversarial", "Interdependency"],
+      "workload_class": "stable externally defined workload class",
+      "benchmark_evidence": "Evidence specifically supporting this fused activity group and workload class."
+    }
+  ]
 }
