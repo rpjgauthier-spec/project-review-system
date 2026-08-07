@@ -4,7 +4,7 @@
 
 Verify that an Adaptive Execution pass cannot be represented as merely another checklist item inside one undifferentiated semantic execution. Each completed execution-plan pass must have a distinct declared execution occurrence, must externalize a bounded handoff that the next pass explicitly consumes, and in repository execution must leave ordered durable evidence rather than being backfilled together after the fact.
 
-The evaluation covers ordinary one-pass stages, subdivided stages, ISOLATED subpasses, reopened/redo executions, partial/intermediate completion states, and evidence carried across pull-request or base-state boundaries.
+The evaluation covers ordinary one-pass stages, subdivided stages, ISOLATED subpasses, reopened/redo executions, partial/intermediate completion states, evidence carried across pull-request or base-state boundaries, and merge strategies that discard unsquashed pull-request history.
 
 ## Required behavior
 
@@ -27,8 +27,9 @@ The evaluation covers ordinary one-pass stages, subdivided stages, ISOLATED subp
 17. Each subdivided subpass must first complete in its own later durable state; the enclosing stage must not receive a passing result until every planned pass is complete.
 18. Any recorded completed pass, including a partial subdivided prefix before stage credit, must remain bound to a current gate for the current `review_revision` and current governed `target_state_id`.
 19. Historical uniqueness validation for a pull request includes relevant pre-existing/base-state evidence so reopening in a later pull request cannot reuse an earlier execution-unit or boundary identity.
-20. The historical exemption set is closed; the active change record cannot self-authorize an exemption from pass-boundary enforcement.
-21. In a chat host where one assistant message is the selected SEPARATED execution unit, perform only one semantic pass per assistant message and put its bounded findings/handoff in that message or a durable artifact read by the next pass before it begins.
+20. Every completed occurrence observed in PR history is retained in an append-only `execution_occurrence_history` ledger in the final change-record state, including superseded or cleared occurrences, so squash/rebase merge cannot erase the identities needed by later base-state validation.
+21. The historical exemption set is closed; the active change record cannot self-authorize an exemption from pass-boundary enforcement.
+22. In a chat host where one assistant message is the selected SEPARATED execution unit, perform only one semantic pass per assistant message and put its bounded findings/handoff in that message or a durable artifact read by the next pass before it begins.
 
 ## Failure conditions
 
@@ -49,6 +50,8 @@ Fail if:
 - a subdivided stage receives passing credit before its full plan is complete;
 - a partial/intermediate pass completion is accepted under a stale gate, stale review revision, or stale governed artifact state;
 - reopening in a later pull request can reuse an execution identity because base-state history was omitted;
+- a completed occurrence can disappear from the final durable ledger and become reusable after squash/rebase merge removes the original PR commits;
+- an existing durable ledger entry can be removed or mutated;
 - the active record can add itself to an enforcement exemption;
 - multiple semantic stages are executed in one undifferentiated assistant message while being recorded as separate passes; or
 - the repository claims that its deterministic checker proves a host message/context boundary when the host supplied no independently meaningful boundary ID.
@@ -68,6 +71,10 @@ Exercise at least:
 - acceptance of a redo or execution-plan change only after the review revision increments and new execution identities are used;
 - rejection of identity reuse from a pre-existing/base-state occurrence in a later pull request;
 - rejection of post-completion mutation of execution identity or handoff evidence;
+- preservation of a superseded/cleared completed occurrence in the final ledger;
+- rejection when the final state omits an occurrence seen earlier in PR history;
+- rejection when a future squash-like base containing only the ledger is followed by reuse of an old execution identity;
+- rejection of ledger removal or mutation once recorded;
 - rejection of a stale partial-subpass gate or completion target state;
 - rejection of a broken or tampered handoff chain;
 - ISOLATED boundary enforcement; and
@@ -75,4 +82,4 @@ Exercise at least:
 
 ## Assurance boundary
 
-The deterministic controls can prove consistency of the recorded execution identities, handoff chain, plan-prefix shape, current artifact binding, historical uniqueness/immutability, one-completion-per-logical-slot and one-gate-per-completed-stage/revision, and—inside Git repository execution—the durable chronology of gate-before-completion and one-first-completion-commit-per-pass. They cannot independently prove that a ChatGPT message boundary or fresh context actually occurred unless the execution host exposes a trustworthy boundary identifier. Where no such identifier exists, the boundary identity remains an attestation; Git chronology and immutable handoff evidence limit backfilling and replay but do not convert that attestation into host-level proof.
+The deterministic controls can prove consistency of the recorded execution identities, handoff chain, plan-prefix shape, current artifact binding, historical uniqueness/immutability, one-completion-per-logical-slot, one-gate-per-completed-stage/revision, and durable retention of completed occurrence identities across squash/rebase history loss. Inside Git repository execution they also prove the durable chronology of gate-before-completion and one-first-completion-commit-per-pass while the PR history is available. They cannot independently prove that a ChatGPT message boundary or fresh context actually occurred unless the execution host exposes a trustworthy boundary identifier. Where no such identifier exists, the boundary identity remains an attestation; Git chronology and immutable handoff evidence limit backfilling and replay but do not convert that attestation into host-level proof.
