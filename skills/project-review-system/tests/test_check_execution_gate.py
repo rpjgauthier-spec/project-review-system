@@ -100,6 +100,16 @@ class ExecutionGateTests(unittest.TestCase):
             present = checker.repository_artifact_state_sha256(["gone.txt"], root)
             self.assertNotEqual(absent, present)
 
+    def test_repository_path_normalization_preserves_leading_dot(self) -> None:
+        self.assertEqual(
+            checker.normalize_repository_path("./.github/workflows/check.yml"),
+            ".github/workflows/check.yml",
+        )
+        self.assertEqual(
+            checker.normalize_repository_path(".github/workflows/check.yml"),
+            ".github/workflows/check.yml",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
