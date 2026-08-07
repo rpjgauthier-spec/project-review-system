@@ -20,7 +20,10 @@ Exhaustive semantic-coverage release candidate.
 
 ### Revalidation status
 
-- bounded same-agent revalidation is in progress before the first unrelated-project pilot
+- bounded same-agent revalidation covered Adversarial, Interdependency, Normalization, Structural Optimization, and End-to-end validation
+- live protected pull-request execution passed changed-file coverage and all 37 regression tests before the intentionally unresolved queue gate
+- exhaustive-object-inventory, full-range-coverage, premature-completion, reopening-chain, semantic-coverage-boundary, and structural-validator evaluations were supported
+- independent and unrelated-project effectiveness validation remain outstanding
 
 ## 0.1.8 — 2026-08-06
 
