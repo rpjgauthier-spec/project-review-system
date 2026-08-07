@@ -30,7 +30,7 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, current artifact-state binding for partial subdivided completion, revision-bound redo semantics, and durable occurrence retention across squash/rebase history loss. Revision-8 Adversarial has now found and corrected eight blocking defects or assurance gaps. The eighth convergence-mode finding was that historical uniqueness depended on unsquashed PR commit history: after squash merge, superseded completed occurrences cleared from the live record could disappear from the future base and their identities could be reused. This directly threatened the historical/base-state core invariant, so it was classified blocking rather than deferred. The checker now requires every completed occurrence observed in PR history to survive in the final append-only execution_occurrence_history ledger, and future base snapshots seed identity/stage-gate immutability from that ledger. Regression coverage and the mapped evaluation include squash-like history loss. Before the next semantic retry, CI exposed a non-semantic regression in an existing queue test whose expected error text no longer matched the equivalent rejection message; that assertion was updated and added to changed-file coverage before creating the next gate. Adversarial remains uncredited pending a fresh convergence-mode retry. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, current artifact-state binding for partial subdivided completion, revision-bound redo semantics, and durable occurrence retention across squash/rebase history loss. Revision-8 Adversarial has now found and corrected eight blocking defects or assurance gaps. The eighth convergence-mode finding was that historical uniqueness depended on unsquashed PR commit history: after squash merge, superseded completed occurrences cleared from the live record could disappear from the future base and their identities could be reused. This directly threatened the historical/base-state core invariant, so it was classified blocking rather than deferred. The checker now requires every completed occurrence observed in PR history to survive in the final append-only execution_occurrence_history ledger, and future base snapshots seed identity/stage-gate immutability from that ledger. Regression coverage and the mapped evaluation include squash-like history loss. Before the next semantic retry, CI exposed a non-semantic regression in an existing queue test whose expected error text no longer matched the equivalent rejection message; that assertion was updated and added to changed-file coverage before creating the next gate. Adversarial remains uncredited pending a fresh convergence-mode retry. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID. The fresh convergence-mode Adversarial retry then found no remaining blocking defect against the six declared core invariants. Revision-8 Adversarial is therefore supported and hands off to Interdependency; later stages and mapped evaluations remain pending.",
   "status": "in_progress",
   "review_revision": 8,
   "execution_gates": {
@@ -92,8 +92,56 @@
       "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843"
     }
   },
-  "execution_completions": {},
-  "results": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843",
+      "target_state_id": "sha256:f0eca3b1fccebbc2fdf9ef1a08689545b1a7d80b90bb186f75a0745e1f7d4772",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr6-r8-adversarial-convergence-1"
+          },
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "No blocking Adversarial defect remains against the six declared convergence core invariants in the gated revision-8 state.",
+              "The durable occurrence ledger closes the squash/rebase history-loss path while preserving historical identity, stage-gate, and completed-evidence immutability across future base snapshots.",
+              "Current deterministic controls reject stale artifact/revision gates, invalid partial completion, backfilled separated/subdivided passes, broken handoff chaining, same-revision redo or stage-plan replacement after durable completion, and historical identity reuse.",
+              "Repository evidence still does not prove an actual host message/context or isolation boundary without an independently trustworthy host boundary identifier; that limitation remains explicit.",
+              "CI run 185 passed changed-file coverage, the 103-test regression suite, pass-boundary enforcement, and historical identity enforcement; only the intentionally unresolved revalidation queue remained failing because later stages/evaluations are not complete."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_identity_history.py",
+              "skills/project-review-system/scripts/check_pass_boundaries.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/references/adaptive-execution.md",
+              "skills/project-review-system/references/adversarial-review.md",
+              "skills/project-review-system/evals/pass-boundary-enforcement.md",
+              "skills/project-review-system/tests/test_execution_identity_reopening.py",
+              "GitHub Actions run 185"
+            ],
+            "unresolved_conditions": [
+              "Interdependency and the later required semantic stages and mapped evaluations remain unperformed for revision 8.",
+              "The chat host supplies no independently trustworthy message/context boundary identifier, so actual one-pass-per-message separation remains execution discipline rather than repository-provable host evidence."
+            ],
+            "sha256": "1b6bed9ea5673610f5db7da4ad41aa63be2540f697bdd7b9b13cc036e9b14f68"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {
+    "Adversarial": "supported"
+  },
   "execution_occurrence_history": [
     {
       "review_revision": 7,
@@ -106,6 +154,18 @@
         "id": "assistant-message-pr6-r7-adversarial-1"
       },
       "pass_evidence_sha256": "c724e5b1b583b5fd4d4dff05773a7e0d719af8c904f3b1a16266e79381bf888b"
+    },
+    {
+      "review_revision": 8,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843",
+      "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr6-r8-adversarial-convergence-1"
+      },
+      "pass_evidence_sha256": "1a4956716f698ff2392144e862a230d097e5817c373c040c21eca49e436e75f9"
     }
   ],
   "adversarial_convergence": {
@@ -126,14 +186,14 @@
   "next_step_plan": {
     "consumer": "next reviewer or assistant message continuing PR #6",
     "retention_reason": "Preserve the exact continuation plan and convergence threshold outside chat context so a context-window reset cannot restore the prior open-ended retry behavior.",
-    "current_state": "Revision 8 is in progress. Adversarial is uncredited. A fresh convergence-mode Adversarial gate is bound to the current governed artifact state after the pre-gate CI regression repair; the gate must pre-exist any completion credit.",
-    "procedure_coverage": "Eight revision-8 Adversarial findings have been assessed. The eighth finding is already covered by historical/base-state interaction and post-credit immutability, but it crossed the convergence blocking threshold because squash/rebase history loss violated a declared core invariant.",
+    "current_state": "Revision 8 Adversarial is supported under convergence mode. Its completion, unique occurrence identity, durable occurrence-ledger entry, and bounded handoff to Interdependency are recorded. Do not rerun Adversarial unless a later blocking finding invalidates it.",
+    "procedure_coverage": "Eight prior revision-8 Adversarial findings were procedure-assessed. The successful convergence retry found no new blocking defect and no new reusable attack class.",
     "next_actions": [
-      "Perform only revision-8 Adversarial against the exact state bound by the current gate under adversarial_convergence.mode=active.",
-      "Before correcting anything, classify every material observation blocking or non-blocking against adversarial_convergence.core_invariants and classify its procedure coverage.",
-      "Only a blocking finding may change governed artifacts, invalidate the gate, and force another retry. Record/defer non-blocking findings without restarting the stage.",
-      "If no blocking defect remains, record only the Adversarial completion/result with a new unique execution occurrence identity, append that occurrence to execution_occurrence_history, and produce a bounded handoff to Interdependency. Do not perform Interdependency in the same assistant message.",
-      "After Adversarial passes, continue one semantic pass per assistant message in canonical order: Interdependency, Normalization, Structural Optimization, End-to-end validation, then mapped evaluations and final queue/CI clearance."
+      "Read the current authorities, this change record, and the exact Adversarial handoff hash before beginning Interdependency.",
+      "Create a fresh revision-8 Interdependency execution gate bound to the current governed artifact state and commit it before semantic credit.",
+      "Perform only Interdependency in the next assistant message; consume Adversarial handoff sha256:1b6bed9ea5673610f5db7da4ad41aa63be2540f697bdd7b9b13cc036e9b14f68.",
+      "If Interdependency finds a blocking defect that invalidates Adversarial, reopen from the earliest affected stage and increment review_revision as required. Otherwise record only Interdependency completion/result and handoff to Normalization.",
+      "Continue one semantic pass per assistant message in canonical order: Normalization, Structural Optimization, End-to-end validation, then mapped evaluations and final queue/CI clearance."
     ]
   },
   "supersedes_assurance": [
