@@ -7,7 +7,7 @@
   "benchmark_evidence": "Path, run ID, or other stable reference to evaluation evidence.",
   "fused_limits": {
     "artifact_count": 0,
-    "semantic_units": 0,
+    "content_bytes": 0,
     "required_stage_count": 0,
     "required_evaluation_count": 0,
     "dependency_count": 0,
@@ -20,7 +20,7 @@
   },
   "separated_limits": {
     "artifact_count": 0,
-    "semantic_units": 0,
+    "content_bytes": 0,
     "required_stage_count": 0,
     "required_evaluation_count": 0,
     "dependency_count": 0,
