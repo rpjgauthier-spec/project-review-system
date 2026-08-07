@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "profile_id": "replace-with-stable-profile-id",
+  "validation_status": "VALIDATED",
+  "benchmark_evidence": "Path, run ID, or other stable reference to evaluation evidence.",
+  "fused_limits": {
+    "artifact_count": 0,
+    "semantic_units": 0,
+    "required_stage_count": 0,
+    "required_evaluation_count": 0,
+    "dependency_count": 0,
+    "protected_control_count": 0,
+    "unresolved_uncertainty_count": 0,
+    "material_findings_count": 0,
+    "unexpected_dependency_count": 0,
+    "allow_self_referential": false,
+    "allow_exhaustive_claim": false
+  },
+  "separated_limits": {
+    "artifact_count": 0,
+    "semantic_units": 0,
+    "required_stage_count": 0,
+    "required_evaluation_count": 0,
+    "dependency_count": 0,
+    "protected_control_count": 0,
+    "unresolved_uncertainty_count": 0,
+    "material_findings_count": 0,
+    "unexpected_dependency_count": 0,
+    "allow_self_referential": false,
+    "allow_exhaustive_claim": false
+  }
+}
