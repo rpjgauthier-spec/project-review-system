@@ -6,6 +6,8 @@ from __future__ import annotations
 import importlib.util
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 CHECKER_PATH = SKILL_ROOT / "scripts" / "check_execution_identity_history.py"
@@ -102,6 +104,48 @@ class ExecutionIdentityHistoryTests(unittest.TestCase):
         second["execution_completions"]["Adversarial"]["passes"][1]["execution_unit_id"] = "unit-r7-b"
         with self.assertRaisesRegex(ValueError, "reuses execution_unit_id"):
             checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", second)])
+
+    def test_pr_history_includes_existing_base_snapshot(self):
+        base_value = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-r7", "boundary-r7")
+        head_value = snapshot(8, "Adversarial", "stage-main", "gate-r8", "unit-r8", "boundary-r8")
+
+        def fake_snapshot(record_id, ref):
+            if ref == "base-sha":
+                return base_value
+            if ref == "commit-r8":
+                return head_value
+            return None
+
+        with patch.object(checker, "snapshot_at_ref", side_effect=fake_snapshot), patch.object(
+            checker.subprocess,
+            "run",
+            return_value=SimpleNamespace(stdout="commit-r8\n"),
+        ):
+            values = checker.load_pr_history("current", "base-sha", "head-sha")
+
+        self.assertEqual([item[0] for item in values], ["base-sha", "commit-r8"])
+        checker.validate_identity_history_snapshots("current", values)
+
+    def test_pr_history_base_snapshot_blocks_cross_pr_reuse(self):
+        base_value = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-shared", "boundary-r7")
+        head_value = snapshot(8, "Adversarial", "stage-main", "gate-r8", "unit-shared", "boundary-r8")
+
+        def fake_snapshot(record_id, ref):
+            if ref == "base-sha":
+                return base_value
+            if ref == "commit-r8":
+                return head_value
+            return None
+
+        with patch.object(checker, "snapshot_at_ref", side_effect=fake_snapshot), patch.object(
+            checker.subprocess,
+            "run",
+            return_value=SimpleNamespace(stdout="commit-r8\n"),
+        ):
+            values = checker.load_pr_history("current", "base-sha", "head-sha")
+
+        with self.assertRaisesRegex(ValueError, "reuses execution_unit_id"):
+            checker.validate_identity_history_snapshots("current", values)
 
 
 if __name__ == "__main__":
