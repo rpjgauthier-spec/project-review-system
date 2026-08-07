@@ -8,6 +8,11 @@ appears in durable change-record history, its execution_unit_id and boundary mus
 never have been used by an earlier occurrence, and the complete recorded pass
 evidence must remain unchanged in later snapshots.
 
+A logical pass slot is the tuple (review_revision, stage, pass_id). Once that slot
+has durable completion evidence, a different gate may not create a replacement
+occurrence in the same review revision. A redo after durable completion therefore
+requires a new review revision rather than merely a new gate and new identities.
+
 For a PR-scoped check, history begins with the base-state snapshot when the change
 record already exists there, followed by change-record commits in base..head.
 """
@@ -72,6 +77,7 @@ def completed_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...
 
 def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
     occurrence_evidence: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
+    logical_slots: dict[tuple[Any, ...], tuple[Any, ...]] = {}
     used_units: dict[str, tuple[Any, ...]] = {}
     used_boundaries: dict[tuple[str, str], tuple[Any, ...]] = {}
 
@@ -84,6 +90,14 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                         f"record {record_id!r} mutates completed pass evidence for {occurrence!r} at {commit_sha!r}"
                     )
                 continue
+
+            logical_slot = occurrence[:3]
+            previous_occurrence = logical_slots.get(logical_slot)
+            if previous_occurrence is not None and previous_occurrence != occurrence:
+                raise ValueError(
+                    f"record {record_id!r} replaces completed logical pass {logical_slot!r} with a different gate "
+                    f"at {commit_sha!r}; increment review_revision before redoing a durably completed pass"
+                )
 
             previous = used_units.get(unit_id)
             if previous is not None and previous != occurrence:
@@ -98,6 +112,7 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                     f"it was already used by {previous_boundary!r}"
                 )
             occurrence_evidence[occurrence] = (unit_id, boundary, evidence)
+            logical_slots[logical_slot] = occurrence
             used_units[unit_id] = occurrence
             used_boundaries[boundary] = occurrence
 
