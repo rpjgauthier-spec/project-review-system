@@ -1,0 +1,43 @@
+{
+  "id": "2026-08-07-repository-identity-pass",
+  "summary": "Add an evidence-led Repository Identity Pass before repository-wide and full-program review when overlapping purposes could materially affect interpretation.",
+  "changed_files": [
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/references/repository-identity-pass.md",
+    "skills/project-review-system/evals/repository-identity-discovery.md",
+    "skills/project-review-system/changes/2026-08-07-repository-identity-pass.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "simplification-or-structure"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [
+    "Normalization"
+  ],
+  "additional_evaluations": [
+    "repository-identity-discovery",
+    "module-loading",
+    "semantic-coverage-boundary"
+  ],
+  "reason": "This adds a pre-review interpretation control that can change how all five stages distinguish authorities, dependencies, equivalent concepts, structural boundaries, and cross-boundary traces. The pass is deliberately evidence-led: it forbids seeding expected identities from user speculation or a fixed taxonomy, distinguishes explicit from inferred identities, permits overlap and uncertainty, creates no new authority, and does not imply repository splitting. When the parent review is exhaustive, identity conclusions remain subject to the existing exhaustive semantic-coverage boundary. Bounded same-agent revalidation supported all five stages after the evaluation scenario was corrected to remove seeded example layers and the reference module explicitly distinguished semantic repository identity from Git object identity.",
+  "status": "complete",
+  "results": {
+    "Adversarial": "supported",
+    "Interdependency": "supported",
+    "Normalization": "supported",
+    "Structural Optimization": "supported",
+    "End-to-end validation": "supported",
+    "artifact-family": "passed",
+    "authority-conflict": "passed",
+    "duplicate-control": "passed",
+    "module-loading": "passed",
+    "protected-control-retention": "passed",
+    "reopening-chain": "passed",
+    "repository-identity-discovery": "passed",
+    "semantic-coverage-boundary": "passed",
+    "status-propagation": "passed"
+  }
+}
