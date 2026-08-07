@@ -1,6 +1,6 @@
 {
   "id": "2026-08-07-public-repository-bootstrap",
-  "summary": "Publish the validated Project Review System package in its standalone public repository without changing operational behavior.",
+  "summary": "Publish the validated Project Review System package in its standalone public repository without changing the imported package behavior.",
   "changed_files": [
     ".github/workflows/project-review-system-revalidation.yml",
     "skills/project-review-system/CHANGELOG.md",
@@ -36,7 +36,7 @@
   "claimed_earliest_stage": "None",
   "additional_stages": [],
   "additional_evaluations": [],
-  "reason": "This is a deployment and documentation-status import of the already validated 0.1.8 package into its standalone public repository. Operational rules, mappings, scripts, templates, tests, and workflow behavior are preserved; only repository-facing documentation reflects completed source validation and public distribution.",
+  "reason": "This record covers the standalone repository import itself: package layout, distribution, and repository-facing documentation. The imported 0.1.8 behavior was preserved at bootstrap. A portability defect discovered by the first public GitHub Actions run and its subsequent parser correction are tracked separately in 2026-08-07-dot-github-path-normalization.json.",
   "status": "complete",
   "results": {
     "confirm-behavior-neutral": "passed"
