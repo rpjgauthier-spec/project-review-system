@@ -97,8 +97,8 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         elif seen_unpassed:
             raise ValueError(f"record {record.get('id')!r} credits {stage!r} before an earlier required stage is complete")
 
-    flattened: list[tuple[str, str, str, dict[str, Any]]] = []
-    for stage in stages:
+    flattened: list[tuple[str, str, str, dict[str, Any], str]] = []
+    for stage_index, stage in enumerate(stages):
         if results.get(stage) not in PASS_RESULTS:
             continue
         gate = gates.get(stage)
@@ -109,20 +109,27 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         passes = completion.get("passes")
         if not isinstance(plan, list) or not isinstance(passes, list) or len(plan) != len(passes):
             raise ValueError(f"record {record.get('id')!r} has invalid pass plan/completion for {stage!r}")
-        for index, (planned, actual) in enumerate(zip(plan, passes)):
+        for pass_index, (planned, actual) in enumerate(zip(plan, passes)):
             if not isinstance(planned, dict) or not isinstance(actual, dict):
-                raise ValueError(f"record {record.get('id')!r} has malformed pass {stage}[{index}]")
-            pass_id = require_string(planned.get("pass_id"), f"{stage}.plan[{index}].pass_id")
-            mode = require_string(planned.get("context_mode"), f"{stage}.plan[{index}].context_mode")
+                raise ValueError(f"record {record.get('id')!r} has malformed pass {stage}[{pass_index}]")
+            pass_id = require_string(planned.get("pass_id"), f"{stage}.plan[{pass_index}].pass_id")
+            mode = require_string(planned.get("context_mode"), f"{stage}.plan[{pass_index}].context_mode")
             if actual.get("pass_id") != pass_id or actual.get("context_mode") != mode or actual.get("status") != "complete":
                 raise ValueError(f"record {record.get('id')!r} pass completion does not match plan for {stage}:{pass_id}")
-            flattened.append((stage, pass_id, mode, actual))
+            if pass_index + 1 < len(plan):
+                next_pass_id = require_string(plan[pass_index + 1].get("pass_id"), f"{stage}.plan[{pass_index + 1}].pass_id")
+                expected_consumer = f"{stage}:{next_pass_id}"
+            elif stage_index + 1 < len(stages):
+                expected_consumer = stages[stage_index + 1]
+            else:
+                expected_consumer = "review-completion"
+            flattened.append((stage, pass_id, mode, actual, expected_consumer))
 
     unit_ids: set[str] = set()
     boundary_ids: set[tuple[str, str]] = set()
     previous_handoff_sha: str | None = None
 
-    for index, (stage, pass_id, mode, actual) in enumerate(flattened):
+    for index, (stage, pass_id, mode, actual, expected_consumer) in enumerate(flattened):
         label = f"{stage}:{pass_id}"
         unit_id = require_string(actual.get("execution_unit_id"), f"{label}.execution_unit_id")
         if unit_id in unit_ids:
@@ -152,11 +159,6 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         elif inbound != previous_handoff_sha:
             raise ValueError(f"{label}.inbound_handoff_sha256 does not consume the previous pass handoff")
 
-        if index + 1 < len(flattened):
-            next_stage, next_pass_id, _, _ = flattened[index + 1]
-            expected_consumer = f"{next_stage}:{next_pass_id}"
-        else:
-            expected_consumer = "review-completion"
         previous_handoff_sha = validate_handoff(actual.get("handoff"), expected_consumer, label)
 
 
