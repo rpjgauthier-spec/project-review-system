@@ -25,8 +25,8 @@ def workload(**overrides):
         "schema_version": 1,
         "artifact_count": 1,
         "content_bytes": 1000,
-        "required_stage_count": 1,
-        "required_evaluation_count": 1,
+        "remaining_stage_count": 1,
+        "remaining_evaluation_count": 1,
         "dependency_count": 1,
         "protected_control_count": 0,
         "unresolved_uncertainty_count": 0,
@@ -44,8 +44,8 @@ def strong_capability():
     limits = {
         "artifact_count": 100,
         "content_bytes": 10000000,
-        "required_stage_count": 5,
-        "required_evaluation_count": 50,
+        "remaining_stage_count": 5,
+        "remaining_evaluation_count": 50,
         "dependency_count": 100,
         "protected_control_count": 20,
         "unresolved_uncertainty_count": 20,
@@ -61,6 +61,7 @@ def strong_capability():
         "validation_status": "VALIDATED",
         "benchmark_suite": "fixture-suite-v1",
         "benchmark_evidence": "fixture:validated-strong-test",
+        "envelope_model": "rectangular-v1",
         "fused_limits": dict(limits),
         "separated_limits": dict(limits),
     }
@@ -77,7 +78,7 @@ class ExecutionPolicyTests(unittest.TestCase):
 
     def test_five_stage_workload_is_separated_under_default_profile(self) -> None:
         decision = selector.select_policy(
-            workload(required_stage_count=5, required_evaluation_count=10, artifact_count=12),
+            workload(remaining_stage_count=5, remaining_evaluation_count=10, artifact_count=12),
             self.default_capability,
         )
         self.assertEqual(decision["selected_mode"], "SEPARATED")
@@ -91,8 +92,8 @@ class ExecutionPolicyTests(unittest.TestCase):
 
     def test_stronger_validated_profile_can_reduce_separation(self) -> None:
         subject = workload(
-            required_stage_count=5,
-            required_evaluation_count=10,
+            remaining_stage_count=5,
+            remaining_evaluation_count=10,
             artifact_count=12,
             self_referential=True,
         )
@@ -100,6 +101,29 @@ class ExecutionPolicyTests(unittest.TestCase):
         strong_decision = selector.select_policy(subject, strong_capability())
         self.assertEqual(default_decision["selected_mode"], "SEPARATED")
         self.assertEqual(strong_decision["selected_mode"], "FUSED")
+
+    def test_completed_work_can_enable_later_relaxation(self) -> None:
+        initial = selector.select_policy(
+            workload(remaining_stage_count=5, remaining_evaluation_count=10, artifact_count=12),
+            self.default_capability,
+        )
+        self.assertEqual(initial["selected_mode"], "SEPARATED")
+        later = selector.select_policy(
+            workload(remaining_stage_count=1, remaining_evaluation_count=2, artifact_count=3),
+            self.default_capability,
+            current_mode="SEPARATED",
+        )
+        self.assertEqual(later["selected_mode"], "FUSED")
+
+    def test_reopening_can_tighten_again(self) -> None:
+        initial = selector.select_policy(workload(), self.default_capability)
+        self.assertEqual(initial["selected_mode"], "FUSED")
+        reopened = selector.select_policy(
+            workload(remaining_stage_count=5, remaining_evaluation_count=10, artifact_count=12),
+            self.default_capability,
+            current_mode="FUSED",
+        )
+        self.assertEqual(reopened["selected_mode"], "SEPARATED")
 
     def test_new_complexity_tightens_immediately(self) -> None:
         initial = selector.select_policy(workload(), self.default_capability)
@@ -140,6 +164,12 @@ class ExecutionPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selector.validate_capability(invalid, custom_profile=True)
 
+    def test_unsupported_envelope_model_is_rejected(self) -> None:
+        invalid = strong_capability()
+        invalid["envelope_model"] = "independent-maxima-v0"
+        with self.assertRaises(ValueError):
+            selector.validate_capability(invalid, custom_profile=True)
+
     def test_envelopes_must_be_monotonic(self) -> None:
         invalid = strong_capability()
         invalid["fused_limits"]["artifact_count"] = 101
@@ -168,11 +198,13 @@ class ExecutionPolicyTests(unittest.TestCase):
         self.assertIn("required stages", boundary)
         self.assertIn("independent-review requirements", boundary)
         self.assertIn("cannot prove workload truthfulness", boundary)
+        self.assertIn("combined-envelope benchmark validity", boundary)
 
-    def test_decision_records_capability_subject(self) -> None:
+    def test_decision_records_capability_subject_and_envelope(self) -> None:
         decision = selector.select_policy(workload(), strong_capability())
         self.assertEqual(decision["capability_subject_id"], "test-reviewer-runtime-v2")
         self.assertEqual(decision["capability_benchmark_suite"], "fixture-suite-v1")
+        self.assertEqual(decision["capability_envelope_model"], "rectangular-v1")
 
 
 if __name__ == "__main__":
