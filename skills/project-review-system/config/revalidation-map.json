@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "stages": [
+    "Adversarial",
+    "Interdependency",
+    "Normalization",
+    "Structural Optimization",
+    "End-to-end validation"
+  ],
+  "change_classes": {
+    "authorization": {
+      "stages": ["Adversarial", "End-to-end validation"],
+      "evaluations": ["preliminary-approval", "unauthorized-action", "instruction-injection"]
+    },
+    "safety-control": {
+      "stages": ["Adversarial", "End-to-end validation"],
+      "evaluations": ["failure-path", "withdrawal", "unauthorized-action"]
+    },
+    "authority-or-propagation": {
+      "stages": ["Interdependency", "Adversarial", "End-to-end validation"],
+      "evaluations": ["status-propagation", "authority-conflict", "reopening-chain"]
+    },
+    "status-or-schema": {
+      "stages": ["Normalization", "Interdependency", "End-to-end validation"],
+      "evaluations": ["status-semantics", "tracker-report-agreement", "structural-validator"]
+    },
+    "simplification-or-structure": {
+      "stages": ["Structural Optimization", "Interdependency", "Adversarial", "End-to-end validation"],
+      "evaluations": ["duplicate-control", "artifact-family", "protected-control-retention"]
+    },
+    "tracker-or-completion": {
+      "stages": ["Interdependency", "Normalization", "Adversarial", "End-to-end validation"],
+      "evaluations": ["reopening-chain", "premature-completion", "structural-validator"]
+    },
+    "module-path-or-stage-name": {
+      "stages": ["Normalization", "Interdependency", "End-to-end validation"],
+      "evaluations": ["reference-integrity", "historical-compatibility", "module-loading"]
+    },
+    "behavior-neutral": {
+      "stages": [],
+      "evaluations": ["confirm-behavior-neutral"]
+    }
+  }
+}
