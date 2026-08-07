@@ -9,9 +9,9 @@ requires a new review revision.
 
 PR commit history alone is not durable across squash/rebase merges. Therefore a
 change record may carry `execution_occurrence_history`, an append-only ledger of
-completed occurrences. The final PR state must preserve every completed occurrence
-observed in the PR history. Future PR base snapshots then retain those identities
-even when the original unsquashed commits are no longer reachable from main.
+completed occurrences. PR enforcement requires the final state to preserve every
+completed occurrence observed in the PR history. Future PR base snapshots then
+retain those identities even when the original unsquashed commits are gone.
 """
 
 from __future__ import annotations
@@ -112,7 +112,12 @@ def ledger_occurrences(snapshot: dict[str, Any]) -> dict[tuple[Any, ...], tuple[
     return entries
 
 
-def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
+def validate_identity_history_snapshots(
+    record_id: str,
+    snapshots: list[tuple[str, dict[str, Any]]],
+    *,
+    require_final_ledger: bool = False,
+) -> None:
     occurrence_evidence: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
     logical_slots: dict[tuple[Any, ...], tuple[Any, ...]] = {}
     stage_gates: dict[tuple[Any, ...], str] = {}
@@ -149,14 +154,12 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
         previous = used_units.get(unit_id)
         if previous is not None and previous != occurrence:
             raise ValueError(
-                f"record {record_id!r} reuses execution_unit_id {unit_id!r} for {occurrence!r}; "
-                f"it was already used by {previous!r}"
+                f"record {record_id!r} reuses execution_unit_id {unit_id!r} for {occurrence!r}; it was already used by {previous!r}"
             )
         previous_boundary = used_boundaries.get(boundary)
         if previous_boundary is not None and previous_boundary != occurrence:
             raise ValueError(
-                f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; "
-                f"it was already used by {previous_boundary!r}"
+                f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; it was already used by {previous_boundary!r}"
             )
         occurrence_evidence[occurrence] = (unit_id, boundary, evidence_sha)
         logical_slots[logical_slot] = occurrence
@@ -169,8 +172,7 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
         for occurrence, prior_value in previous_ledger.items():
             if ledger.get(occurrence) != prior_value:
                 raise ValueError(
-                    f"record {record_id!r} removes or mutates durable execution occurrence ledger entry "
-                    f"{occurrence!r} at {commit_sha!r}"
+                    f"record {record_id!r} removes or mutates durable execution occurrence ledger entry {occurrence!r} at {commit_sha!r}"
                 )
         for occurrence, (unit_id, boundary, evidence_sha) in ledger.items():
             register(occurrence, unit_id, boundary, evidence_sha, commit_sha)
@@ -185,12 +187,13 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
         previous_ledger = ledger
         final_ledger = ledger
 
-    for occurrence, value in observed_completed.items():
-        if final_ledger.get(occurrence) != value:
-            raise ValueError(
-                f"record {record_id!r} does not preserve completed occurrence {occurrence!r} in final "
-                "execution_occurrence_history; PR commit history may disappear after squash/rebase merge"
-            )
+    if require_final_ledger:
+        for occurrence, value in observed_completed.items():
+            if final_ledger.get(occurrence) != value:
+                raise ValueError(
+                    f"record {record_id!r} does not preserve completed occurrence {occurrence!r} in final "
+                    "execution_occurrence_history; PR commit history may disappear after squash/rebase merge"
+                )
 
 
 def changed_record_ids(base: str, head: str) -> set[str]:
@@ -236,11 +239,9 @@ def snapshot_at_ref(record_id: str, ref: str) -> dict[str, Any] | None:
 def load_pr_history(record_id: str, base: str, head: str) -> list[tuple[str, dict[str, Any]]]:
     path = f"{CHANGES_PREFIX}{record_id}.json"
     snapshots: list[tuple[str, dict[str, Any]]] = []
-
     base_snapshot = snapshot_at_ref(record_id, base)
     if base_snapshot is not None:
         snapshots.append((base, base_snapshot))
-
     try:
         log = subprocess.run(
             ["git", "log", "--format=%H", "--reverse", f"{base}..{head}", "--", path],
@@ -251,7 +252,6 @@ def load_pr_history(record_id: str, base: str, head: str) -> list[tuple[str, dic
         ).stdout
     except (OSError, subprocess.CalledProcessError) as exc:
         raise ValueError(f"cannot read PR history for {record_id!r}") from exc
-
     for sha in [line.strip() for line in log.splitlines() if line.strip()]:
         snapshot = snapshot_at_ref(record_id, sha)
         if snapshot is not None:
@@ -273,7 +273,7 @@ def main() -> int:
             if record_id in exemptions:
                 continue
             snapshots = load_pr_history(record_id, args.base, args.head)
-            validate_identity_history_snapshots(record_id, snapshots)
+            validate_identity_history_snapshots(record_id, snapshots, require_final_ledger=True)
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
