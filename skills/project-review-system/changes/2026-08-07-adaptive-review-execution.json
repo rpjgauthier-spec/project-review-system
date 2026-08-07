@@ -33,9 +33,17 @@
     "initial_mode": "SEPARATED",
     "capability_profile": "default-conservative-v1",
     "basis": "The change is self-referential and requires all five review stages and eleven evaluations; those facts alone exceed the default FUSED envelope while remaining inside the default SEPARATED envelope.",
+    "reopening": {
+      "trigger_stage": "End-to-end validation",
+      "earliest_reopened_stage": "Adversarial",
+      "reason": "End-to-end validation found that a VALIDATED capability profile carried subject_id provenance but the selector did not compare that subject to the reviewer/runtime actually being governed. Capability evidence for one reviewer/runtime could therefore be consumed by another and reduce separation without validated transfer evidence.",
+      "correction": "Add workload reviewer_subject_id, require exact subject match for VALIDATED profiles, keep the built-in conservative fallback generic, reject mismatched validated profiles explicitly, and add regression/evaluation coverage for subject transfer.",
+      "prior_results_status": "withdrawn_pending_ordered_revalidation"
+    },
     "stage_handoffs": {
       "Adversarial": {
         "mode": "SEPARATED",
+        "historical": true,
         "findings": [
           "Library callers could previously pass a non-default profile marked DEFAULT_CONSERVATIVE even though the CLI rejected that custom-profile status.",
           "The original semantic_units workload dimension lacked a reproducible unit definition."
@@ -52,6 +60,7 @@
       },
       "Interdependency": {
         "mode": "SEPARATED",
+        "historical": true,
         "findings": [
           "The initial design did not make workload, capability-profile, selector, decision, and handoff ownership explicit enough.",
           "Without a producer boundary, a semantic review could create a stronger capability profile and immediately consume it to reduce its own separation."
@@ -67,6 +76,7 @@
       },
       "Normalization": {
         "mode": "SEPARATED",
+        "historical": true,
         "findings": [],
         "corrections": [],
         "retained_distinctions": [
@@ -77,6 +87,7 @@
       },
       "Structural Optimization": {
         "mode": "SEPARATED",
+        "historical": true,
         "checkpoint_mode": "SEPARATED",
         "findings": [
           "Using original total stage/evaluation counts would prevent the controller from recognizing that valid completion reduces remaining review load, weakening automatic relaxation.",
@@ -87,18 +98,20 @@
           "Declare envelope_model rectangular-v1 and require validated capability evidence to support the combined rectangular envelope rather than isolated dimension maxima.",
           "Add regression cases for completion-driven relaxation, reopening-driven tightening, unsupported envelope models, and explicit combined-envelope assurance limits."
         ],
-        "checkpoint_basis": "After Structural Optimization, one semantic stage remains but eleven mapped evaluations and twelve changed artifacts remain; these exceed the default FUSED envelope, so execution stays SEPARATED for End-to-end validation.",
+        "checkpoint_basis": "After Structural Optimization, one semantic stage remained but eleven mapped evaluations and twelve changed artifacts remained; these exceeded the default FUSED envelope, so execution stayed SEPARATED for End-to-end validation.",
         "residual_conditions": [
           "The built-in conservative envelope remains a policy fallback rather than measured model capability.",
           "A rectangular validated profile is only as trustworthy as the benchmark evidence supplied by its external capability authority."
         ]
+      },
+      "End-to-end validation": {
+        "mode": "SEPARATED",
+        "historical": true,
+        "verdict": "reopened",
+        "finding": "Validated capability subject provenance was recorded but not enforced against the current reviewer/runtime subject.",
+        "action": "Corrected subject binding and reopened ordered revalidation from Adversarial before permitting End-to-end completion."
       }
     }
   },
-  "results": {
-    "Adversarial": "supported",
-    "Interdependency": "supported",
-    "Normalization": "supported",
-    "Structural Optimization": "supported"
-  }
+  "results": {}
 }
