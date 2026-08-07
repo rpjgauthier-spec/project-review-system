@@ -59,6 +59,11 @@ class CoverageRegressionTests(unittest.TestCase):
         subprocess.run(["git", "add", "."], cwd=self.root, check=True)
         subprocess.run(["git", "commit", "-qm", "change"], cwd=self.root, check=True)
 
+    def test_dotgithub_path_keeps_leading_dot(self) -> None:
+        workflow = ".github/workflows/project-review-system-revalidation.yml"
+        self.assertEqual(MODULE.normalize_declared(workflow), workflow)
+        self.assertEqual(MODULE.normalize_declared("./" + workflow), workflow)
+
     def test_rejects_unrecorded_change(self) -> None:
         self.commit_change(declared=None)
         errors = self.validate()
