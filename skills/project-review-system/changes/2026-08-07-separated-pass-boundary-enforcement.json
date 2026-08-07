@@ -33,7 +33,65 @@
   "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered handoff chaining, closed historical exemptions, gate-before-pass chronology, historical identity uniqueness, immutable completed-pass evidence, current artifact-state binding for partial subdivided completion, revision-bound redo semantics, and durable occurrence retention across squash/rebase history loss. Revision-8 Adversarial has now found and corrected eight blocking defects or assurance gaps. The eighth convergence-mode finding was that historical uniqueness depended on unsquashed PR commit history: after squash merge, superseded completed occurrences cleared from the live record could disappear from the future base and their identities could be reused. This directly threatened the historical/base-state core invariant, so it was classified blocking rather than deferred. The checker now requires every completed occurrence observed in PR history to survive in the final append-only execution_occurrence_history ledger, and future base snapshots seed identity/stage-gate immutability from that ledger. Regression coverage and the mapped evaluation include squash-like history loss. Before the next semantic retry, CI exposed a non-semantic regression in an existing queue test whose expected error text no longer matched the equivalent rejection message; that assertion was updated and added to changed-file coverage before creating the next gate. Adversarial remains uncredited pending a fresh convergence-mode retry. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
   "status": "in_progress",
   "review_revision": 8,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:f0eca3b1fccebbc2fdf9ef1a08689545b1a7d80b90bb186f75a0745e1f7d4772",
+        "review_revision": 8,
+        "workload_class": "bounded-revalidation-pass-boundary-convergence-v2",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 8 remains in convergence mode with six predeclared core invariants after durable occurrence-ledger enforcement was added.",
+            "The bounded pass tests the current separated-pass enforcement and ledger persistence against those invariants; one SEPARATED pass is suitable."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "Fresh SEPARATED one-pass Adversarial retry under convergence mode; only blocking findings may invalidate the pass."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:f0eca3b1fccebbc2fdf9ef1a08689545b1a7d80b90bb186f75a0745e1f7d4772",
+        "review_revision": 8,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "workload_class": "bounded-revalidation-pass-boundary-convergence-v2",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "2445eadddd01a98bf54f352d2f2643f072f85f16911dc476ad212c444d79af4e",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843"
+    }
+  },
   "execution_completions": {},
   "results": {},
   "execution_occurrence_history": [
@@ -68,12 +126,10 @@
   "next_step_plan": {
     "consumer": "next reviewer or assistant message continuing PR #6",
     "retention_reason": "Preserve the exact continuation plan and convergence threshold outside chat context so a context-window reset cannot restore the prior open-ended retry behavior.",
-    "current_state": "Revision 8 is in progress. Adversarial is uncredited. The durable occurrence-ledger correction is present, and the pre-gate CI assertion mismatch has been repaired. The next Adversarial retry operates in convergence mode and requires a fresh artifact-bound gate.",
+    "current_state": "Revision 8 is in progress. Adversarial is uncredited. A fresh convergence-mode Adversarial gate is bound to the current governed artifact state after the pre-gate CI regression repair; the gate must pre-exist any completion credit.",
     "procedure_coverage": "Eight revision-8 Adversarial findings have been assessed. The eighth finding is already covered by historical/base-state interaction and post-credit immutability, but it crossed the convergence blocking threshold because squash/rebase history loss violated a declared core invariant.",
     "next_actions": [
-      "Read the current authorities, this change record including execution_occurrence_history, the historical-identity/pass-boundary implementation, regression coverage, and mapped evaluation.",
-      "Create a fresh revision-8 Adversarial execution gate bound to the then-current governed artifact state and commit it before semantic credit.",
-      "Perform only revision-8 Adversarial under adversarial_convergence.mode=active.",
+      "Perform only revision-8 Adversarial against the exact state bound by the current gate under adversarial_convergence.mode=active.",
       "Before correcting anything, classify every material observation blocking or non-blocking against adversarial_convergence.core_invariants and classify its procedure coverage.",
       "Only a blocking finding may change governed artifacts, invalidate the gate, and force another retry. Record/defer non-blocking findings without restarting the stage.",
       "If no blocking defect remains, record only the Adversarial completion/result with a new unique execution occurrence identity, append that occurrence to execution_occurrence_history, and produce a bounded handoff to Interdependency. Do not perform Interdependency in the same assistant message.",
