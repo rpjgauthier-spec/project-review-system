@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Validate declared execution-unit boundaries and bounded handoff chains.
+"""Validate declared execution-unit boundaries, handoffs, and Git chronology.
 
-This checker can prove structural consistency of recorded pass boundaries and
-handoff consumption. It cannot prove that a host message/context boundary
-actually occurred unless the host supplies an independently meaningful boundary
-identifier.
+The structural checks prove consistency of recorded pass boundaries and handoff
+consumption. Repository history additionally proves that the current gate existed
+before a pass received credit and that separate passes first received credit in
+distinct change-record commits. Neither mechanism proves a host message/context
+boundary unless the host supplies an independently meaningful boundary identity.
 """
 
 from __future__ import annotations
@@ -12,10 +13,12 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = ROOT.parents[1]
 DEFAULT_MAP = ROOT / "config" / "revalidation-map.json"
 DEFAULT_CHANGES = ROOT / "changes"
 PASS_RESULTS = {"passed", "supported", "complete"}
@@ -77,27 +80,13 @@ def validate_handoff(handoff: Any, expected_consumer: str, where: str) -> str:
     return digest
 
 
-def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
-    if not boundary_required(record, mapping):
-        return
-
+def flattened_current_passes(record: dict[str, Any], mapping: dict[str, Any]) -> list[tuple[str, str, str, dict[str, Any], str, str]]:
+    """Return credited current passes with expected consumer and current gate hash."""
     stages = required_stages(record, mapping)
     results = record.get("results", {})
     gates = record.get("execution_gates", {})
     completions = record.get("execution_completions", {})
-    if not isinstance(results, dict) or not isinstance(gates, dict) or not isinstance(completions, dict):
-        raise ValueError(f"record {record.get('id')!r} has invalid results/gate/completion containers")
-
-    # A later stage cannot be credited before an earlier required stage.
-    seen_unpassed = False
-    for stage in stages:
-        passed = results.get(stage) in PASS_RESULTS
-        if not passed:
-            seen_unpassed = True
-        elif seen_unpassed:
-            raise ValueError(f"record {record.get('id')!r} credits {stage!r} before an earlier required stage is complete")
-
-    flattened: list[tuple[str, str, str, dict[str, Any], str]] = []
+    flattened: list[tuple[str, str, str, dict[str, Any], str, str]] = []
     for stage_index, stage in enumerate(stages):
         if results.get(stage) not in PASS_RESULTS:
             continue
@@ -105,6 +94,7 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         completion = completions.get(stage)
         if not isinstance(gate, dict) or not isinstance(completion, dict):
             raise ValueError(f"record {record.get('id')!r} lacks gate/completion evidence for passing stage {stage!r}")
+        gate_sha = require_string(gate.get("gate_sha256"), f"{stage}.gate_sha256")
         plan = gate.get("decision", {}).get("execution_plan")
         passes = completion.get("passes")
         if not isinstance(plan, list) or not isinstance(passes, list) or len(plan) != len(passes):
@@ -123,13 +113,35 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
                 expected_consumer = stages[stage_index + 1]
             else:
                 expected_consumer = "review-completion"
-            flattened.append((stage, pass_id, mode, actual, expected_consumer))
+            flattened.append((stage, pass_id, mode, actual, expected_consumer, gate_sha))
+    return flattened
 
+
+def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
+    if not boundary_required(record, mapping):
+        return
+
+    stages = required_stages(record, mapping)
+    results = record.get("results", {})
+    gates = record.get("execution_gates", {})
+    completions = record.get("execution_completions", {})
+    if not isinstance(results, dict) or not isinstance(gates, dict) or not isinstance(completions, dict):
+        raise ValueError(f"record {record.get('id')!r} has invalid results/gate/completion containers")
+
+    seen_unpassed = False
+    for stage in stages:
+        passed = results.get(stage) in PASS_RESULTS
+        if not passed:
+            seen_unpassed = True
+        elif seen_unpassed:
+            raise ValueError(f"record {record.get('id')!r} credits {stage!r} before an earlier required stage is complete")
+
+    flattened = flattened_current_passes(record, mapping)
     unit_ids: set[str] = set()
     boundary_ids: set[tuple[str, str]] = set()
     previous_handoff_sha: str | None = None
 
-    for index, (stage, pass_id, mode, actual, expected_consumer) in enumerate(flattened):
+    for index, (stage, pass_id, mode, actual, expected_consumer, _) in enumerate(flattened):
         label = f"{stage}:{pass_id}"
         unit_id = require_string(actual.get("execution_unit_id"), f"{label}.execution_unit_id")
         if unit_id in unit_ids:
@@ -162,10 +174,104 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         previous_handoff_sha = validate_handoff(actual.get("handoff"), expected_consumer, label)
 
 
+def _pass_credit(snapshot: dict[str, Any], stage: str, pass_id: str, gate_sha: str) -> dict[str, Any] | None:
+    gate = snapshot.get("execution_gates", {}).get(stage)
+    completion = snapshot.get("execution_completions", {}).get(stage)
+    if not isinstance(gate, dict) or gate.get("gate_sha256") != gate_sha or not isinstance(completion, dict):
+        return None
+    if completion.get("gate_sha256") != gate_sha:
+        return None
+    for item in completion.get("passes", []):
+        if isinstance(item, dict) and item.get("pass_id") == pass_id and item.get("status") == "complete":
+            return item
+    return None
+
+
+def _gate_present(snapshot: dict[str, Any], stage: str, gate_sha: str) -> bool:
+    gate = snapshot.get("execution_gates", {}).get(stage)
+    return isinstance(gate, dict) and gate.get("gate_sha256") == gate_sha
+
+
+def validate_history_snapshots(record: dict[str, Any], mapping: dict[str, Any], snapshots: list[tuple[str, dict[str, Any]]]) -> None:
+    """Require current pass credit to appear sequentially in distinct durable states."""
+    if not boundary_required(record, mapping):
+        return
+    flattened = flattened_current_passes(record, mapping)
+    if not flattened:
+        return
+    if not snapshots:
+        raise ValueError(f"record {record.get('id')!r} has credited passes but no Git history")
+
+    first_credit_indexes: list[int] = []
+    previous_handoff_sha: str | None = None
+    for stage, pass_id, _, actual, _, gate_sha in flattened:
+        label = f"{stage}:{pass_id}"
+        credit_index = None
+        for index, (_, snapshot) in enumerate(snapshots):
+            if _pass_credit(snapshot, stage, pass_id, gate_sha) is not None:
+                credit_index = index
+                break
+        if credit_index is None:
+            raise ValueError(f"{label} has no durable Git-history state containing its current gate/pass credit")
+        if credit_index == 0:
+            raise ValueError(f"{label} received credit before a prior durable state could contain its gate")
+        if first_credit_indexes and credit_index <= first_credit_indexes[-1]:
+            raise ValueError(f"{label} first received credit in the same or an earlier change-record commit as the previous pass")
+
+        prior_snapshot = snapshots[credit_index - 1][1]
+        if not _gate_present(prior_snapshot, stage, gate_sha):
+            raise ValueError(f"{label} current execution gate did not exist in the prior durable change-record state")
+        if previous_handoff_sha is not None:
+            previous_stage, previous_pass_id, _, _, _, previous_gate_sha = flattened[len(first_credit_indexes) - 1]
+            prior_previous = _pass_credit(prior_snapshot, previous_stage, previous_pass_id, previous_gate_sha)
+            if prior_previous is None:
+                raise ValueError(f"{label} received credit before the previous pass was durably complete")
+            prior_handoff = prior_previous.get("handoff")
+            if not isinstance(prior_handoff, dict) or prior_handoff.get("sha256") != previous_handoff_sha:
+                raise ValueError(f"{label} received credit before the exact previous handoff was durably recorded")
+            if actual.get("inbound_handoff_sha256") != previous_handoff_sha:
+                raise ValueError(f"{label} does not consume the durably prior handoff")
+
+        first_credit_indexes.append(credit_index)
+        handoff = actual.get("handoff")
+        previous_handoff_sha = handoff.get("sha256") if isinstance(handoff, dict) else None
+
+
+def load_git_history(record_id: str) -> list[tuple[str, dict[str, Any]]]:
+    path = f"skills/project-review-system/changes/{record_id}.json"
+    try:
+        log = subprocess.run(
+            ["git", "log", "--format=%H", "--reverse", "--", path],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise ValueError(f"cannot read Git history for {record_id!r}") from exc
+    snapshots: list[tuple[str, dict[str, Any]]] = []
+    for sha in [line.strip() for line in log.splitlines() if line.strip()]:
+        try:
+            raw = subprocess.run(
+                ["git", "show", f"{sha}:{path}"],
+                cwd=REPOSITORY_ROOT,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout
+            value = json.loads(raw)
+        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
+            continue
+        if isinstance(value, dict):
+            snapshots.append((sha, value))
+    return snapshots
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--map", type=Path, default=DEFAULT_MAP)
     parser.add_argument("--changes", type=Path, default=DEFAULT_CHANGES)
+    parser.add_argument("--skip-git-history", action="store_true", help="test-only/portable structural validation without repository chronology")
     args = parser.parse_args()
     try:
         mapping = load_json(args.map)
@@ -174,10 +280,13 @@ def main() -> int:
             if not isinstance(record, dict):
                 raise ValueError("change-impact record must be a JSON object")
             validate_record(record, mapping)
+            if not args.skip_git_history and boundary_required(record, mapping):
+                record_id = require_string(record.get("id"), "record.id")
+                validate_history_snapshots(record, mapping, load_git_history(record_id))
     except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
         print(f"ERROR: {exc}")
         return 2
-    print("Pass-boundary and handoff evidence is structurally valid.")
+    print("Pass-boundary, handoff, and durable chronology evidence is structurally valid.")
     return 0
 
 
