@@ -89,8 +89,8 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "da860fe7f8f73c2ce702349e53e69c9ef9be002971867747524366897bb6d59b",
-        "capability_sha256": "b4957681b1966883a885673c8ace877e1dbf673355e3e2cad7dac89f36ae82fb",
+        "workload_sha256": "6c67e85b07ee2ed3031174f22719a1ee4fc7a91c231e0454811acf470d67d93e",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
       "gate_sha256": "00674fa8b904c916f2687a0771ebc8475c86384b3bf47e9e48dac7c8b3e554e5"
@@ -146,11 +146,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "570897081d52693ef59c5d8f848c525498407407509fac89296284821048264f",
-        "capability_sha256": "b4957681b1966883a885673c8ace877e1dbf673355e3e2cad7dac89f36ae82fb",
+        "workload_sha256": "ba2c174685d7b957faa1a3c8a4b9b087450709425ba05445472e3a59ad3eca7f",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "889d69e5bcf177954187601386e4365fe27a870fe4a85e39a007233470149386"
+      "gate_sha256": "403994be3bb07ad681052f98baf977d21bd037c99c126845ef792c997d97b17c"
     },
     "Normalization": {
       "schema_version": 1,
@@ -203,11 +203,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "90ffbeaf007bcaf29d003d2879a19590df13025188dc3a5c0faf70fe73bb7b39",
-        "capability_sha256": "b4957681b1966883a885673c8ace877e1dbf673355e3e2cad7dac89f36ae82fb",
+        "workload_sha256": "0e67e7b1af490dd6bc7b38444d0f42be4cc3d055f778bb72dae899d44865801f",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "24fe31c8568c7871f58cfdfdba6b39a2e1cc9a9e30bf1192f66341f28c21c6f7"
+      "gate_sha256": "be017748ef83772ff5ab53655811427c018c6cb72b2f719aefab96cf727914c1"
     },
     "Structural Optimization": {
       "schema_version": 1,
@@ -260,11 +260,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "6256a86d27103a08df729e9a080b3727a5ef8cbd99c7969078e37b2e7e274eaa",
-        "capability_sha256": "b4957681b1966883a885673c8ace877e1dbf673355e3e2cad7dac89f36ae82fb",
+        "workload_sha256": "3e7e42b4e1f09c77fce3e2a3860edb8b913320232aade824bf1ff755fdbedf40",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "3e2881e43b67923f2d7ddf511131bfe89ef46a9e7692032447510e77929c6df6"
+      "gate_sha256": "c5ae3582f0fde37ea8928b9d9a28a2e4378c86a43d2abfe4ae54b37eaa763c27"
     },
     "End-to-end validation": {
       "schema_version": 1,
@@ -317,11 +317,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "6d3f3ccf8286bfd8db42ed033a47ca925f85278dd9512399110ff412b49e7df6",
-        "capability_sha256": "b4957681b1966883a885673c8ace877e1dbf673355e3e2cad7dac89f36ae82fb",
+        "workload_sha256": "2d644e429d33426c42e87cc76000f3c6065967000698ddcfd96c34f475aee046",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "8d9ff820ad0a38052783ede1aedc2ab3b7859ab33995a5fbdc236fe118334cff"
+      "gate_sha256": "23013ca1ea00e60398a093a748001d23ce3c8831ed1bc89483927e3bf3692c76"
     }
   },
   "execution_completions": {
@@ -340,7 +340,7 @@
       "retained_subpass_artifacts": []
     },
     "Interdependency": {
-      "gate_sha256": "889d69e5bcf177954187601386e4365fe27a870fe4a85e39a007233470149386",
+      "gate_sha256": "403994be3bb07ad681052f98baf977d21bd037c99c126845ef792c997d97b17c",
       "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
       "passes": [
         {
@@ -354,7 +354,7 @@
       "retained_subpass_artifacts": []
     },
     "Normalization": {
-      "gate_sha256": "24fe31c8568c7871f58cfdfdba6b39a2e1cc9a9e30bf1192f66341f28c21c6f7",
+      "gate_sha256": "be017748ef83772ff5ab53655811427c018c6cb72b2f719aefab96cf727914c1",
       "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
       "passes": [
         {
@@ -368,7 +368,7 @@
       "retained_subpass_artifacts": []
     },
     "Structural Optimization": {
-      "gate_sha256": "3e2881e43b67923f2d7ddf511131bfe89ef46a9e7692032447510e77929c6df6",
+      "gate_sha256": "c5ae3582f0fde37ea8928b9d9a28a2e4378c86a43d2abfe4ae54b37eaa763c27",
       "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
       "passes": [
         {
@@ -382,7 +382,7 @@
       "retained_subpass_artifacts": []
     },
     "End-to-end validation": {
-      "gate_sha256": "8d9ff820ad0a38052783ede1aedc2ab3b7859ab33995a5fbdc236fe118334cff",
+      "gate_sha256": "23013ca1ea00e60398a093a748001d23ce3c8831ed1bc89483927e3bf3692c76",
       "target_state_id": "sha256:ba1702e72a3e22e268a961c317ad6cb4e39f36a524403dff56bc5bc6e3ce3ed1",
       "passes": [
         {
