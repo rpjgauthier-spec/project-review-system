@@ -95,6 +95,18 @@ class ExecutionIdentityHistoryTests(unittest.TestCase):
         value = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-r7", "boundary-r7")
         checker.validate_identity_history_snapshots("current", [("c1", value), ("c2", value)])
 
+    def test_same_occurrence_cannot_mutate_execution_unit_id(self):
+        first = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-r7", "boundary-r7")
+        later = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-mutated", "boundary-r7")
+        with self.assertRaisesRegex(ValueError, "mutates execution identity"):
+            checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", later)])
+
+    def test_same_occurrence_cannot_mutate_boundary_identity(self):
+        first = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-r7", "boundary-r7")
+        later = snapshot(7, "Adversarial", "stage-main", "gate-r7", "unit-r7", "boundary-mutated")
+        with self.assertRaisesRegex(ValueError, "mutates execution identity"):
+            checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", later)])
+
     def test_subdivided_passes_each_have_distinct_occurrences(self):
         checker.validate_identity_history_snapshots("current", [("c1", subdivided_snapshot(7))])
 
