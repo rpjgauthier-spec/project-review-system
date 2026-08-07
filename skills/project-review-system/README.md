@@ -54,19 +54,19 @@ See `INSTALL.md` for review-only and enforced-GitHub installation profiles. Repo
 
 1. Read `SKILL.md` and `references/shared-control-model.md`.
 2. Select review mode, scope, authorization, and smallest sufficient depth.
-3. For broad or multi-stage work, run the Adaptive Execution preflight before the Identity Pass or first semantic stage.
+3. Before the Identity Pass or first semantic stage, create and validate an Adaptive Execution gate for the exact activity.
 4. For broad/full-program work, run the Identity Pass when identity boundaries could materially change interpretation.
-5. Re-run Adaptive Execution after the Identity Pass and after each completed stage while later work remains.
+5. Re-run Adaptive Execution after the Identity Pass and after each completed stage while later work remains; create a new gate before each governed stage.
 6. Identify one review-state authority when a durable staged program is justified.
 7. Record review changes under `changes/` and regenerate `reviews/revalidation-queue.md`.
 8. Run the required stage work, evaluations, and deterministic tests.
-9. Complete only when execution policy, identity interpretation where applicable, tracker state, reports, changed-file coverage, queue state, traces, and bounded claims agree.
+9. Complete only when execution gates/policy, identity interpretation where applicable, tracker state, reports, changed-file coverage, queue state, traces, and bounded claims agree.
 
 Focused reviews normally do not need permanent trackers or stage reports. Changes made during review still require a change-impact record. A supported `behavior-neutral` record does not reopen a review stage.
 
 ## Adaptive Execution
 
-Use `references/adaptive-execution.md`, `templates/review-workload.json`, and `scripts/select_execution_policy.py` to select context separation from observable workload and reviewer capability.
+Use `references/adaptive-execution.md`, `templates/review-workload.json`, `scripts/select_execution_policy.py`, and `scripts/check_execution_gate.py` to select and verify context separation from observable workload and reviewer capability.
 
 Modes:
 
@@ -74,13 +74,17 @@ Modes:
 - `SEPARATED` — each stage gets an explicit semantic pass and bounded handoff.
 - `ISOLATED` — each stage gets a fresh context or equivalent isolated execution.
 
-The initial decision occurs after scope/depth are known but before the Identity Pass or first semantic stage. Re-evaluate after the Identity Pass and after every completed stage while later work remains.
+The initial decision occurs after scope/depth are known but before the Identity Pass or first semantic stage. The workload names the exact `activity`, reviewer/runtime subject, and current `review_revision`. `select_execution_policy.py --gate` produces a verifiable gate containing the workload, capability profile, decision, and binding hashes.
+
+For current/future governed behavioral revalidation, `update_revalidation_queue.py` rejects a passing semantic-stage result unless a valid gate exists for that exact stage and current review revision. Reopening or a correction that invalidates prior work increments `review_revision`, so older gates become stale automatically. Historical pre-enforcement records may be grandfathered only through the closed exemption list in `config/revalidation-map.json`.
 
 New complexity can tighten separation immediately. A reduced workload or stronger externally validated capability profile can relax remaining work by at most one level per checkpoint. This lets the same governance become lighter automatically as reviewer capability improves without hard-coding model names.
 
 Execution mode never removes required stages, evaluations, evidence obligations, stage order, or independent-review requirements. `ISOLATED` same-reviewer execution is not independent review.
 
-The default profile at `config/default-execution-capability.json` is intentionally conservative and is not a measured capability claim. Custom profiles must be marked `VALIDATED` and identify benchmark evidence. Do not infer capability from model name, advertised context length, or subjective confidence.
+The default profile at `config/default-execution-capability.json` is intentionally conservative and is not a measured capability claim. Custom profiles must be marked `VALIDATED`, identify benchmark evidence, and match the reviewer/runtime subject. Do not infer capability from model name, advertised context length, or subjective confidence.
+
+The execution gate proves that the recorded decision matches its declared inputs and current revision. It does not prove workload truthfulness, benchmark validity, semantic correctness, or reviewer independence.
 
 ## Identity Pass
 
@@ -146,7 +150,8 @@ Semantic search, sampled reading, snippets, summaries, or repository-wide search
 ## Deterministic validation
 
 ```bash
-python skills/project-review-system/scripts/select_execution_policy.py --workload review-workload.json
+python skills/project-review-system/scripts/select_execution_policy.py --workload review-workload.json --gate --output execution-gate.json
+python skills/project-review-system/scripts/check_execution_gate.py --gate execution-gate.json --activity Adversarial --review-revision 1
 python skills/project-review-system/scripts/update_revalidation_queue.py
 python skills/project-review-system/scripts/update_revalidation_queue.py --check
 python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
@@ -154,7 +159,7 @@ python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 
 For pull requests, GitHub Actions also invokes `scripts/check_change_impact_coverage.py` with the base and head SHAs.
 
-These controls validate declared structures, mappings, workload profiles, and capability envelopes only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, benchmark validity, or comprehension.
+These controls validate declared structures, mappings, workload profiles, capability envelopes, and execution-gate consistency only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, benchmark validity, or comprehension.
 
 ## Enforcement boundary
 
@@ -162,7 +167,7 @@ The workflow reports `validate-revalidation-controls` for every pull request and
 
 ## Assurance limits
 
-Version `0.1.12` adds Adaptive Execution: a preflight and checkpoint controller that selects `FUSED`, `SEPARATED`, or `ISOLATED` from workload and capability envelopes. It is designed to tighten automatically as review complexity grows and to relax automatically when a stronger externally validated reviewer profile supports more shared context.
+Version `0.1.12` adds Adaptive Execution: a preflight/checkpoint controller that selects `FUSED`, `SEPARATED`, or `ISOLATED` from workload and capability envelopes, plus an execution gate that prevents governed passing stage results from being accepted without a current matching preflight. It is designed to tighten automatically as review complexity grows and to relax automatically when a stronger externally validated reviewer profile supports more shared context.
 
 Version `0.1.11` corrected an abstraction-boundary defect in Version 0.1.10: semantic identity discovery is medium-independent, while Git-specific exhaustive evidence and enforcement remain repository-specific. Structural Optimization also gained a reusable accidental-environment-coupling check and regression evaluation.
 
