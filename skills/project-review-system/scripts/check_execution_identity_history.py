@@ -10,8 +10,11 @@ evidence must remain unchanged in later snapshots.
 
 A logical pass slot is the tuple (review_revision, stage, pass_id). Once that slot
 has durable completion evidence, a different gate may not create a replacement
-occurrence in the same review revision. A redo after durable completion therefore
-requires a new review revision rather than merely a new gate and new identities.
+occurrence in the same review revision. More strongly, once any pass in a stage
+has durable completion evidence, the tuple (review_revision, stage) is bound to
+that gate hash for all later completed subpasses in that revision. Changing the
+stage gate or execution plan after durable completion therefore requires a new
+review revision.
 
 For a PR-scoped check, history begins with the base-state snapshot when the change
 record already exists there, followed by change-record commits in base..head.
@@ -78,6 +81,7 @@ def completed_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...
 def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
     occurrence_evidence: dict[tuple[Any, ...], tuple[str, tuple[str, str], str]] = {}
     logical_slots: dict[tuple[Any, ...], tuple[Any, ...]] = {}
+    stage_gates: dict[tuple[Any, ...], str] = {}
     used_units: dict[str, tuple[Any, ...]] = {}
     used_boundaries: dict[tuple[str, str], tuple[Any, ...]] = {}
 
@@ -91,7 +95,16 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                     )
                 continue
 
-            logical_slot = occurrence[:3]
+            revision, stage, pass_id, gate_sha = occurrence
+            stage_slot = (revision, stage)
+            previous_gate = stage_gates.get(stage_slot)
+            if previous_gate is not None and previous_gate != gate_sha:
+                raise ValueError(
+                    f"record {record_id!r} replaces the completed stage gate for {stage_slot!r} at {commit_sha!r}; "
+                    f"increment review_revision before changing a stage gate or execution plan after durable completion"
+                )
+
+            logical_slot = (revision, stage, pass_id)
             previous_occurrence = logical_slots.get(logical_slot)
             if previous_occurrence is not None and previous_occurrence != occurrence:
                 raise ValueError(
@@ -112,6 +125,7 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                     f"it was already used by {previous_boundary!r}"
                 )
             occurrence_evidence[occurrence] = (unit_id, boundary, evidence)
+            stage_gates[stage_slot] = gate_sha
             logical_slots[logical_slot] = occurrence
             used_units[unit_id] = occurrence
             used_boundaries[boundary] = occurrence
