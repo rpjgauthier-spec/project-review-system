@@ -24,7 +24,7 @@ def workload(**overrides):
     value = {
         "schema_version": 1,
         "artifact_count": 1,
-        "semantic_units": 100,
+        "content_bytes": 1000,
         "required_stage_count": 1,
         "required_evaluation_count": 1,
         "dependency_count": 1,
@@ -43,7 +43,7 @@ def workload(**overrides):
 def strong_capability():
     limits = {
         "artifact_count": 100,
-        "semantic_units": 100000,
+        "content_bytes": 10000000,
         "required_stage_count": 5,
         "required_evaluation_count": 50,
         "dependency_count": 100,
@@ -84,7 +84,7 @@ class ExecutionPolicyTests(unittest.TestCase):
 
     def test_large_workload_is_isolated_under_default_profile(self) -> None:
         decision = selector.select_policy(
-            workload(artifact_count=40, semantic_units=20000, dependency_count=25),
+            workload(artifact_count=40, content_bytes=2000000, dependency_count=25),
             self.default_capability,
         )
         self.assertEqual(decision["selected_mode"], "ISOLATED")
