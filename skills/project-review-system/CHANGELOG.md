@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.1.12 — 2026-08-07
+
+Adaptive review-execution release.
+
+### Added
+
+- `references/adaptive-execution.md`
+- deterministic `scripts/select_execution_policy.py`
+- conservative default capability envelope
+- workload and validated-capability profile templates
+- adaptive execution evaluation and regression tests
+
+### Changed
+
+- broad or multi-stage review now performs an execution preflight after scope/depth are known but before the Identity Pass or first semantic stage
+- execution mode is re-evaluated after the Identity Pass and each completed stage while later work remains
+- `FUSED`, `SEPARATED`, and `ISOLATED` alter context separation only; they do not alter required stages, evaluations, evidence obligations, stage order, or independent-review requirements
+- increasing complexity may tighten separation immediately
+- decreasing workload or a stronger externally validated capability profile may relax remaining work by at most one level per checkpoint
+- model name, advertised context length, and subjective reviewer confidence are not accepted as capability evidence
+
+### Revalidation status
+
+- bounded revalidation pending at change creation; completion is recorded in the change-impact record and generated queue
+- this release is same-agent reviewed and does not establish benchmark calibration or independent validation
+
 ## 0.1.11 — 2026-08-07
 
 Identity abstraction-boundary correction.
