@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
 """Validate declared execution-unit boundaries, handoffs, and Git chronology.
 
+Completed execution-plan passes are durable occurrences even before the enclosing
+semantic stage receives a passing result. This permits a subdivided stage to
+record one bounded subpass per durable state while withholding stage credit until
+the full plan is complete.
+
 The structural checks prove consistency of recorded pass boundaries and handoff
 consumption. Repository history additionally proves that the current gate existed
-before a pass received credit and that separate passes first received credit in
-distinct change-record commits. Neither mechanism proves a host message/context
-boundary unless the host supplies an independently meaningful boundary identity.
+before a pass completed and that separate passes first completed in distinct
+change-record commits. Neither mechanism proves a host message/context boundary
+unless the host supplies an independently meaningful boundary identity.
 """
 
 from __future__ import annotations
@@ -99,26 +104,54 @@ def validate_handoff(handoff: Any, expected_consumer: str, where: str) -> str:
     return digest
 
 
-def flattened_current_passes(record: dict[str, Any], mapping: dict[str, Any]) -> list[tuple[str, str, str, dict[str, Any], str, str]]:
-    """Return credited current passes with expected consumer and current gate hash."""
+def flattened_recorded_passes(record: dict[str, Any], mapping: dict[str, Any]) -> list[tuple[str, str, str, dict[str, Any], str, str]]:
+    """Return every durably completed plan pass, including partial stage prefixes."""
     stages = required_stages(record, mapping)
     results = record.get("results", {})
     gates = record.get("execution_gates", {})
     completions = record.get("execution_completions", {})
+    if not isinstance(results, dict) or not isinstance(gates, dict) or not isinstance(completions, dict):
+        raise ValueError(f"record {record.get('id')!r} has invalid results/gate/completion containers")
+
     flattened: list[tuple[str, str, str, dict[str, Any], str, str]] = []
+    prior_stage_passed = True
+
     for stage_index, stage in enumerate(stages):
-        if results.get(stage) not in PASS_RESULTS:
-            continue
+        stage_passed = results.get(stage) in PASS_RESULTS
         gate = gates.get(stage)
         completion = completions.get(stage)
-        if not isinstance(gate, dict) or not isinstance(completion, dict):
-            raise ValueError(f"record {record.get('id')!r} lacks gate/completion evidence for passing stage {stage!r}")
+
+        if not prior_stage_passed and (stage_passed or gate is not None or completion is not None):
+            raise ValueError(f"record {record.get('id')!r} records {stage!r} before the prior required stage is complete")
+
+        if gate is None:
+            if stage_passed or completion is not None:
+                raise ValueError(f"record {record.get('id')!r} records {stage!r} without an execution gate")
+            prior_stage_passed = False
+            continue
+        if not isinstance(gate, dict):
+            raise ValueError(f"record {record.get('id')!r} has malformed execution gate for {stage!r}")
+
         gate_sha = require_string(gate.get("gate_sha256"), f"{stage}.gate_sha256")
         plan = gate.get("decision", {}).get("execution_plan")
+        if not isinstance(plan, list) or not plan:
+            raise ValueError(f"record {record.get('id')!r} has invalid execution plan for {stage!r}")
+
+        if completion is None:
+            if stage_passed:
+                raise ValueError(f"record {record.get('id')!r} credits {stage!r} without execution completion")
+            prior_stage_passed = False
+            continue
+        if not isinstance(completion, dict) or completion.get("gate_sha256") != gate_sha:
+            raise ValueError(f"record {record.get('id')!r} completion does not match the current gate for {stage!r}")
         passes = completion.get("passes")
-        if not isinstance(plan, list) or not isinstance(passes, list) or len(plan) != len(passes):
-            raise ValueError(f"record {record.get('id')!r} has invalid pass plan/completion for {stage!r}")
-        for pass_index, (planned, actual) in enumerate(zip(plan, passes)):
+        if not isinstance(passes, list) or len(passes) > len(plan):
+            raise ValueError(f"record {record.get('id')!r} has invalid pass completion prefix for {stage!r}")
+        if stage_passed and len(passes) != len(plan):
+            raise ValueError(f"record {record.get('id')!r} credits {stage!r} before its full execution plan is complete")
+
+        for pass_index, actual in enumerate(passes):
+            planned = plan[pass_index]
             if not isinstance(planned, dict) or not isinstance(actual, dict):
                 raise ValueError(f"record {record.get('id')!r} has malformed pass {stage}[{pass_index}]")
             pass_id = require_string(planned.get("pass_id"), f"{stage}.plan[{pass_index}].pass_id")
@@ -133,6 +166,9 @@ def flattened_current_passes(record: dict[str, Any], mapping: dict[str, Any]) ->
             else:
                 expected_consumer = "review-completion"
             flattened.append((stage, pass_id, mode, actual, expected_consumer, gate_sha))
+
+        prior_stage_passed = stage_passed
+
     return flattened
 
 
@@ -140,22 +176,7 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
     if not boundary_required(record, mapping):
         return
 
-    stages = required_stages(record, mapping)
-    results = record.get("results", {})
-    gates = record.get("execution_gates", {})
-    completions = record.get("execution_completions", {})
-    if not isinstance(results, dict) or not isinstance(gates, dict) or not isinstance(completions, dict):
-        raise ValueError(f"record {record.get('id')!r} has invalid results/gate/completion containers")
-
-    seen_unpassed = False
-    for stage in stages:
-        passed = results.get(stage) in PASS_RESULTS
-        if not passed:
-            seen_unpassed = True
-        elif seen_unpassed:
-            raise ValueError(f"record {record.get('id')!r} credits {stage!r} before an earlier required stage is complete")
-
-    flattened = flattened_current_passes(record, mapping)
+    flattened = flattened_recorded_passes(record, mapping)
     unit_ids: set[str] = set()
     boundary_ids: set[tuple[str, str]] = set()
     previous_handoff_sha: str | None = None
@@ -186,14 +207,14 @@ def validate_record(record: dict[str, Any], mapping: dict[str, Any]) -> None:
         inbound = actual.get("inbound_handoff_sha256")
         if index == 0:
             if inbound is not None:
-                raise ValueError(f"first credited pass {label} must have null inbound_handoff_sha256")
+                raise ValueError(f"first recorded pass {label} must have null inbound_handoff_sha256")
         elif inbound != previous_handoff_sha:
             raise ValueError(f"{label}.inbound_handoff_sha256 does not consume the previous pass handoff")
 
         previous_handoff_sha = validate_handoff(actual.get("handoff"), expected_consumer, label)
 
 
-def _pass_credit(snapshot: dict[str, Any], stage: str, pass_id: str, gate_sha: str) -> dict[str, Any] | None:
+def _pass_completion(snapshot: dict[str, Any], stage: str, pass_id: str, gate_sha: str) -> dict[str, Any] | None:
     gate = snapshot.get("execution_gates", {}).get(stage)
     completion = snapshot.get("execution_completions", {}).get(stage)
     if not isinstance(gate, dict) or gate.get("gate_sha256") != gate_sha or not isinstance(completion, dict):
@@ -212,46 +233,46 @@ def _gate_present(snapshot: dict[str, Any], stage: str, gate_sha: str) -> bool:
 
 
 def validate_history_snapshots(record: dict[str, Any], mapping: dict[str, Any], snapshots: list[tuple[str, dict[str, Any]]]) -> None:
-    """Require current pass credit to appear sequentially in distinct durable states."""
+    """Require each current completed pass to appear sequentially in durable states."""
     if not boundary_required(record, mapping):
         return
-    flattened = flattened_current_passes(record, mapping)
+    flattened = flattened_recorded_passes(record, mapping)
     if not flattened:
         return
     if not snapshots:
-        raise ValueError(f"record {record.get('id')!r} has credited passes but no Git history")
+        raise ValueError(f"record {record.get('id')!r} has completed passes but no Git history")
 
-    first_credit_indexes: list[int] = []
+    first_completion_indexes: list[int] = []
     previous_handoff_sha: str | None = None
     for stage, pass_id, _, actual, _, gate_sha in flattened:
         label = f"{stage}:{pass_id}"
-        credit_index = None
+        completion_index = None
         for index, (_, snapshot) in enumerate(snapshots):
-            if _pass_credit(snapshot, stage, pass_id, gate_sha) is not None:
-                credit_index = index
+            if _pass_completion(snapshot, stage, pass_id, gate_sha) is not None:
+                completion_index = index
                 break
-        if credit_index is None:
-            raise ValueError(f"{label} has no durable Git-history state containing its current gate/pass credit")
-        if credit_index == 0:
-            raise ValueError(f"{label} received credit before a prior durable state could contain its gate")
-        if first_credit_indexes and credit_index <= first_credit_indexes[-1]:
-            raise ValueError(f"{label} first received credit in the same or an earlier change-record commit as the previous pass")
+        if completion_index is None:
+            raise ValueError(f"{label} has no durable Git-history state containing its current gate/pass completion")
+        if completion_index == 0:
+            raise ValueError(f"{label} completed before a prior durable state could contain its gate")
+        if first_completion_indexes and completion_index <= first_completion_indexes[-1]:
+            raise ValueError(f"{label} first completed in the same or an earlier change-record commit as the previous pass")
 
-        prior_snapshot = snapshots[credit_index - 1][1]
+        prior_snapshot = snapshots[completion_index - 1][1]
         if not _gate_present(prior_snapshot, stage, gate_sha):
             raise ValueError(f"{label} current execution gate did not exist in the prior durable change-record state")
         if previous_handoff_sha is not None:
-            previous_stage, previous_pass_id, _, _, _, previous_gate_sha = flattened[len(first_credit_indexes) - 1]
-            prior_previous = _pass_credit(prior_snapshot, previous_stage, previous_pass_id, previous_gate_sha)
+            previous_stage, previous_pass_id, _, _, _, previous_gate_sha = flattened[len(first_completion_indexes) - 1]
+            prior_previous = _pass_completion(prior_snapshot, previous_stage, previous_pass_id, previous_gate_sha)
             if prior_previous is None:
-                raise ValueError(f"{label} received credit before the previous pass was durably complete")
+                raise ValueError(f"{label} completed before the previous pass was durably complete")
             prior_handoff = prior_previous.get("handoff")
             if not isinstance(prior_handoff, dict) or prior_handoff.get("sha256") != previous_handoff_sha:
-                raise ValueError(f"{label} received credit before the exact previous handoff was durably recorded")
+                raise ValueError(f"{label} completed before the exact previous handoff was durably recorded")
             if actual.get("inbound_handoff_sha256") != previous_handoff_sha:
                 raise ValueError(f"{label} does not consume the durably prior handoff")
 
-        first_credit_indexes.append(credit_index)
+        first_completion_indexes.append(completion_index)
         handoff = actual.get("handoff")
         previous_handoff_sha = handoff.get("sha256") if isinstance(handoff, dict) else None
 
