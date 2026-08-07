@@ -70,6 +70,7 @@ def validate_workload(workload: dict[str, Any]) -> None:
         raise ValueError("workload.schema_version must be 1")
     require_nonempty_string(workload, "reviewer_subject_id", "workload")
     require_nonempty_string(workload, "activity", "workload")
+    require_nonempty_string(workload, "target_state_id", "workload")
     for key in NUMERIC_DIMENSIONS:
         require_nonnegative_int(workload, key, "workload")
     for key in BOOLEAN_DIMENSIONS:
@@ -209,6 +210,7 @@ def select_policy(
     return {
         "schema_version": 1,
         "activity": workload["activity"],
+        "target_state_id": workload["target_state_id"],
         "selected_mode": selected,
         "base_mode": base,
         "current_mode": current_mode,
@@ -226,9 +228,11 @@ def select_policy(
         "assurance_boundary": (
             "Execution mode changes context separation only; required stages, evaluations, "
             "stage order, evidence obligations, and independent-review requirements are unchanged. "
-            "The selector validates declared workload/profile structure and validated-profile subject "
-            "binding but cannot prove workload truthfulness, combined-envelope benchmark validity, "
-            "or reviewer independence."
+            "The selector binds the decision to a declared target_state_id and validates declared "
+            "workload/profile structure plus validated-profile subject binding, but it cannot prove "
+            "that the target-state identifier, workload facts, combined-envelope benchmark, or "
+            "reviewer independence are truthful. Environment-specific enforcement must verify the "
+            "target_state_id against the actual governed artifacts."
         ),
     }
 
