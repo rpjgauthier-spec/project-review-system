@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "profile_id": "default-conservative-v1",
+  "validation_status": "DEFAULT_CONSERVATIVE",
+  "benchmark_evidence": "Built-in conservative fallback; not a claim of measured model capability.",
+  "fused_limits": {
+    "artifact_count": 5,
+    "semantic_units": 1000,
+    "required_stage_count": 1,
+    "required_evaluation_count": 3,
+    "dependency_count": 3,
+    "protected_control_count": 0,
+    "unresolved_uncertainty_count": 0,
+    "material_findings_count": 0,
+    "unexpected_dependency_count": 0,
+    "allow_self_referential": false,
+    "allow_exhaustive_claim": false
+  },
+  "separated_limits": {
+    "artifact_count": 25,
+    "semantic_units": 10000,
+    "required_stage_count": 5,
+    "required_evaluation_count": 15,
+    "dependency_count": 20,
+    "protected_control_count": 3,
+    "unresolved_uncertainty_count": 5,
+    "material_findings_count": 5,
+    "unexpected_dependency_count": 5,
+    "allow_self_referential": true,
+    "allow_exhaustive_claim": true
+  }
+}
