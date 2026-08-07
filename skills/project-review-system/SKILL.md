@@ -9,7 +9,7 @@ license: Apache-2.0
 
 Use this skill when asked to review, validate, simplify, optimize, normalize, reopen, or continue a repository-based project governance system, operating plan, research program, campaign, or other multi-document workflow.
 
-The five review stages and Identity Pass are semantic review methods. Adaptive execution determines how much semantic work may safely share context. Git manifests, object identity, changed-file enforcement, pull requests, and GitHub Actions are repository-specific evidence and enforcement mechanisms layered around those methods.
+The five review stages and Identity Pass are semantic review methods. Adaptive execution defaults those stages to separate bounded contexts and escalates overloaded stage units through subdivision or isolation. Git manifests, object identity, changed-file enforcement, pull requests, and GitHub Actions are repository-specific evidence and enforcement mechanisms layered around those methods.
 
 ## Goal
 
@@ -39,25 +39,21 @@ Focused reviews do not require permanent trackers, separate stage reports, or ev
 
 ## Adaptive execution preflight
 
-After review mode, scope, authorization, and depth are known—but **before the Identity Pass or first semantic review stage**—select how much semantic work may share one working context.
+After review mode, scope, authorization, and depth are known—but **before the Identity Pass or first semantic review stage**—establish the execution plan.
 
-Read `references/adaptive-execution.md`. Build a workload record from `templates/review-workload.json`, including the reviewer/runtime subject, exact semantic activity, and current `review_revision`. Use the conservative profile in `config/default-execution-capability.json` unless a stronger externally validated reviewer capability profile is available.
+Read `references/adaptive-execution.md`. Build a workload record from `templates/review-workload.json`, including reviewer/runtime subject, exact semantic activity, current `review_revision`, current artifact `target_state_id`, workload class, and a bounded stage-size assessment.
 
-Run `scripts/select_execution_policy.py --gate` and validate the resulting gate with `scripts/check_execution_gate.py` before treating the Identity Pass or semantic stage as validly opened.
+**SEPARATED is the default.** The semantic assessment answers whether the current stage is suitable for one bounded pass. If it is not, declare at least two bounded subpasses. Each subpass states its scope and whether it still requires a fresh context. The deterministic selector then assigns `SEPARATED` to ordinary passes and `ISOLATED` to any subpass marked `isolation_required`.
 
-Execution modes are:
+`FUSED` is not selected from self-estimated capacity. It is permitted only when a pre-existing externally `VALIDATED` capability profile contains an exact permission for the same reviewer/runtime subject, activity group, and workload class. FUSED permission cannot override a current assessment requiring subdivision.
 
-- `FUSED` — multiple semantic activities may share one bounded context when inside the validated fused envelope.
-- `SEPARATED` — each review stage gets an explicit semantic pass and bounded handoff.
-- `ISOLATED` — each review stage gets a fresh context or equivalent isolated execution, using durable evidence and bounded prior-stage handoffs.
+Run `scripts/select_execution_policy.py --gate` and validate the resulting gate with `scripts/check_execution_gate.py` before treating the semantic activity as validly opened.
 
-The execution mode changes context separation only. It does **not** change required stages, evaluations, stage order, evidence obligations, or independent-review requirements.
+A governed passing stage result additionally requires an execution completion record matching the gate's plan exactly. Every planned pass must appear in order with the required context mode and `status: complete`. `update_revalidation_queue.py` rejects a passing result when the gate or completion is absent, stale, mismatched, incomplete, or bound to an earlier artifact state or review revision.
 
-Re-evaluate execution after the Identity Pass and after each completed semantic stage while later work remains. New complexity may tighten separation immediately. Reduced workload or a stronger validated capability profile may relax remaining work by at most one level per checkpoint. Never retroactively upgrade the assurance of already completed work.
+The semantic judgment deciding whether subdivision or isolation is warranted is not itself deterministic. The deterministic controls enforce the **consequences** of the recorded judgment. Do not claim that gate validation proves the judgment or semantic review conclusion was correct.
 
-A governed passing stage result is invalid without a current execution gate for that exact stage. `update_revalidation_queue.py` enforces this for current/future behavioral change records. When a correction or reopening invalidates prior review work, increment `review_revision`; older gates then become stale and cannot authorize the reopened stage.
-
-Do not infer capability from model name, advertised context-window size, provider claims, or subjective reviewer confidence. A custom capability profile must be `VALIDATED`, identify benchmark evidence, and match the reviewer/runtime subject being governed. If no validated profile exists, deliberately use the conservative default.
+Do not infer FUSED permission from model name, advertised context-window size, provider claims, or subjective reviewer confidence.
 
 ## Trust boundary
 
@@ -75,7 +71,7 @@ For a focused review, run the Identity Pass only when identity ambiguity could m
 
 ## Full-program sequence
 
-Preflight. **Adaptive execution** — select `FUSED`, `SEPARATED`, or `ISOLATED` from declared workload and validated reviewer capability; create a verifiable gate for the Identity Pass or first semantic stage and rerun at later checkpoints.
+Preflight. **Adaptive execution** — default to `SEPARATED`; assess whether the current semantic activity needs bounded subdivision; require `ISOLATED` only for declared overloaded subpasses; allow `FUSED` only with exact pre-existing validated permission; create and validate an artifact-bound execution gate.
 0. **Identity Pass** — discover materially distinct identities without seeding expected layers; characterize explicit versus inferred identities, overlaps, uncertainty, and material implications for later interpretation.
 1. **Adversarial review** — identify failure, misuse, ambiguity, silent authorization, missing safeguards, stale-state hazards, and unsafe fallback behavior.
 2. **Interdependency review** — identify authorities, producers, consumers, propagation duties, status mappings, handoffs, fallbacks, archive paths, and broken contracts.
@@ -83,13 +79,13 @@ Preflight. **Adaptive execution** — select `FUSED`, `SEPARATED`, or `ISOLATED`
 4. **Structural Optimization Review** — select the lowest-burden reliable organization by retaining, deferring, simplifying, generalizing, specializing, merging, splitting, indexing, generating, restructuring, or removing elements without weakening controls or consumer needs.
 5. **End-to-end validation** — trace representative normal, failure, withdrawal, closure, recurrence, focused-review, incomplete-access, unauthorized-action, and reopening paths.
 
-Adaptive execution is a preflight and checkpoint control, not a review stage. The Identity Pass is pre-review interpretation, not a review stage. Bounded revalidation is not a sixth stage. It is a change-triggered lifecycle mechanism that uses the canonical mapping and queue to select and rerun only affected conclusions from the five-stage model.
+Adaptive execution is a preflight and per-stage execution control, not a review stage. The Identity Pass is pre-review interpretation, not a review stage. Bounded revalidation is not a sixth stage. It is a change-triggered lifecycle mechanism that uses the canonical mapping and queue to select and rerun only affected conclusions from the five-stage model.
 
 Do not run normalization or structural optimization first when doing so could hide risk or break dependencies.
 
 ## Required repository inputs
 
-Locate only inputs material to the selected depth, including current state, controlling authorities, active gates, protected controls, scope and exclusions, review mode, allowed actions, identity-relevant evidence when applicable, execution workload/capability/gate evidence when adaptive execution applies, and any durable tracker or report that has a real consumer.
+Locate only inputs material to the selected depth, including current state, controlling authorities, active gates, protected controls, scope and exclusions, review mode, allowed actions, identity-relevant evidence when applicable, execution gate/assessment/plan/completion evidence when adaptive execution applies, and any durable tracker or report that has a real consumer.
 
 Do not invent permanent governance solely to support the skill.
 
@@ -119,7 +115,7 @@ For a staged review, identify exactly one current review-state authority. It own
 
 ## Automatic revalidation queue
 
-Do not rely on reviewers to remember every affected stage, evaluation, or Adaptive Execution gate.
+Do not rely on reviewers to remember every affected stage, evaluation, execution gate, or required execution pass.
 
 For every change made during a review:
 
@@ -128,13 +124,14 @@ For every change made during a review:
 3. List every changed system file, including the impact record itself and the enforcement workflow when changed.
 4. Run `scripts/update_revalidation_queue.py`.
 5. Read `reviews/revalidation-queue.md` as the required revalidation prompt.
-6. Before each governed semantic stage, create and validate an Adaptive Execution gate for that exact stage and current `review_revision`.
-7. Run the listed stage recheck, then record its result and gate in the change-impact record. A passing result without a valid gate is rejected.
-8. Run every listed evaluation and record results.
-9. Regenerate the queue after results, gates, revisions, or scope change.
-10. Run `scripts/update_revalidation_queue.py --check` before advancement or completion.
+6. Before each governed semantic stage, record the stage-size assessment and create/validate an Adaptive Execution gate for that exact stage, current `review_revision`, and current target artifact state.
+7. Execute every pass in the gate's execution plan. Record completion with exact pass IDs, required context modes, and `status: complete`.
+8. Record the stage result only after the gate and execution completion match. A passing result without matching execution evidence is rejected.
+9. Run every listed evaluation and record results.
+10. Regenerate the queue after results, gates, completion evidence, revisions, or scope change.
+11. Run `scripts/update_revalidation_queue.py --check` before advancement or completion.
 
-The generator derives the earliest affected stage, unions all required stages and evaluations, rejects an incorrectly claimed earliest stage, and validates required stage execution gates. The generated queue is not manually edited. A stale or unresolved queue or absent/stale/invalid required gate blocks advancement.
+The generator derives the earliest affected stage, unions all required stages and evaluations, rejects an incorrectly claimed earliest stage, and validates required stage execution evidence. The generated queue is not manually edited. A stale or unresolved queue or absent/stale/invalid execution evidence blocks advancement.
 
 Historical records created before gate enforcement may be exempt only through the closed legacy exemption list in `config/revalidation-map.json`; an individual change record cannot self-exempt.
 
@@ -149,19 +146,21 @@ The workflow:
 - requires every changed system file to be listed by an impact record added or updated in the same pull request;
 - requires each impact record to list itself;
 - rejects deleted impact records and stale file claims;
-- runs the full regression suite, including Adaptive Execution gate tests;
-- checks that the generated revalidation queue is current and clear, including required execution gates.
+- runs the full regression suite, including Adaptive Execution plan/completion tests;
+- checks that the generated revalidation queue is current and clear, including required execution evidence.
 
 Repository branch protection must require the `validate-revalidation-controls` check and prevent direct pushes to the protected branch. Without that repository setting, GitHub Actions detects violations but cannot guarantee that a privileged direct push or administrative bypass will be blocked.
 
 ## Operating rules
 
 - Read `references/shared-control-model.md` for every review, then load only relevant modules.
-- Run the adaptive execution preflight before the Identity Pass or first semantic stage after scope/depth are known.
-- For governed semantic stages, do not record or accept a passing result without a valid gate for the exact stage and current `review_revision`.
-- Increment `review_revision` whenever a correction or reopening invalidates prior stage execution; never reuse a gate from an older revision for reopened work.
-- Re-run adaptive execution after the Identity Pass and after each semantic stage while later work remains.
-- Do not let execution mode suppress any required stage, evaluation, evidence obligation, or independent-review requirement.
+- Run Adaptive Execution before the Identity Pass or first semantic stage after scope/depth are known, and before each governed semantic stage.
+- Default to `SEPARATED` unless an exact pre-existing validated FUSED permission applies.
+- If semantic assessment says one pass is unsuitable, declare bounded subpasses; do not continue as one pass.
+- If a subpass is declared `isolation_required`, execute it in `ISOLATED` context before crediting it as complete.
+- For governed semantic stages, do not record or accept a passing result without a current artifact-bound gate and matching execution completion.
+- Increment `review_revision` whenever a correction or reopening invalidates prior stage execution; never reuse evidence from an older revision for reopened work.
+- Do not let execution policy suppress any required stage, evaluation, evidence obligation, or independent-review requirement.
 - Run `references/identity-pass.md` before broad/full-program work when identity boundaries could materially affect interpretation.
 - Do not seed the Identity Pass with expected project layers; discover identities from evidence.
 - During Structural Optimization, test whether stated scope or platform coupling is functionally necessary or merely inherited from the implementation context.
@@ -187,7 +186,7 @@ Same-agent review is weaker than independent review. `ISOLATED` execution reduce
 
 ## Canonical vocabulary
 
-Use the review modes, states, verdicts, dispositions, evidence labels, independence labels, reopening rules, change-impact rules, revalidation mappings, and execution-mode definitions in `references/shared-control-model.md`, `references/adaptive-execution.md`, and `config/revalidation-map.json`.
+Use the review modes, states, verdicts, dispositions, evidence labels, independence labels, reopening rules, change-impact rules, revalidation mappings, and execution definitions in `references/shared-control-model.md`, `references/adaptive-execution.md`, and `config/revalidation-map.json`.
 
 ## Module loading
 
@@ -219,7 +218,7 @@ python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 
 ## Completion rule
 
-A full program is complete only when the initial adaptive execution preflight occurred, every governed passing semantic-stage result has a current valid execution gate, material checkpoint re-evaluations are resolved, the Identity Pass has been completed or explicitly found immaterial, every required stage has a permitted terminal verdict and report, the tracker agrees with reports, no open/failed/pending or awaiting-revalidation stage remains, protected controls and dependencies remain intact, backward-impact gates are resolved, changed-file coverage passes for the full proposed diff, the generated revalidation queue is current and clear, selected end-to-end traces pass, deterministic checks pass within their stated scope, and the final claim records scope, exclusions, evidence limits, reviewer independence, and execution modes used.
+A full program is complete only when the initial Adaptive Execution preflight occurred, every governed passing semantic-stage result has a current valid artifact-bound execution gate and matching completion for every planned pass, the Identity Pass has been completed or explicitly found immaterial, every required stage has a permitted terminal verdict and report, the tracker agrees with reports, no open/failed/pending or awaiting-revalidation stage remains, protected controls and dependencies remain intact, backward-impact gates are resolved, changed-file coverage passes for the full proposed diff, the generated revalidation queue is current and clear, selected end-to-end traces pass, deterministic checks pass within their stated scope, and the final claim records scope, exclusions, evidence limits, reviewer independence, and execution modes used.
 
 If the full-program conclusion additionally claims exhaustive repository coverage, the pinned exhaustive manifest and coverage ledger must also pass `check_review_coverage.py`. Failure to account for any tracked object blocks only the exhaustive claim unless that missing object also invalidates the underlying bounded review conclusion.
 
