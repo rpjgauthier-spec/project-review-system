@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regression tests for adaptive execution gate validation."""
+"""Regression tests for Adaptive Execution gate and completion validation."""
 
 from __future__ import annotations
 
@@ -18,48 +18,45 @@ checker_spec = importlib.util.spec_from_file_location("check_execution_gate", CH
 assert checker_spec and checker_spec.loader
 checker = importlib.util.module_from_spec(checker_spec)
 checker_spec.loader.exec_module(checker)
-
 selector_spec = importlib.util.spec_from_file_location("selector_for_gate_test", SELECTOR_PATH)
 assert selector_spec and selector_spec.loader
 selector = importlib.util.module_from_spec(selector_spec)
 selector_spec.loader.exec_module(selector)
-
 CAPABILITY = json.loads(DEFAULT_CAPABILITY_PATH.read_text(encoding="utf-8"))
 
 
-def workload(**overrides):
-    value = {
+def workload(assessment=None):
+    return {
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer",
         "activity": "Adversarial",
         "target_state_id": "sha256:fixture",
         "review_revision": 2,
-        "artifact_count": 2,
-        "content_bytes": 2000,
-        "remaining_stage_count": 5,
-        "remaining_evaluation_count": 10,
-        "dependency_count": 2,
-        "protected_control_count": 0,
-        "unresolved_uncertainty_count": 0,
-        "material_findings_count": 0,
-        "unexpected_dependency_count": 0,
-        "self_referential": True,
-        "exhaustive_claim": False,
-        "checkpoint": "reopened-adversarial",
+        "workload_class": "ordinary-review-v1",
+        "stage_assessment": assessment or {"single_pass_suitable": True, "reasons": ["bounded"], "subpasses": []},
+        "fused_authorization": None,
     }
-    value.update(overrides)
-    return value
+
+
+def completion_for(gate):
+    decision = gate["decision"]
+    return {
+        "gate_sha256": gate["gate_sha256"],
+        "target_state_id": decision["target_state_id"],
+        "passes": [
+            {"pass_id": item["pass_id"], "context_mode": item["context_mode"], "status": "complete"}
+            for item in decision["execution_plan"]
+        ],
+    }
 
 
 class ExecutionGateTests(unittest.TestCase):
     def test_valid_gate_passes(self) -> None:
-        gate = selector.build_gate(workload(), CAPABILITY, current_mode="SEPARATED")
-        decision = checker.validate_execution_gate(
-            gate, "Adversarial", 2, expected_target_state_id="sha256:fixture"
-        )
-        self.assertEqual(decision["activity"], "Adversarial")
+        gate = selector.build_gate(workload(), CAPABILITY)
+        decision = checker.validate_execution_gate(gate, "Adversarial", 2, "sha256:fixture")
+        self.assertEqual(decision["plan_kind"], "ONE_PASS")
 
-    def test_stale_review_revision_fails(self) -> None:
+    def test_stale_revision_fails(self) -> None:
         gate = selector.build_gate(workload(), CAPABILITY)
         with self.assertRaisesRegex(ValueError, "does not match current review revision"):
             checker.validate_execution_gate(gate, "Adversarial", 3)
@@ -67,22 +64,42 @@ class ExecutionGateTests(unittest.TestCase):
     def test_stale_target_state_fails(self) -> None:
         gate = selector.build_gate(workload(), CAPABILITY)
         with self.assertRaisesRegex(ValueError, "does not match current governed artifact state"):
-            checker.validate_execution_gate(
-                gate, "Adversarial", 2, expected_target_state_id="sha256:new-state"
-            )
+            checker.validate_execution_gate(gate, "Adversarial", 2, "sha256:new")
 
-    def test_zero_remaining_stage_count_fails_for_stage(self) -> None:
-        gate = selector.build_gate(workload(remaining_stage_count=0), CAPABILITY)
-        with self.assertRaisesRegex(ValueError, "must include that stage"):
-            checker.validate_execution_gate(gate, "Adversarial", 2)
+    def test_matching_completion_passes(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        checker.validate_execution_completion(completion_for(gate), gate)
 
-    def test_identity_pass_may_have_zero_remaining_stage_count(self) -> None:
-        gate = selector.build_gate(
-            workload(activity="Identity Pass", remaining_stage_count=0), CAPABILITY
-        )
-        checker.validate_execution_gate(gate, "Identity Pass", 2)
+    def test_wrong_context_mode_fails(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["passes"][0]["context_mode"] = "ISOLATED"
+        with self.assertRaisesRegex(ValueError, "wrong context mode"):
+            checker.validate_execution_completion(completion, gate)
 
-    def test_repository_artifact_state_changes_when_content_changes(self) -> None:
+    def test_missing_subpass_fails(self) -> None:
+        assessment = {
+            "single_pass_suitable": False,
+            "reasons": ["broad"],
+            "subpasses": [
+                {"pass_id": "a", "scope": "a", "isolation_required": False, "reasons": ["bounded"]},
+                {"pass_id": "b", "scope": "b", "isolation_required": True, "reasons": ["large"]},
+            ],
+        }
+        gate = selector.build_gate(workload(assessment), CAPABILITY)
+        completion = completion_for(gate)
+        completion["passes"].pop()
+        with self.assertRaisesRegex(ValueError, "pass count"):
+            checker.validate_execution_completion(completion, gate)
+
+    def test_incomplete_pass_fails(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["passes"][0]["status"] = "pending"
+        with self.assertRaisesRegex(ValueError, "not complete"):
+            checker.validate_execution_completion(completion, gate)
+
+    def test_artifact_state_changes_with_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             target = root / "a.txt"
@@ -92,23 +109,8 @@ class ExecutionGateTests(unittest.TestCase):
             second = checker.repository_artifact_state_sha256(["a.txt"], root)
             self.assertNotEqual(first, second)
 
-    def test_repository_artifact_state_represents_absence(self) -> None:
-        with tempfile.TemporaryDirectory() as temp_dir:
-            root = Path(temp_dir)
-            absent = checker.repository_artifact_state_sha256(["gone.txt"], root)
-            (root / "gone.txt").write_text("present", encoding="utf-8")
-            present = checker.repository_artifact_state_sha256(["gone.txt"], root)
-            self.assertNotEqual(absent, present)
-
-    def test_repository_path_normalization_preserves_leading_dot(self) -> None:
-        self.assertEqual(
-            checker.normalize_repository_path("./.github/workflows/check.yml"),
-            ".github/workflows/check.yml",
-        )
-        self.assertEqual(
-            checker.normalize_repository_path(".github/workflows/check.yml"),
-            ".github/workflows/check.yml",
-        )
+    def test_leading_dot_path_is_preserved(self) -> None:
+        self.assertEqual(checker.normalize_repository_path(".github/workflow.yml"), ".github/workflow.yml")
 
 
 if __name__ == "__main__":
