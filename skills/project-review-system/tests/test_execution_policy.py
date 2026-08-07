@@ -57,7 +57,9 @@ def strong_capability():
     return {
         "schema_version": 1,
         "profile_id": "validated-strong-test",
+        "subject_id": "test-reviewer-runtime-v2",
         "validation_status": "VALIDATED",
+        "benchmark_suite": "fixture-suite-v1",
         "benchmark_evidence": "fixture:validated-strong-test",
         "fused_limits": dict(limits),
         "separated_limits": dict(limits),
@@ -122,6 +124,22 @@ class ExecutionPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selector.validate_capability(invalid, custom_profile=True)
 
+    def test_nondefault_profile_cannot_impersonate_default_conservative(self) -> None:
+        invalid = strong_capability()
+        invalid["validation_status"] = "DEFAULT_CONSERVATIVE"
+        with self.assertRaises(ValueError):
+            selector.select_policy(workload(), invalid)
+
+    def test_capability_requires_subject_and_benchmark_suite(self) -> None:
+        invalid = strong_capability()
+        invalid["subject_id"] = ""
+        with self.assertRaises(ValueError):
+            selector.validate_capability(invalid, custom_profile=True)
+        invalid = strong_capability()
+        invalid["benchmark_suite"] = ""
+        with self.assertRaises(ValueError):
+            selector.validate_capability(invalid, custom_profile=True)
+
     def test_envelopes_must_be_monotonic(self) -> None:
         invalid = strong_capability()
         invalid["fused_limits"]["artifact_count"] = 101
@@ -149,6 +167,12 @@ class ExecutionPolicyTests(unittest.TestCase):
         boundary = decision["assurance_boundary"]
         self.assertIn("required stages", boundary)
         self.assertIn("independent-review requirements", boundary)
+        self.assertIn("cannot prove workload truthfulness", boundary)
+
+    def test_decision_records_capability_subject(self) -> None:
+        decision = selector.select_policy(workload(), strong_capability())
+        self.assertEqual(decision["capability_subject_id"], "test-reviewer-runtime-v2")
+        self.assertEqual(decision["capability_benchmark_suite"], "fixture-suite-v1")
 
 
 if __name__ == "__main__":
