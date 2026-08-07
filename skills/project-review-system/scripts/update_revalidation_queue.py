@@ -5,7 +5,8 @@ Inputs are JSON change-impact records in changes/*.json plus the canonical
 config/revalidation-map.json. The generated Markdown queue is the reviewer's
 prompt and the tracker/CI handoff. This script does not decide whether a change
 record is truthful; it deterministically expands declared change classes and
-enforces recorded Adaptive Execution plans at the stage-result boundary.
+enforces current artifact binding for any recorded Adaptive Execution pass and
+full execution-completion validity at the stage-result boundary.
 """
 
 from __future__ import annotations
@@ -75,6 +76,15 @@ def current_record_target_state_id(record: dict[str, Any]) -> str:
     return f"sha256:{GATE_CHECKER.repository_artifact_state_sha256(paths)}"
 
 
+def _recorded_passes(completion: Any) -> list[dict[str, Any]]:
+    if not isinstance(completion, dict):
+        return []
+    passes = completion.get("passes")
+    if not isinstance(passes, list):
+        return []
+    return [item for item in passes if isinstance(item, dict) and item.get("status") == "complete"]
+
+
 def validate_stage_execution(record: dict[str, Any], mapping: dict[str, Any], stages: list[str], results: dict[str, Any], behavioral: bool) -> None:
     if not execution_gate_required(record, mapping, behavioral):
         return
@@ -90,19 +100,38 @@ def validate_stage_execution(record: dict[str, Any], mapping: dict[str, Any], st
     expected_target_state_id = current_record_target_state_id(record)
 
     for stage in stages:
-        if results.get(stage) not in PASS_RESULTS:
+        stage_passed = results.get(stage) in PASS_RESULTS
+        completion = completions.get(stage)
+        has_recorded_passes = bool(_recorded_passes(completion))
+        if not stage_passed and not has_recorded_passes:
             continue
+
         gate = gates.get(stage)
         if not isinstance(gate, dict):
-            raise ValueError(f"record {record['id']!r} has passing result for {stage!r} without a current execution gate")
-        completion = completions.get(stage)
-        if not isinstance(completion, dict):
-            raise ValueError(f"record {record['id']!r} has passing result for {stage!r} without execution completion evidence")
+            what = "passing result" if stage_passed else "recorded pass completion"
+            raise ValueError(f"record {record['id']!r} has {what} for {stage!r} without a current execution gate")
         try:
-            decision = GATE_CHECKER.validate_execution_gate(gate, stage, revision, expected_target_state_id=expected_target_state_id)
-            GATE_CHECKER.validate_execution_completion(completion, gate, decision)
+            decision = GATE_CHECKER.validate_execution_gate(
+                gate,
+                stage,
+                revision,
+                expected_target_state_id=expected_target_state_id,
+            )
         except (ValueError, TypeError, RuntimeError) as exc:
-            raise ValueError(f"record {record['id']!r} has invalid execution evidence for {stage!r}: {exc}") from exc
+            raise ValueError(f"record {record['id']!r} has invalid execution gate for {stage!r}: {exc}") from exc
+
+        if not isinstance(completion, dict):
+            raise ValueError(f"record {record['id']!r} has execution evidence for {stage!r} without an execution completion object")
+        if completion.get("gate_sha256") != gate.get("gate_sha256"):
+            raise ValueError(f"record {record['id']!r} completion gate hash does not match the current gate for {stage!r}")
+        if completion.get("target_state_id") != expected_target_state_id:
+            raise ValueError(f"record {record['id']!r} completion target state is stale for {stage!r}")
+
+        if stage_passed:
+            try:
+                GATE_CHECKER.validate_execution_completion(completion, gate, decision)
+            except (ValueError, TypeError, RuntimeError) as exc:
+                raise ValueError(f"record {record['id']!r} has invalid execution completion for {stage!r}: {exc}") from exc
 
 
 def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[str, Any]:
@@ -197,7 +226,7 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
             mark = "x" if results.get(evaluation) in PASS_RESULTS else " "
             lines.append(f"- [{mark}] Run evaluation `{evaluation}` and record the result.")
         lines.append("")
-    lines.extend(["## Commands", "", "```bash", "python skills/project-review-system/scripts/update_revalidation_queue.py", "python skills/project-review-system/scripts/update_revalidation_queue.py --check", "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'", "```", "", "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has absent/stale/invalid gate or completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed."])
+    lines.extend(["## Commands", "", "```bash", "python skills/project-review-system/scripts/update_revalidation_queue.py", "python skills/project-review-system/scripts/update_revalidation_queue.py --check", "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'", "```", "", "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, any recorded pass is bound to an absent/stale/invalid gate or target state, a passing stage has invalid completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed."])
     return "\n".join(lines) + "\n"
 
 
