@@ -47,7 +47,10 @@ jobs:
 
       - name: Verify declared pass boundaries and handoffs
         if: steps.scope.outputs.relevant == 'true'
-        run: python skills/project-review-system/scripts/check_pass_boundaries.py
+        run: |
+          python skills/project-review-system/scripts/check_pass_boundaries.py \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}"
 
       - name: Verify generated revalidation queue
         if: steps.scope.outputs.relevant == 'true'
