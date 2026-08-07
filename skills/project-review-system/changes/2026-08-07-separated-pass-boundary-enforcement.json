@@ -1,0 +1,38 @@
+{
+  "id": "2026-08-07-separated-pass-boundary-enforcement",
+  "summary": "Require distinct declared execution units and deterministic bounded-handoff chaining for credited Adaptive Execution passes, then revalidate the merged Adaptive Execution behavior under the corrected discipline.",
+  "changed_files": [
+    ".github/workflows/project-review-system-revalidation.yml",
+    "skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json",
+    "skills/project-review-system/config/revalidation-map.json",
+    "skills/project-review-system/evals/pass-boundary-enforcement.md",
+    "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/reviews/revalidation-queue.md",
+    "skills/project-review-system/scripts/check_pass_boundaries.py",
+    "skills/project-review-system/templates/project-review-system-revalidation.yml",
+    "skills/project-review-system/tests/test_pass_boundaries.py"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "simplification-or-structure",
+    "tracker-or-completion"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "adaptive-execution",
+    "execution-gate-enforcement",
+    "pass-boundary-enforcement"
+  ],
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The existing gate/completion validator proved structural consistency of the recorded plan but could not establish that distinct semantic execution units actually occurred. This correction makes the intended execution discipline explicit and adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered stage credit, hashed outbound handoffs, exact downstream consumers, and next-pass consumption of the prior handoff. ISOLATED passes additionally require an isolation-boundary declaration. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID. Revision-6 same-response semantic assurance is not relied upon for this correction; the behavior is being revalidated again under revision 7 using one semantic pass per assistant message or equivalent bounded execution unit.",
+  "status": "in_progress",
+  "review_revision": 7,
+  "execution_gates": {},
+  "execution_completions": {},
+  "results": {},
+  "supersedes_assurance": {
+    "change_id": "2026-08-07-adaptive-review-execution",
+    "review_revision": 6,
+    "reason": "The revision-6 semantic completion records overstated actual separation and are not used as evidence for revision-7 completion."
+  }
+}
