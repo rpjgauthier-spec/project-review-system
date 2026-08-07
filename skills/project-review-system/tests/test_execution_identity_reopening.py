@@ -102,19 +102,19 @@ class ExecutionIdentityReopeningTests(unittest.TestCase):
         first = completed(8, "gate-a", "unit-a", "boundary-a")
         cleared = {"review_revision": 8, "execution_gates": {}, "execution_completions": {}}
         with self.assertRaisesRegex(ValueError, "does not preserve completed occurrence"):
-            checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", cleared)])
+            checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", cleared)], require_final_ledger=True)
 
     def test_final_ledger_can_preserve_occurrence_after_live_completion_is_cleared(self):
         first = completed(8, "gate-a", "unit-a", "boundary-a")
         final = preserved_without_live_completion(first)
-        checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", final)])
+        checker.validate_identity_history_snapshots("current", [("c1", first), ("c2", final)], require_final_ledger=True)
 
     def test_ledger_is_append_only_once_present(self):
         first = completed(8, "gate-a", "unit-a", "boundary-a")
         with_ledger = preserved_without_live_completion(first)
         removed = {"review_revision": 8, "execution_gates": {}, "execution_completions": {}, "execution_occurrence_history": []}
         with self.assertRaisesRegex(ValueError, "removes or mutates durable execution occurrence ledger"):
-            checker.validate_identity_history_snapshots("current", [("c1", with_ledger), ("c2", removed)])
+            checker.validate_identity_history_snapshots("current", [("c1", with_ledger), ("c2", removed)], require_final_ledger=True)
 
     def test_squash_like_base_ledger_blocks_future_identity_reuse(self):
         old = completed(8, "gate-a", "unit-shared", "boundary-a")
@@ -122,7 +122,7 @@ class ExecutionIdentityReopeningTests(unittest.TestCase):
         redo = completed(9, "gate-b", "unit-shared", "boundary-b")
         redo["execution_occurrence_history"] = [ledger_entry(old), ledger_entry(redo)]
         with self.assertRaisesRegex(ValueError, "reuses execution_unit_id"):
-            checker.validate_identity_history_snapshots("current", [("base", base), ("head", redo)])
+            checker.validate_identity_history_snapshots("current", [("base", base), ("head", redo)], require_final_ledger=True)
 
 
 if __name__ == "__main__":
