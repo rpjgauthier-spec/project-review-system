@@ -52,9 +52,9 @@ def source_hash(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
 
 
 def execution_gate_required(record: dict[str, Any], mapping: dict[str, Any], behavioral: bool) -> bool:
-    if not behavioral:
+    if not behavioral or "execution_gate" not in mapping:
         return False
-    exempt = set(mapping.get("execution_gate", {}).get("legacy_exempt_change_ids", []))
+    exempt = set(mapping["execution_gate"].get("legacy_exempt_change_ids", []))
     return record["id"] not in exempt
 
 
