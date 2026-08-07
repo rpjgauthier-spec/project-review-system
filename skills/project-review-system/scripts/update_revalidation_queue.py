@@ -24,6 +24,7 @@ VALID_STATUSES = {"pending", "in_progress", "complete", "failed", "escalated"}
 PASS_RESULTS = {"passed", "supported", "complete"}
 BEHAVIOR_NEUTRAL_CLASS = "behavior-neutral"
 GATE_CHECKER_PATH = ROOT / "scripts" / "check_execution_gate.py"
+QUEUE_REPOSITORY_PATH = "skills/project-review-system/reviews/revalidation-queue.md"
 
 
 def _load_gate_checker():
@@ -52,10 +53,30 @@ def source_hash(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
 
 
 def execution_gate_required(record: dict[str, Any], mapping: dict[str, Any], behavioral: bool) -> bool:
-    if not behavioral or "execution_gate" not in mapping:
+    if not behavioral:
         return False
-    exempt = set(mapping["execution_gate"].get("legacy_exempt_change_ids", []))
+    policy = mapping.get("execution_gate")
+    if not isinstance(policy, dict) or not policy.get("enabled", False):
+        return False
+    exempt = set(policy.get("legacy_exempt_change_ids", []))
     return record["id"] not in exempt
+
+
+def record_artifact_paths(record: dict[str, Any]) -> list[str]:
+    changed_files = record.get("changed_files")
+    if not isinstance(changed_files, list) or not all(isinstance(path, str) and path.strip() for path in changed_files):
+        raise ValueError(f"record {record['id']!r} requires changed_files for artifact-state binding")
+    record_path = f"skills/project-review-system/changes/{record['id']}.json"
+    excluded = {record_path, QUEUE_REPOSITORY_PATH}
+    return sorted(set(path for path in changed_files if path not in excluded))
+
+
+def current_record_target_state_id(record: dict[str, Any]) -> str:
+    paths = record_artifact_paths(record)
+    if not paths:
+        raise ValueError(f"record {record['id']!r} has no governed artifact files after state exclusions")
+    digest = GATE_CHECKER.repository_artifact_state_sha256(paths)
+    return f"sha256:{digest}"
 
 
 def validate_stage_execution_gates(
@@ -74,6 +95,7 @@ def validate_stage_execution_gates(
     if not isinstance(gates, dict):
         raise ValueError(f"record {record['id']!r} execution_gates must be an object")
 
+    expected_target_state_id = current_record_target_state_id(record)
     for stage in stages:
         if results.get(stage) not in PASS_RESULTS:
             continue
@@ -83,7 +105,12 @@ def validate_stage_execution_gates(
                 f"record {record['id']!r} has passing result for {stage!r} without a current execution gate"
             )
         try:
-            GATE_CHECKER.validate_execution_gate(gate, stage, revision)
+            GATE_CHECKER.validate_execution_gate(
+                gate,
+                stage,
+                revision,
+                expected_target_state_id=expected_target_state_id,
+            )
         except (ValueError, TypeError, RuntimeError) as exc:
             raise ValueError(
                 f"record {record['id']!r} has invalid execution gate for {stage!r}: {exc}"
@@ -214,7 +241,7 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
         results = record.get("results", {})
         for stage in record["derived_stages"]:
             mark = "x" if results.get(stage) in PASS_RESULTS else " "
-            gate_note = " with a valid Adaptive Execution gate" if record["derived_execution_gate_required"] else ""
+            gate_note = " with a valid Adaptive Execution gate bound to current artifact state" if record["derived_execution_gate_required"] else ""
             lines.append(f"- [{mark}] Revalidate **{stage}**{gate_note} and record the result.")
         for evaluation in record["derived_evaluations"]:
             mark = "x" if results.get(evaluation) in PASS_RESULTS else " "
@@ -231,7 +258,7 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
             "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'",
             "```",
             "",
-            "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has an absent/stale/invalid gate, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.",
+            "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has an absent/stale/invalid gate or artifact-state binding, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed.",
         ]
     )
     return "\n".join(lines) + "\n"
