@@ -24,6 +24,8 @@ def workload(**overrides):
     value = {
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer-runtime-v2",
+        "activity": "Adversarial",
+        "review_revision": 1,
         "artifact_count": 1,
         "content_bytes": 1000,
         "remaining_stage_count": 1,
@@ -76,6 +78,7 @@ class ExecutionPolicyTests(unittest.TestCase):
     def test_small_workload_is_fused_under_default_profile(self) -> None:
         decision = selector.select_policy(workload(), self.default_capability)
         self.assertEqual(decision["selected_mode"], "FUSED")
+        self.assertEqual(decision["activity"], "Adversarial")
 
     def test_five_stage_workload_is_separated_under_default_profile(self) -> None:
         decision = selector.select_policy(
@@ -179,10 +182,11 @@ class ExecutionPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selector.validate_capability(invalid, custom_profile=True)
 
-    def test_workload_requires_reviewer_subject(self) -> None:
-        invalid = workload(reviewer_subject_id="")
+    def test_workload_requires_reviewer_subject_and_activity(self) -> None:
         with self.assertRaises(ValueError):
-            selector.validate_workload(invalid)
+            selector.validate_workload(workload(reviewer_subject_id=""))
+        with self.assertRaises(ValueError):
+            selector.validate_workload(workload(activity=""))
 
     def test_unsupported_envelope_model_is_rejected(self) -> None:
         invalid = strong_capability()
@@ -220,12 +224,27 @@ class ExecutionPolicyTests(unittest.TestCase):
         self.assertIn("cannot prove workload truthfulness", boundary)
         self.assertIn("combined-envelope benchmark validity", boundary)
 
-    def test_decision_records_capability_subject_and_envelope(self) -> None:
+    def test_decision_records_hashes_and_capability_subject(self) -> None:
         decision = selector.select_policy(workload(), strong_capability())
         self.assertEqual(decision["reviewer_subject_id"], "test-reviewer-runtime-v2")
         self.assertEqual(decision["capability_subject_id"], "test-reviewer-runtime-v2")
         self.assertEqual(decision["capability_benchmark_suite"], "fixture-suite-v1")
         self.assertEqual(decision["capability_envelope_model"], "rectangular-v1")
+        self.assertEqual(len(decision["workload_sha256"]), 64)
+        self.assertEqual(len(decision["capability_sha256"]), 64)
+
+    def test_gate_recomputes_and_rejects_tampering(self) -> None:
+        gate = selector.build_gate(workload(), self.default_capability)
+        decision = selector.validate_gate(gate, expected_activity="Adversarial")
+        self.assertEqual(decision["selected_mode"], "FUSED")
+        gate["decision"]["selected_mode"] = "ISOLATED"
+        with self.assertRaises(ValueError):
+            selector.validate_gate(gate, expected_activity="Adversarial")
+
+    def test_gate_rejects_wrong_activity(self) -> None:
+        gate = selector.build_gate(workload(), self.default_capability)
+        with self.assertRaises(ValueError):
+            selector.validate_gate(gate, expected_activity="Interdependency")
 
 
 if __name__ == "__main__":
