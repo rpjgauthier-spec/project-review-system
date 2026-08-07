@@ -7,7 +7,6 @@
     "skills/project-review-system/config/revalidation-map.json",
     "skills/project-review-system/evals/pass-boundary-enforcement.md",
     "skills/project-review-system/references/adaptive-execution.md",
-    "skills/project-review-system/reviews/revalidation-queue.md",
     "skills/project-review-system/scripts/check_pass_boundaries.py",
     "skills/project-review-system/templates/project-review-system-revalidation.yml",
     "skills/project-review-system/tests/test_pass_boundaries.py"
