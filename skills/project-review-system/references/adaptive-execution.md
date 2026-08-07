@@ -21,7 +21,7 @@ Execution mode changes only context separation. All required stages and evaluati
 Before the Identity Pass or first semantic stage:
 
 1. Build a workload record using `templates/review-workload.json`.
-2. Use deterministic or directly observable values where available: artifact count, semantic units, required stages, required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
+2. Use deterministic or directly observable values where available: artifact count, content bytes, required stages, required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
 3. Select a reviewer capability profile. If no externally validated profile is available, use `config/default-execution-capability.json`.
 4. Run `scripts/select_execution_policy.py`.
 5. Record the selected mode and decision evidence in the active review record or bounded working notes.
@@ -33,11 +33,13 @@ Do not infer capability from model name, context-window size, provider marketing
 
 A capability profile defines the largest workload envelope demonstrated for `FUSED` and `SEPARATED` execution. Anything outside the separated envelope selects `ISOLATED`.
 
-A non-default profile must be marked `VALIDATED` and identify benchmark evidence. The deterministic selector validates the profile schema and uses its declared envelopes; it does not prove that the benchmark itself was honest or sufficient.
+A non-default profile must be marked `VALIDATED`, identify the reviewer/runtime `subject_id` to which the evidence applies, name the benchmark suite, and identify benchmark evidence. The deterministic selector validates these declared fields and the envelope schema; it does not prove that the benchmark itself was honest or sufficient.
+
+The built-in `DEFAULT_CONSERVATIVE` status is reserved for `default-conservative-v1`. Other profiles cannot use that status to bypass validation requirements.
 
 As reviewer capability improves, a newly validated profile may raise the fused or separated envelope. The same workload can then automatically select a lighter execution mode without changing review governance.
 
-Capability improvement may relax context separation, but it cannot waive an independent-review requirement whose purpose is conflict-of-interest or assurance independence rather than context capacity.
+Capability improvement may relax context separation, but it cannot waive an independent-review requirement whose purpose is conflict-of-interest or assurance independence rather than context capacity. A profile validated for one reviewer/runtime must not be silently transferred to another subject.
 
 ## Workload dimensions
 
@@ -46,7 +48,7 @@ The selector compares the workload independently against every envelope dimensio
 Current dimensions are:
 
 - `artifact_count`
-- `semantic_units`
+- `content_bytes`
 - `required_stage_count`
 - `required_evaluation_count`
 - `dependency_count`
@@ -57,7 +59,9 @@ Current dimensions are:
 - `self_referential`
 - `exhaustive_claim`
 
-These dimensions are policy inputs, not scientific measures of reasoning difficulty. Capability envelopes should be revised only from evaluation evidence, not tuned merely to obtain a preferred execution mode.
+`content_bytes` is the reproducible byte size of the in-scope content represented by the workload decision. Use the same counting boundary in the workload and the benchmark that produced a capability envelope. Do not replace it with an undefined semantic-unit estimate. When content is added to or removed from scope, update the byte count at the next checkpoint.
+
+These dimensions are policy inputs, not scientific measures of reasoning difficulty. Capability envelopes should be revised only from evaluation evidence, not tuned merely to obtain a preferred execution mode. The selector validates declared structure but cannot prove that workload counts or benchmark claims are truthful; that remains an evidence and authority boundary.
 
 ## Dynamic re-evaluation
 
