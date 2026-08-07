@@ -1,7 +1,7 @@
 ---
 name: project-review-system
 description: Review repository-based projects through adversarial, interdependency, normalization, and structural optimization stages while preserving authority, safeguards, evidence, and recoverability.
-version: 0.1.8
+version: 0.1.9
 license: Apache-2.0
 ---
 
@@ -57,6 +57,26 @@ Locate only inputs material to the selected depth, including current state, cont
 
 Do not invent permanent governance solely to support the skill.
 
+## Exhaustive semantic coverage
+
+Use exhaustive semantic coverage only when the requested claim is repository-wide and exhaustive. Do not impose it on ordinary focused reviews.
+
+For an exhaustive claim:
+
+1. Pin the target repository to a specific Git commit.
+2. Run `scripts/build_review_manifest.py` against that pinned tree.
+3. Account for every tracked tree entry in the generated manifest, including directories, blobs, and gitlinks.
+4. Use the manifest-assigned semantic method for each entry. Methods distinguish code, structured data, text/documents, images, archives, binaries, repository structure, and gitlinks.
+5. Record actual processing in a coverage ledger using `templates/review-coverage.json` as the schema example.
+6. For every manifest entry, require matching Git object identity, matching semantic method, `semantic_status: COMPLETE`, and complete line/byte/object ranges.
+7. Run `scripts/check_review_coverage.py` before making an exhaustive repository-coverage claim.
+
+An exhaustive claim has no `EXCLUDED`, irrelevant-file, sample-only, snippet-only, or search-only completion path. If any tracked entry cannot be semantically processed, the exhaustive claim is blocked and the limitation must be stated instead.
+
+A passing coverage checker proves inventory identity and declared full-range processing records. It does not prove comprehension, semantic correctness, truthful interpretation, domain correctness, or reviewer independence. Do not claim that deterministic coverage proves those things.
+
+Semantic search may help discover relationships, but it cannot substitute for sequential full-object processing under an exhaustive claim.
+
 ## Review-state authority
 
 For a staged review, identify exactly one current review-state authority. It owns program status, open stage, current status, report paths, residual conditions, suspension state, and advancement. Reports are historical evidence and cannot independently advance the program.
@@ -90,7 +110,7 @@ The workflow:
 - requires each impact record to list itself;
 - rejects deleted impact records and stale file claims;
 - checks that the generated queue is current and clear;
-- runs tracker, queue-generator, and coverage-checker regression suites.
+- runs tracker, queue-generator, coverage-checker, and exhaustive-review regression suites.
 
 Repository branch protection must require the `validate-revalidation-controls` check and prevent direct pushes to the protected branch. Without that repository setting, GitHub Actions detects violations but cannot guarantee that a privileged direct push or administrative bypass will be blocked.
 
@@ -110,6 +130,7 @@ Repository branch protection must require the `validate-revalidation-controls` c
 - Reopen the earliest invalidated prior stage and suspend later stages when an earlier conclusion no longer holds.
 - Do not advance while `update_revalidation_queue.py --check` reports stale or unresolved work.
 - Do not merge a Project Review System pull request unless changed-file coverage and all required revalidation checks pass.
+- Do not claim exhaustive repository coverage unless `check_review_coverage.py` passes for the pinned target manifest and the substantive review still supports the claim.
 
 ## Independent-review limitation
 
@@ -143,10 +164,12 @@ python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 
 A full program is complete only when every required stage has a permitted terminal verdict and report, the tracker agrees with reports, no open/failed/pending or awaiting-revalidation stage remains, protected controls and dependencies remain intact, backward-impact gates are resolved, changed-file coverage passes for the full proposed diff, the generated revalidation queue is current and clear, selected end-to-end traces pass, deterministic checks pass within their stated scope, and the final claim records scope, exclusions, evidence limits, and reviewer independence.
 
+If the full-program conclusion additionally claims exhaustive repository coverage, the pinned exhaustive manifest and coverage ledger must also pass `check_review_coverage.py`. Failure to account for any tracked object blocks only the exhaustive claim unless that missing object also invalidates the underlying bounded review conclusion.
+
 A focused review is complete when its bounded question is answered, material findings are resolved or escalated, and remaining uncertainty is stated.
 
 A defensible full-program claim is:
 
 > Within the reviewed and accessible scope, current state, known triggers, and available evidence, no material unresolved adversarial, interdependency, normalization, structural-optimization, or end-to-end control defect was identified.
 
-Do not claim universal correctness, safety, optimality, complete coverage, independent validation, or future-proofing.
+Do not claim universal correctness, safety, optimality, independent validation, future-proofing, or exhaustive coverage without the corresponding evidence.

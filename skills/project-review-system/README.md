@@ -23,7 +23,7 @@ project-review-system/
 ├── changes/                 # Change-impact records
 ├── config/                  # Canonical revalidation mapping
 ├── references/              # Shared model and stage modules
-├── templates/               # Trackers, reports, impact record, workflow
+├── templates/               # Trackers, reports, impact and coverage records, workflow
 ├── evals/                   # Evaluation scenarios
 ├── reviews/                 # Current state and historical evidence
 ├── scripts/                 # Deterministic controls
@@ -56,6 +56,35 @@ See `INSTALL.md` for review-only and enforced-GitHub installation profiles. Repo
 
 Focused reviews normally do not need permanent trackers or stage reports. Changes made during review still require a change-impact record. A supported `behavior-neutral` record does not reopen a review stage.
 
+## Exhaustive semantic coverage
+
+When a review claims exhaustive repository coverage, inventory and semantic-processing coverage must be proven separately from the reviewer's conclusions.
+
+Pin the target repository to a commit and build a manifest:
+
+```bash
+python skills/project-review-system/scripts/build_review_manifest.py \
+  --repo /path/to/target-repository \
+  --ref HEAD \
+  --output review-manifest.json
+```
+
+The manifest includes every tracked tree entry reachable from the pinned commit, including directories, blobs, and gitlinks. Each entry records its Git object identity and a required semantic method such as code, structured data, document, image, archive, binary, repository structure, or gitlink analysis.
+
+During review, maintain a coverage ledger based on `templates/review-coverage.json`. A complete exhaustive claim requires every manifest entry to have `semantic_status: COMPLETE` and full declared range coverage. There is no `EXCLUDED` or irrelevant-file shortcut for an exhaustive claim.
+
+Validate the ledger with:
+
+```bash
+python skills/project-review-system/scripts/check_review_coverage.py \
+  --manifest review-manifest.json \
+  --coverage review-coverage.json
+```
+
+A passing coverage check proves that every inventoried object has matching identity, semantic method, and complete line/byte/object-range processing records. It does **not** prove comprehension, semantic correctness, domain correctness, or reviewer independence.
+
+Semantic search, sampled reading, snippets, summaries, or repository-wide search results cannot substitute for the exhaustive manifest-and-coverage path when an exhaustive claim is made.
+
 ## Deterministic validation
 
 ```bash
@@ -66,7 +95,7 @@ python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 
 For pull requests, GitHub Actions also invokes `scripts/check_change_impact_coverage.py` with the base and head SHAs.
 
-These controls validate declared structures and mappings only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, or complete coverage.
+These controls validate declared structures and mappings only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, or comprehension.
 
 ## Enforcement boundary
 
@@ -74,9 +103,11 @@ The workflow reports `validate-revalidation-controls` for every pull request and
 
 ## Assurance limits
 
-Version `0.1.8` completed staged same-agent revalidation and live GitHub Actions runtime validation in its source repository. The validated source state passed 27 regression tests, changed-file coverage, and a clear revalidation-queue check. Deliberate live failure-path tests also confirmed rejection of an unrecorded watched change, a deleted impact record, a stale new-record claim, and a stale generated queue.
+Version `0.1.9` adds deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls. Bounded same-agent revalidation covered all five review stages, the exhaustive-object-inventory, full-range-coverage, premature-completion, reopening-chain, semantic-coverage-boundary, and structural-validator evaluations, and a live protected pull-request run in which changed-file coverage and all 37 regression tests passed before the intentionally unresolved queue gate.
 
-This standalone public repository preserves that validated package layout but does not constitute independent review. Independent review, unrelated-project testing, host-specific testing, and measured false-positive/false-negative performance remain outstanding.
+Version `0.1.8` completed staged same-agent revalidation and live GitHub Actions runtime validation in its source repository. The standalone public bootstrap subsequently passed 28 regression tests, changed-file coverage, and a clear revalidation-queue check, while also exposing and correcting a `.github` path-normalization portability defect.
+
+This standalone public repository does not constitute independent review. Independent review, unrelated-project effectiveness testing, host-specific testing, and measured false-positive/false-negative performance remain outstanding.
 
 The package does not replace qualified domain expertise.
 

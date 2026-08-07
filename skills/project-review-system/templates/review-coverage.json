@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "resolved_commit": "REPLACE_WITH_MANIFEST_COMMIT",
+  "entries": [
+    {
+      "path": "path/from/manifest",
+      "object_sha": "sha/from/manifest",
+      "review_method": "METHOD_FROM_MANIFEST",
+      "coverage_unit": "line",
+      "semantic_status": "COMPLETE",
+      "ranges": [
+        [1, 100]
+      ],
+      "notes": "Optional bounded review note; do not use notes as a substitute for complete ranges."
+    }
+  ]
+}
