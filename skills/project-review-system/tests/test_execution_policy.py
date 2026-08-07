@@ -25,6 +25,7 @@ def workload(**overrides):
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer-runtime-v2",
         "activity": "Adversarial",
+        "target_state_id": "fixture-state-v1",
         "review_revision": 1,
         "artifact_count": 1,
         "content_bytes": 1000,
@@ -79,6 +80,7 @@ class ExecutionPolicyTests(unittest.TestCase):
         decision = selector.select_policy(workload(), self.default_capability)
         self.assertEqual(decision["selected_mode"], "FUSED")
         self.assertEqual(decision["activity"], "Adversarial")
+        self.assertEqual(decision["target_state_id"], "fixture-state-v1")
 
     def test_five_stage_workload_is_separated_under_default_profile(self) -> None:
         decision = selector.select_policy(
@@ -182,11 +184,13 @@ class ExecutionPolicyTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             selector.validate_capability(invalid, custom_profile=True)
 
-    def test_workload_requires_reviewer_subject_and_activity(self) -> None:
+    def test_workload_requires_subject_activity_and_target_state(self) -> None:
         with self.assertRaises(ValueError):
             selector.validate_workload(workload(reviewer_subject_id=""))
         with self.assertRaises(ValueError):
             selector.validate_workload(workload(activity=""))
+        with self.assertRaises(ValueError):
+            selector.validate_workload(workload(target_state_id=""))
 
     def test_unsupported_envelope_model_is_rejected(self) -> None:
         invalid = strong_capability()
@@ -221,8 +225,8 @@ class ExecutionPolicyTests(unittest.TestCase):
         boundary = decision["assurance_boundary"]
         self.assertIn("required stages", boundary)
         self.assertIn("independent-review requirements", boundary)
-        self.assertIn("cannot prove workload truthfulness", boundary)
-        self.assertIn("combined-envelope benchmark validity", boundary)
+        self.assertIn("target_state_id", boundary)
+        self.assertIn("combined-envelope benchmark", boundary)
 
     def test_decision_records_hashes_and_capability_subject(self) -> None:
         decision = selector.select_policy(workload(), strong_capability())
