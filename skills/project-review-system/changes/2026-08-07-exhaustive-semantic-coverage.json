@@ -1,0 +1,30 @@
+{
+  "id": "2026-08-07-exhaustive-semantic-coverage",
+  "summary": "Add deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls.",
+  "changed_files": [
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/CHANGELOG.md",
+    "skills/project-review-system/scripts/build_review_manifest.py",
+    "skills/project-review-system/scripts/check_review_coverage.py",
+    "skills/project-review-system/templates/review-coverage.json",
+    "skills/project-review-system/tests/test_review_coverage.py",
+    "skills/project-review-system/changes/2026-08-07-exhaustive-semantic-coverage.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "tracker-or-completion"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [
+    "Structural Optimization"
+  ],
+  "additional_evaluations": [
+    "exhaustive-object-inventory",
+    "full-range-coverage",
+    "semantic-coverage-boundary"
+  ],
+  "reason": "This changes the evidence required for an exhaustive repository-wide coverage claim. The new manifest pins a Git commit and inventories every tracked tree entry; the coverage checker requires matching object identity, assigned semantic method, COMPLETE semantic status, and complete line/byte/object ranges. Search, sampling, snippets, exclusions, and inaccessible entries cannot satisfy an exhaustive claim. Structural Optimization is added because the change introduces a new manifest/ledger artifact pair and deterministic controls whose burden and separation require explicit review.",
+  "status": "in_progress",
+  "results": {}
+}
