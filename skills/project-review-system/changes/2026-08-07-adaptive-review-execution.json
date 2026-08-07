@@ -1,0 +1,33 @@
+{
+  "id": "2026-08-07-adaptive-review-execution",
+  "summary": "Add adaptive preflight and checkpoint selection of FUSED, SEPARATED, or ISOLATED semantic review execution from workload and validated reviewer capability.",
+  "changed_files": [
+    "skills/project-review-system/SKILL.md",
+    "skills/project-review-system/README.md",
+    "skills/project-review-system/CHANGELOG.md",
+    "skills/project-review-system/references/adaptive-execution.md",
+    "skills/project-review-system/config/default-execution-capability.json",
+    "skills/project-review-system/templates/review-workload.json",
+    "skills/project-review-system/templates/reviewer-capability.json",
+    "skills/project-review-system/scripts/select_execution_policy.py",
+    "skills/project-review-system/evals/adaptive-execution.md",
+    "skills/project-review-system/tests/test_execution_policy.py",
+    "skills/project-review-system/changes/2026-08-07-adaptive-review-execution.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "simplification-or-structure",
+    "tracker-or-completion"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "adaptive-execution",
+    "execution-policy-selector",
+    "capability-relaxation"
+  ],
+  "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds a preflight before the Identity Pass or first semantic stage and checkpoint re-evaluation after Identity Pass and each completed stage. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
+  "status": "in_progress",
+  "results": {}
+}
