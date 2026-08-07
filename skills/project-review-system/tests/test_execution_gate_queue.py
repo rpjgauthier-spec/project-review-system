@@ -26,7 +26,7 @@ selector_spec.loader.exec_module(selector)
 CAPABILITY = json.loads(DEFAULT_CAPABILITY_PATH.read_text(encoding="utf-8"))
 MAPPING = {
     "stages": ["Adversarial", "End-to-end validation"],
-    "execution_gate": {"legacy_exempt_change_ids": ["legacy"]},
+    "execution_gate": {"enabled": True, "legacy_exempt_change_ids": ["legacy"]},
     "change_classes": {
         "authorization": {
             "stages": ["Adversarial", "End-to-end validation"],
@@ -36,11 +36,12 @@ MAPPING = {
 }
 
 
-def workload(activity="Adversarial", revision=2):
+def workload(target_state_id, activity="Adversarial", revision=2):
     return {
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer",
         "activity": activity,
+        "target_state_id": target_state_id,
         "review_revision": revision,
         "artifact_count": 2,
         "content_bytes": 2000,
@@ -61,6 +62,11 @@ def record(record_id="current"):
     return {
         "id": record_id,
         "summary": "Test authorization change.",
+        "changed_files": [
+            "skills/project-review-system/tests/test_execution_gate_queue.py",
+            f"skills/project-review-system/changes/{record_id}.json",
+            "skills/project-review-system/reviews/revalidation-queue.md",
+        ],
         "change_classes": ["authorization"],
         "claimed_earliest_stage": "Adversarial",
         "status": "in_progress",
@@ -68,6 +74,13 @@ def record(record_id="current"):
         "results": {},
         "execution_gates": {},
     }
+
+
+def attach_gate(value, activity="Adversarial", revision=2, target_state_id=None):
+    actual_target = target_state_id or queue.current_record_target_state_id(value)
+    value["execution_gates"]["Adversarial"] = selector.build_gate(
+        workload(actual_target, activity=activity, revision=revision), CAPABILITY
+    )
 
 
 class QueueExecutionGateTests(unittest.TestCase):
@@ -79,30 +92,38 @@ class QueueExecutionGateTests(unittest.TestCase):
 
     def test_passing_stage_with_valid_gate_is_accepted(self) -> None:
         value = record()
-        value["execution_gates"]["Adversarial"] = selector.build_gate(
-            workload(), CAPABILITY
-        )
+        attach_gate(value)
         value["results"]["Adversarial"] = "supported"
         normalized = queue.normalize_record(value, MAPPING)
         self.assertTrue(normalized["derived_execution_gate_required"])
 
     def test_reopening_revision_invalidates_old_gate(self) -> None:
         value = record()
-        value["execution_gates"]["Adversarial"] = selector.build_gate(
-            workload(revision=1), CAPABILITY
-        )
+        attach_gate(value, revision=1)
         value["results"]["Adversarial"] = "supported"
         with self.assertRaisesRegex(ValueError, "review_revision 1 does not match current review revision 2"):
             queue.normalize_record(value, MAPPING)
 
     def test_gate_for_wrong_stage_is_rejected(self) -> None:
         value = record()
-        value["execution_gates"]["Adversarial"] = selector.build_gate(
-            workload(activity="End-to-end validation"), CAPABILITY
-        )
+        attach_gate(value, activity="End-to-end validation")
         value["results"]["Adversarial"] = "supported"
         with self.assertRaisesRegex(ValueError, "does not match expected"):
             queue.normalize_record(value, MAPPING)
+
+    def test_stale_artifact_state_is_rejected(self) -> None:
+        value = record()
+        attach_gate(value, target_state_id="sha256:stale")
+        value["results"]["Adversarial"] = "supported"
+        with self.assertRaisesRegex(ValueError, "does not match current governed artifact state"):
+            queue.normalize_record(value, MAPPING)
+
+    def test_change_record_and_generated_queue_are_excluded_from_target_hash(self) -> None:
+        value = record()
+        paths = queue.record_artifact_paths(value)
+        self.assertNotIn("skills/project-review-system/changes/current.json", paths)
+        self.assertNotIn("skills/project-review-system/reviews/revalidation-queue.md", paths)
+        self.assertEqual(paths, ["skills/project-review-system/tests/test_execution_gate_queue.py"])
 
     def test_legacy_record_remains_exempt(self) -> None:
         value = record("legacy")
