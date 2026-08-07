@@ -2,6 +2,7 @@
   "schema_version": 1,
   "reviewer_subject_id": "stable reviewer/runtime identifier for the execution being governed",
   "activity": "Identity Pass or exact review stage name",
+  "target_state_id": "environment-provided stable identity for the exact governed artifact state",
   "review_revision": 0,
   "artifact_count": 0,
   "content_bytes": 0,
@@ -15,5 +16,5 @@
   "self_referential": false,
   "exhaustive_claim": false,
   "checkpoint": "initial-preflight",
-  "notes": "Use observable values where available. reviewer_subject_id identifies the reviewer/runtime actually being governed. activity identifies the semantic activity this decision gates. review_revision increments whenever a correction/reopening invalidates prior execution gates. content_bytes is the reproducible byte size of in-scope content used for this decision. remaining_stage_count and remaining_evaluation_count decrease only after work is validly completed and not reopened. Update before Identity Pass, before the first or reopened semantic stage, and at later checkpoints."
+  "notes": "Use observable values where available. reviewer_subject_id identifies the reviewer/runtime actually being governed. activity identifies the semantic activity this decision gates. target_state_id binds the decision to the exact governed artifact state; repository enforcement may derive it automatically from file content. review_revision remains an explicit lifecycle marker, but target-state binding independently invalidates stale gates after artifact changes. content_bytes is the reproducible byte size of in-scope content used for this decision. remaining_stage_count and remaining_evaluation_count decrease only after work is validly completed and not reopened. Update before Identity Pass, before the first or reopened semantic stage, and at later checkpoints."
 }
