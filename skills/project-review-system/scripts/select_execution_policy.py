@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Select review execution separation from workload and capability envelopes.
+"""Build and validate Adaptive Execution plans.
 
-The selector changes only how much semantic work may share context. It does not
-change required review stages, evaluations, stage order, or independent-review
-requirements.
+Default execution is SEPARATED. Semantic stage assessment may require bounded
+subpasses and may mark individual subpasses ISOLATED. FUSED execution is allowed
+only through an exact permission in an externally VALIDATED capability profile.
 """
 
 from __future__ import annotations
@@ -16,27 +16,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CAPABILITY = ROOT / "config" / "default-execution-capability.json"
-DEFAULT_PROFILE_ID = "default-conservative-v1"
-SUPPORTED_ENVELOPE_MODEL = "rectangular-v1"
-
-MODES = ("FUSED", "SEPARATED", "ISOLATED")
-MODE_INDEX = {mode: index for index, mode in enumerate(MODES)}
-NUMERIC_DIMENSIONS = (
-    "artifact_count",
-    "content_bytes",
-    "remaining_stage_count",
-    "remaining_evaluation_count",
-    "dependency_count",
-    "protected_control_count",
-    "unresolved_uncertainty_count",
-    "material_findings_count",
-    "unexpected_dependency_count",
-)
-BOOLEAN_DIMENSIONS = {
-    "self_referential": "allow_self_referential",
-    "exhaustive_claim": "allow_exhaustive_claim",
-}
-VALID_PROFILE_STATUSES = {"DEFAULT_CONSERVATIVE", "VALIDATED"}
+DEFAULT_PROFILE_ID = "default-separated-v1"
+VALID_PROFILE_STATUSES = {"DEFAULT_SEPARATED", "VALIDATED"}
+PASS_MODES = {"SEPARATED", "ISOLATED", "FUSED"}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -51,18 +33,46 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
-def require_nonnegative_int(container: dict[str, Any], key: str, where: str) -> int:
-    value = container.get(key)
-    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
-        raise ValueError(f"{where}.{key} must be a nonnegative integer")
-    return value
-
-
 def require_nonempty_string(container: dict[str, Any], key: str, where: str) -> str:
     value = container.get(key)
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{where}.{key} is required")
     return value.strip()
+
+
+def validate_subpasses(subpasses: Any, single_pass_suitable: bool) -> list[dict[str, Any]]:
+    if not isinstance(subpasses, list):
+        raise ValueError("workload.stage_assessment.subpasses must be an array")
+    if single_pass_suitable:
+        if subpasses:
+            raise ValueError("single-pass-suitable stage must not predeclare subdivision subpasses")
+        return []
+    if len(subpasses) < 2:
+        raise ValueError("single-pass-unsuitable stage requires at least two bounded subpasses")
+
+    seen: set[str] = set()
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(subpasses):
+        if not isinstance(item, dict):
+            raise ValueError(f"stage_assessment.subpasses[{index}] must be an object")
+        pass_id = require_nonempty_string(item, "pass_id", f"stage_assessment.subpasses[{index}]")
+        scope = require_nonempty_string(item, "scope", f"stage_assessment.subpasses[{index}]")
+        if pass_id in seen:
+            raise ValueError(f"duplicate subpass id: {pass_id}")
+        seen.add(pass_id)
+        isolation_required = item.get("isolation_required")
+        if not isinstance(isolation_required, bool):
+            raise ValueError(f"stage_assessment.subpasses[{index}].isolation_required must be boolean")
+        reasons = item.get("reasons", [])
+        if not isinstance(reasons, list) or not all(isinstance(v, str) and v.strip() for v in reasons):
+            raise ValueError(f"stage_assessment.subpasses[{index}].reasons must be an array of nonempty strings")
+        normalized.append({
+            "pass_id": pass_id,
+            "scope": scope,
+            "isolation_required": isolation_required,
+            "reasons": reasons,
+        })
+    return normalized
 
 
 def validate_workload(workload: dict[str, Any]) -> None:
@@ -71,188 +81,152 @@ def validate_workload(workload: dict[str, Any]) -> None:
     require_nonempty_string(workload, "reviewer_subject_id", "workload")
     require_nonempty_string(workload, "activity", "workload")
     require_nonempty_string(workload, "target_state_id", "workload")
-    for key in NUMERIC_DIMENSIONS:
-        require_nonnegative_int(workload, key, "workload")
-    for key in BOOLEAN_DIMENSIONS:
-        if not isinstance(workload.get(key), bool):
-            raise ValueError(f"workload.{key} must be boolean")
+    revision = workload.get("review_revision")
+    if isinstance(revision, bool) or not isinstance(revision, int) or revision < 0:
+        raise ValueError("workload.review_revision must be a nonnegative integer")
+    require_nonempty_string(workload, "workload_class", "workload")
 
+    assessment = workload.get("stage_assessment")
+    if not isinstance(assessment, dict):
+        raise ValueError("workload.stage_assessment must be an object")
+    suitable = assessment.get("single_pass_suitable")
+    if not isinstance(suitable, bool):
+        raise ValueError("workload.stage_assessment.single_pass_suitable must be boolean")
+    reasons = assessment.get("reasons", [])
+    if not isinstance(reasons, list) or not all(isinstance(v, str) and v.strip() for v in reasons):
+        raise ValueError("workload.stage_assessment.reasons must be an array of nonempty strings")
+    validate_subpasses(assessment.get("subpasses", []), suitable)
 
-def validate_envelope(envelope: dict[str, Any], name: str) -> None:
-    if not isinstance(envelope, dict):
-        raise ValueError(f"capability.{name} must be an object")
-    for key in NUMERIC_DIMENSIONS:
-        require_nonnegative_int(envelope, key, f"capability.{name}")
-    for key in BOOLEAN_DIMENSIONS.values():
-        if not isinstance(envelope.get(key), bool):
-            raise ValueError(f"capability.{name}.{key} must be boolean")
+    fused = workload.get("fused_authorization")
+    if fused is not None:
+        if not isinstance(fused, dict):
+            raise ValueError("workload.fused_authorization must be null or an object")
+        require_nonempty_string(fused, "permission_id", "workload.fused_authorization")
+        require_nonempty_string(fused, "group_id", "workload.fused_authorization")
+        activities = fused.get("activities")
+        if not isinstance(activities, list) or len(activities) < 2 or not all(isinstance(v, str) and v.strip() for v in activities):
+            raise ValueError("workload.fused_authorization.activities must contain at least two activity names")
+        if workload["activity"] not in activities:
+            raise ValueError("workload activity must be included in fused_authorization.activities")
 
 
 def validate_capability(capability: dict[str, Any], custom_profile: bool) -> None:
     if capability.get("schema_version") != 1:
         raise ValueError("capability.schema_version must be 1")
-    status = capability.get("validation_status")
-    if status not in VALID_PROFILE_STATUSES:
-        raise ValueError(
-            "capability.validation_status must be DEFAULT_CONSERVATIVE or VALIDATED"
-        )
-
     profile_id = require_nonempty_string(capability, "profile_id", "capability")
     require_nonempty_string(capability, "subject_id", "capability")
+    status = capability.get("validation_status")
+    if status not in VALID_PROFILE_STATUSES:
+        raise ValueError("capability.validation_status must be DEFAULT_SEPARATED or VALIDATED")
     require_nonempty_string(capability, "benchmark_suite", "capability")
     require_nonempty_string(capability, "benchmark_evidence", "capability")
-    envelope_model = require_nonempty_string(capability, "envelope_model", "capability")
-    if envelope_model != SUPPORTED_ENVELOPE_MODEL:
-        raise ValueError(
-            f"capability.envelope_model must be {SUPPORTED_ENVELOPE_MODEL}"
-        )
+    permissions = capability.get("fused_permissions", [])
+    if not isinstance(permissions, list):
+        raise ValueError("capability.fused_permissions must be an array")
+    seen: set[str] = set()
+    for index, permission in enumerate(permissions):
+        if not isinstance(permission, dict):
+            raise ValueError(f"capability.fused_permissions[{index}] must be an object")
+        permission_id = require_nonempty_string(permission, "permission_id", f"capability.fused_permissions[{index}]")
+        if permission_id in seen:
+            raise ValueError(f"duplicate fused permission id: {permission_id}")
+        seen.add(permission_id)
+        activities = permission.get("activities")
+        if not isinstance(activities, list) or len(activities) < 2 or not all(isinstance(v, str) and v.strip() for v in activities):
+            raise ValueError(f"capability.fused_permissions[{index}].activities must contain at least two activity names")
+        require_nonempty_string(permission, "workload_class", f"capability.fused_permissions[{index}]")
+        require_nonempty_string(permission, "benchmark_evidence", f"capability.fused_permissions[{index}]")
 
-    if status == "DEFAULT_CONSERVATIVE" and profile_id != DEFAULT_PROFILE_ID:
-        raise ValueError(
-            "DEFAULT_CONSERVATIVE is reserved for the built-in default-conservative-v1 profile"
-        )
+    if status == "DEFAULT_SEPARATED":
+        if profile_id != DEFAULT_PROFILE_ID:
+            raise ValueError("DEFAULT_SEPARATED is reserved for default-separated-v1")
+        if permissions:
+            raise ValueError("default separated profile cannot grant fused permissions")
     if custom_profile and status != "VALIDATED":
         raise ValueError("custom capability profiles must have validation_status VALIDATED")
 
-    validate_envelope(capability.get("fused_limits"), "fused_limits")
-    validate_envelope(capability.get("separated_limits"), "separated_limits")
 
-    fused = capability["fused_limits"]
-    separated = capability["separated_limits"]
-    for key in NUMERIC_DIMENSIONS:
-        if fused[key] > separated[key]:
-            raise ValueError(
-                f"capability fused limit for {key} exceeds separated limit"
-            )
-    for workload_key, allow_key in BOOLEAN_DIMENSIONS.items():
-        if fused[allow_key] and not separated[allow_key]:
-            raise ValueError(
-                f"capability fused envelope allows {workload_key} while separated envelope forbids it"
-            )
-
-
-def validate_subject_binding(workload: dict[str, Any], capability: dict[str, Any]) -> None:
-    """Prevent validated capability evidence from silently transferring subjects."""
-    if capability["validation_status"] != "VALIDATED":
-        return
-    workload_subject = require_nonempty_string(workload, "reviewer_subject_id", "workload")
-    capability_subject = require_nonempty_string(capability, "subject_id", "capability")
-    if workload_subject != capability_subject:
-        raise ValueError(
-            "validated capability subject does not match workload reviewer_subject_id"
-        )
+def find_fused_permission(workload: dict[str, Any], capability: dict[str, Any]) -> dict[str, Any] | None:
+    request = workload.get("fused_authorization")
+    if request is None:
+        return None
+    if capability.get("validation_status") != "VALIDATED":
+        raise ValueError("FUSED execution requires a VALIDATED capability profile")
+    if capability.get("subject_id") != workload.get("reviewer_subject_id"):
+        raise ValueError("validated fused capability subject does not match workload reviewer_subject_id")
+    for permission in capability.get("fused_permissions", []):
+        if permission["permission_id"] != request["permission_id"]:
+            continue
+        if permission["activities"] != request["activities"]:
+            raise ValueError("fused permission activities do not exactly match the requested activity group")
+        if permission["workload_class"] != workload["workload_class"]:
+            raise ValueError("fused permission workload_class does not match workload")
+        return permission
+    raise ValueError("requested fused permission is not present in the validated capability profile")
 
 
-def envelope_failures(
-    workload: dict[str, Any], envelope: dict[str, Any]
-) -> list[dict[str, Any]]:
-    failures: list[dict[str, Any]] = []
-    for key in NUMERIC_DIMENSIONS:
-        actual = workload[key]
-        limit = envelope[key]
-        if actual > limit:
-            failures.append({"dimension": key, "actual": actual, "limit": limit})
-    for workload_key, allow_key in BOOLEAN_DIMENSIONS.items():
-        if workload[workload_key] and not envelope[allow_key]:
-            failures.append(
-                {
-                    "dimension": workload_key,
-                    "actual": True,
-                    "limit": False,
-                }
-            )
-    return failures
-
-
-def base_mode(workload: dict[str, Any], capability: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    fused_failures = envelope_failures(workload, capability["fused_limits"])
-    separated_failures = envelope_failures(workload, capability["separated_limits"])
-    if not fused_failures:
-        mode = "FUSED"
-    elif not separated_failures:
-        mode = "SEPARATED"
-    else:
-        mode = "ISOLATED"
-    return mode, {
-        "fused_failures": fused_failures,
-        "separated_failures": separated_failures,
-    }
-
-
-def apply_transition_policy(base: str, current: str | None) -> tuple[str, str]:
-    if current is None:
-        return base, "initial decision"
-    if current not in MODE_INDEX:
-        raise ValueError(f"current mode must be one of: {', '.join(MODES)}")
-
-    base_index = MODE_INDEX[base]
-    current_index = MODE_INDEX[current]
-    if base_index >= current_index:
-        if base_index > current_index:
-            return base, "tightened immediately because workload exceeded the current envelope"
-        return current, "current mode remains within its envelope"
-
-    relaxed_index = max(base_index, current_index - 1)
-    selected = MODES[relaxed_index]
-    if selected == base:
-        return selected, "relaxed one level to the lightest currently validated mode"
-    return selected, "relaxed by one level; further relaxation requires a later checkpoint"
-
-
-def select_policy(
-    workload: dict[str, Any], capability: dict[str, Any], current_mode: str | None = None
-) -> dict[str, Any]:
+def select_policy(workload: dict[str, Any], capability: dict[str, Any]) -> dict[str, Any]:
     validate_workload(workload)
     validate_capability(capability, custom_profile=False)
-    validate_subject_binding(workload, capability)
-    base, evidence = base_mode(workload, capability)
-    selected, transition = apply_transition_policy(base, current_mode)
+    fused_permission = find_fused_permission(workload, capability)
+    assessment = workload["stage_assessment"]
+
+    if fused_permission is not None:
+        if not assessment["single_pass_suitable"]:
+            raise ValueError("FUSED execution cannot override a stage assessment requiring subdivision")
+        plan = [{"pass_id": "fused-group", "scope": "validated fused activity group", "context_mode": "FUSED"}]
+        selected_mode = "FUSED"
+        plan_kind = "FUSED_GROUP"
+        permission_id = fused_permission["permission_id"]
+    elif assessment["single_pass_suitable"]:
+        plan = [{"pass_id": "stage-main", "scope": workload["activity"], "context_mode": "SEPARATED"}]
+        selected_mode = "SEPARATED"
+        plan_kind = "ONE_PASS"
+        permission_id = None
+    else:
+        subpasses = validate_subpasses(assessment["subpasses"], False)
+        plan = [
+            {
+                "pass_id": item["pass_id"],
+                "scope": item["scope"],
+                "context_mode": "ISOLATED" if item["isolation_required"] else "SEPARATED",
+            }
+            for item in subpasses
+        ]
+        selected_mode = "SEPARATED"
+        plan_kind = "SUBDIVIDED"
+        permission_id = None
+
     return {
         "schema_version": 1,
         "activity": workload["activity"],
         "target_state_id": workload["target_state_id"],
-        "selected_mode": selected,
-        "base_mode": base,
-        "current_mode": current_mode,
-        "transition_reason": transition,
+        "review_revision": workload["review_revision"],
         "reviewer_subject_id": workload["reviewer_subject_id"],
+        "workload_class": workload["workload_class"],
+        "selected_mode": selected_mode,
+        "plan_kind": plan_kind,
+        "execution_plan": plan,
+        "fused_permission_id": permission_id,
         "capability_profile_id": capability["profile_id"],
         "capability_subject_id": capability["subject_id"],
         "capability_validation_status": capability["validation_status"],
         "capability_benchmark_suite": capability["benchmark_suite"],
-        "capability_envelope_model": capability["envelope_model"],
-        "checkpoint": workload.get("checkpoint", "unspecified"),
         "workload_sha256": canonical_hash(workload),
         "capability_sha256": canonical_hash(capability),
-        "envelope_evidence": evidence,
         "assurance_boundary": (
-            "Execution mode changes context separation only; required stages, evaluations, "
-            "stage order, evidence obligations, and independent-review requirements are unchanged. "
-            "The selector binds the decision to a declared target_state_id and validates declared "
-            "workload/profile structure plus validated-profile subject binding, but it cannot prove "
-            "that the target-state identifier, workload facts, combined-envelope benchmark, or "
-            "reviewer independence are truthful. Environment-specific enforcement must verify the "
-            "target_state_id against the actual governed artifacts."
+            "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. "
+            "Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, "
+            "and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion "
+            "validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
         ),
     }
 
 
-def build_gate(
-    workload: dict[str, Any], capability: dict[str, Any], current_mode: str | None = None
-) -> dict[str, Any]:
-    decision = select_policy(workload, capability, current_mode)
-    payload = {
-        "activity": workload["activity"],
-        "workload": workload,
-        "capability": capability,
-        "current_mode": current_mode,
-        "decision": decision,
-    }
-    return {
-        "schema_version": 1,
-        **payload,
-        "gate_sha256": canonical_hash(payload),
-    }
+def build_gate(workload: dict[str, Any], capability: dict[str, Any]) -> dict[str, Any]:
+    decision = select_policy(workload, capability)
+    payload = {"activity": workload["activity"], "workload": workload, "capability": capability, "decision": decision}
+    return {"schema_version": 1, **payload, "gate_sha256": canonical_hash(payload)}
 
 
 def validate_gate(gate: dict[str, Any], expected_activity: str | None = None) -> dict[str, Any]:
@@ -265,21 +239,13 @@ def validate_gate(gate: dict[str, Any], expected_activity: str | None = None) ->
         raise ValueError("execution gate must include workload, capability, and decision objects")
     activity = require_nonempty_string(gate, "activity", "execution_gate")
     if expected_activity is not None and activity != expected_activity:
-        raise ValueError(
-            f"execution gate activity {activity!r} does not match expected {expected_activity!r}"
-        )
+        raise ValueError(f"execution gate activity {activity!r} does not match expected {expected_activity!r}")
     if workload.get("activity") != activity:
         raise ValueError("execution gate workload activity does not match gate activity")
-    recomputed = select_policy(workload, capability, gate.get("current_mode"))
+    recomputed = select_policy(workload, capability)
     if decision != recomputed:
         raise ValueError("execution gate decision does not match current workload/capability inputs")
-    payload = {
-        "activity": activity,
-        "workload": workload,
-        "capability": capability,
-        "current_mode": gate.get("current_mode"),
-        "decision": recomputed,
-    }
+    payload = {"activity": activity, "workload": workload, "capability": capability, "decision": recomputed}
     if gate.get("gate_sha256") != canonical_hash(payload):
         raise ValueError("execution gate hash is stale or invalid")
     return recomputed
@@ -289,26 +255,19 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workload", type=Path, required=True)
     parser.add_argument("--capability", type=Path)
-    parser.add_argument("--current-mode", choices=MODES)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--gate", action="store_true", help="emit a verifiable execution gate record")
     args = parser.parse_args()
-
     try:
         workload = load_json(args.workload)
         capability_path = args.capability or DEFAULT_CAPABILITY
         capability = load_json(capability_path)
         validate_workload(workload)
         validate_capability(capability, custom_profile=args.capability is not None)
-        value = (
-            build_gate(workload, capability, args.current_mode)
-            if args.gate
-            else select_policy(workload, capability, args.current_mode)
-        )
+        value = build_gate(workload, capability) if args.gate else select_policy(workload, capability)
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
-
     rendered = json.dumps(value, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
