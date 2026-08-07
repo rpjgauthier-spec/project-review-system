@@ -25,10 +25,68 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered stage credit, hashed outbound handoffs, exact downstream consumers, next-pass consumption of the prior handoff, a closed historical exemption set, PR-scoped durable Git chronology requiring gate-before-credit and distinct first-credit commits per pass, and historical identity uniqueness across execution occurrences. Every ordinary pass, subdivided subpass, and reopened/redo occurrence must introduce an execution_unit_id and boundary identity that were not used by an earlier occurrence of the same change record. ISOLATED passes additionally require an isolation-boundary declaration. Revision-8 Adversarial found that the first historical-identity implementation omitted the PR base snapshot, which would have allowed a reopened change in a later PR to reuse an identity from a previously merged revision. That defect was corrected by prepending the existing base-state change record to PR history before validating identity uniqueness. The gate created before that finding is stale and discarded; Adversarial remains uncredited pending a fresh gate and redo pass. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The correction adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered stage credit, hashed outbound handoffs, exact downstream consumers, next-pass consumption of the prior handoff, a closed historical exemption set, PR-scoped durable Git chronology requiring gate-before-credit and distinct first-credit commits per pass, and historical identity uniqueness across execution occurrences. Every ordinary pass, subdivided subpass, and reopened/redo occurrence must introduce an execution_unit_id and boundary identity that were not used by an earlier occurrence of the same change record. ISOLATED passes additionally require an isolation-boundary declaration. Revision-8 Adversarial found that the first historical-identity implementation omitted the PR base snapshot, which would have allowed a reopened change in a later PR to reuse an identity from a previously merged revision. That defect was corrected by prepending the existing base-state change record to PR history before validating identity uniqueness. The gate created before that finding was discarded. A fresh artifact-bound Adversarial redo gate is now active. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID.",
   "status": "in_progress",
   "review_revision": 8,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:320894498aa8aec09288d843bba57c691aa74a2cf92a0fce91875e2ecf5e382a",
+        "review_revision": 8,
+        "workload_class": "bounded-revalidation-pass-boundary-v3",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 8 is bounded to separated-pass enforcement, durable chronology, handoff integrity, closed exemptions, and historical execution-identity uniqueness including base-state history.",
+            "The adversarial surfaces are bypass of separation, identity reuse or mutation, stale/tampered handoffs, chronology evasion, exemption self-authorization, isolation mislabeling, and assurance overclaim; one bounded pass is suitable."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED one-pass Adversarial redo for revision 8 after correcting base-state history omission; no FUSED permission or subdivision."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:320894498aa8aec09288d843bba57c691aa74a2cf92a0fce91875e2ecf5e382a",
+        "review_revision": 8,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "workload_class": "bounded-revalidation-pass-boundary-v3",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "37d8bf1578fcbb376317d230129c54658ac09a365851c8ae2639e38ba589dd29",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "524cc35bcb86ea53e17bdbe173ce43a0b9417ecf3c45c7bdaeb011b4103c5886"
+    }
+  },
   "execution_completions": {},
   "results": {},
   "supersedes_assurance": [
