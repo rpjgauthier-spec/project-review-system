@@ -1,10 +1,12 @@
 # Project Review System
 
-An Agent Skills-compatible workflow for reviewing repository-based projects through evidence-led identity discovery, adversarial, interdependency, normalization, structural optimization, and end-to-end validation.
+An Agent Skills-compatible workflow for reviewing repository-based projects through adaptive execution, evidence-led identity discovery, adversarial, interdependency, normalization, structural optimization, and end-to-end validation.
 
-The review methods themselves are semantic and can reason about broader bodies of work. Git manifests, object identity, changed-file enforcement, pull requests, and GitHub Actions remain repository-specific evidence and enforcement mechanisms.
+The review methods themselves are semantic and can reason about broader bodies of work. Adaptive execution controls context separation. Git manifests, object identity, changed-file enforcement, pull requests, and GitHub Actions remain repository-specific evidence and enforcement mechanisms.
 
 ## Review model
+
+Preflight before semantic review: **Adaptive Execution**
 
 Pre-review when material: **Identity Pass**
 
@@ -14,7 +16,7 @@ Pre-review when material: **Identity Pass**
 4. Structural Optimization
 5. End-to-end validation
 
-The Identity Pass is not a sixth stage. It discovers materially distinct purposes or lifecycles from evidence before the five-stage review so later stages do not accidentally conflate unrelated or only partially shared bodies of work. Bounded revalidation is a change-triggered lifecycle mechanism, not a sixth stage. Use the smallest review depth that answers the request: focused review, bounded revalidation, or full program.
+Adaptive Execution and the Identity Pass are not additional review stages. Adaptive Execution determines whether semantic work runs `FUSED`, `SEPARATED`, or `ISOLATED`; the Identity Pass discovers materially distinct purposes or lifecycles before the five-stage review. Bounded revalidation remains a change-triggered lifecycle mechanism. Use the smallest review depth that answers the request.
 
 ## Package layout
 
@@ -25,9 +27,9 @@ project-review-system/
 ├── INSTALL.md               # Distribution and activation
 ├── CHANGELOG.md             # Release history
 ├── changes/                 # Change-impact records
-├── config/                  # Canonical revalidation mapping
-├── references/              # Shared model, identity pass, and stage modules
-├── templates/               # Trackers, reports, impact and coverage records, workflow
+├── config/                  # Revalidation mapping and default execution capability
+├── references/              # Shared model, adaptive execution, identity pass, stage modules
+├── templates/               # Trackers, reports, workload/capability, impact and coverage records
 ├── evals/                   # Evaluation scenarios
 ├── reviews/                 # Current state and historical evidence
 ├── scripts/                 # Deterministic controls
@@ -51,15 +53,34 @@ See `INSTALL.md` for review-only and enforced-GitHub installation profiles. Repo
 ## Use
 
 1. Read `SKILL.md` and `references/shared-control-model.md`.
-2. Select the review mode and smallest sufficient depth.
-3. Define accessible scope, exclusions, and allowed actions.
+2. Select review mode, scope, authorization, and smallest sufficient depth.
+3. For broad or multi-stage work, run the Adaptive Execution preflight before the Identity Pass or first semantic stage.
 4. For broad/full-program work, run the Identity Pass when identity boundaries could materially change interpretation.
-5. Identify one review-state authority when a durable staged program is justified.
-6. Record review changes under `changes/` and regenerate `reviews/revalidation-queue.md`.
-7. Run the required stage work, evaluations, and deterministic tests.
-8. Complete only when identity interpretation where applicable, tracker state, reports, changed-file coverage, queue state, traces, and bounded claims agree.
+5. Re-run Adaptive Execution after the Identity Pass and after each completed stage while later work remains.
+6. Identify one review-state authority when a durable staged program is justified.
+7. Record review changes under `changes/` and regenerate `reviews/revalidation-queue.md`.
+8. Run the required stage work, evaluations, and deterministic tests.
+9. Complete only when execution policy, identity interpretation where applicable, tracker state, reports, changed-file coverage, queue state, traces, and bounded claims agree.
 
 Focused reviews normally do not need permanent trackers or stage reports. Changes made during review still require a change-impact record. A supported `behavior-neutral` record does not reopen a review stage.
+
+## Adaptive Execution
+
+Use `references/adaptive-execution.md`, `templates/review-workload.json`, and `scripts/select_execution_policy.py` to select context separation from observable workload and reviewer capability.
+
+Modes:
+
+- `FUSED` — multiple semantic activities may share one bounded context within a validated fused envelope.
+- `SEPARATED` — each stage gets an explicit semantic pass and bounded handoff.
+- `ISOLATED` — each stage gets a fresh context or equivalent isolated execution.
+
+The initial decision occurs after scope/depth are known but before the Identity Pass or first semantic stage. Re-evaluate after the Identity Pass and after every completed stage while later work remains.
+
+New complexity can tighten separation immediately. A reduced workload or stronger externally validated capability profile can relax remaining work by at most one level per checkpoint. This lets the same governance become lighter automatically as reviewer capability improves without hard-coding model names.
+
+Execution mode never removes required stages, evaluations, evidence obligations, stage order, or independent-review requirements. `ISOLATED` same-reviewer execution is not independent review.
+
+The default profile at `config/default-execution-capability.json` is intentionally conservative and is not a measured capability claim. Custom profiles must be marked `VALIDATED` and identify benchmark evidence. Do not infer capability from model name, advertised context length, or subjective confidence.
 
 ## Identity Pass
 
@@ -81,7 +102,7 @@ For Git repositories, repository-specific evidence mechanisms may support the pa
 
 ## Abstraction boundary
 
-Structural Optimization now explicitly asks whether behavior is unnecessarily coupled to a platform, storage medium, implementation, domain, artifact type, or vendor.
+Structural Optimization explicitly asks whether behavior is unnecessarily coupled to a platform, storage medium, implementation, domain, artifact type, or vendor.
 
 The intended separation is:
 
@@ -125,6 +146,7 @@ Semantic search, sampled reading, snippets, summaries, or repository-wide search
 ## Deterministic validation
 
 ```bash
+python skills/project-review-system/scripts/select_execution_policy.py --workload review-workload.json
 python skills/project-review-system/scripts/update_revalidation_queue.py
 python skills/project-review-system/scripts/update_revalidation_queue.py --check
 python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
@@ -132,7 +154,7 @@ python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 
 For pull requests, GitHub Actions also invokes `scripts/check_change_impact_coverage.py` with the base and head SHAs.
 
-These controls validate declared structures and mappings only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, or comprehension.
+These controls validate declared structures, mappings, workload profiles, and capability envelopes only. They do not prove semantic correctness, truthful classification, evidence accuracy, authorization validity, security, domain correctness, benchmark validity, or comprehension.
 
 ## Enforcement boundary
 
@@ -140,15 +162,15 @@ The workflow reports `validate-revalidation-controls` for every pull request and
 
 ## Assurance limits
 
-Version `0.1.11` corrects an abstraction-boundary defect in Version 0.1.10: semantic identity discovery is now medium-independent, while Git-specific exhaustive evidence and enforcement remain repository-specific. Structural Optimization also gains a reusable accidental-environment-coupling check and regression evaluation.
+Version `0.1.12` adds Adaptive Execution: a preflight and checkpoint controller that selects `FUSED`, `SEPARATED`, or `ISOLATED` from workload and capability envelopes. It is designed to tighten automatically as review complexity grows and to relax automatically when a stronger externally validated reviewer profile supports more shared context.
 
-Version `0.1.10` introduced the evidence-led Identity Pass but framed the semantic capability too narrowly around Git repositories. The non-leading discovery controls remain valid; the abstraction boundary is corrected in Version 0.1.11.
+Version `0.1.11` corrected an abstraction-boundary defect in Version 0.1.10: semantic identity discovery is medium-independent, while Git-specific exhaustive evidence and enforcement remain repository-specific. Structural Optimization also gained a reusable accidental-environment-coupling check and regression evaluation.
 
-Version `0.1.9` adds deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls. Bounded same-agent revalidation covered all five review stages, the exhaustive-object-inventory, full-range-coverage, premature-completion, reopening-chain, semantic-coverage-boundary, and structural-validator evaluations, and a live protected pull-request run in which changed-file coverage and all 37 regression tests passed before the intentionally unresolved queue gate.
+Version `0.1.10` introduced the evidence-led Identity Pass but framed the semantic capability too narrowly around Git repositories. The non-leading discovery controls remain valid; the abstraction boundary was corrected in Version 0.1.11.
 
-Version `0.1.8` completed staged same-agent revalidation and live GitHub Actions runtime validation in its source repository. The standalone public bootstrap subsequently passed 28 regression tests, changed-file coverage, and a clear revalidation-queue check, while also exposing and correcting a `.github` path-normalization portability defect.
+Version `0.1.9` added deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls.
 
-This standalone public repository does not constitute independent review. Independent review, unrelated-project effectiveness testing, host-specific testing, and measured false-positive/false-negative performance remain outstanding.
+This standalone public repository does not constitute independent review. Independent review, unrelated-project effectiveness testing, host-specific testing, benchmark calibration, and measured false-positive/false-negative performance remain outstanding.
 
 The package does not replace qualified domain expertise.
 
