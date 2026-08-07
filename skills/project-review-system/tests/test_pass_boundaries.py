@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import copy
 import importlib.util
 import json
 import unittest
@@ -113,9 +114,61 @@ def base_record():
     }
 
 
+def history_snapshots():
+    current = base_record()
+    initial = copy.deepcopy(current)
+    initial["results"] = {}
+    initial["execution_gates"] = {}
+    initial["execution_completions"] = {}
+
+    gate_a = copy.deepcopy(initial)
+    gate_a["execution_gates"]["Adversarial"] = copy.deepcopy(current["execution_gates"]["Adversarial"])
+
+    credit_a = copy.deepcopy(gate_a)
+    credit_a["results"]["Adversarial"] = "supported"
+    credit_a["execution_completions"]["Adversarial"] = copy.deepcopy(current["execution_completions"]["Adversarial"])
+
+    gate_i = copy.deepcopy(credit_a)
+    gate_i["execution_gates"]["Interdependency"] = copy.deepcopy(current["execution_gates"]["Interdependency"])
+
+    return [
+        ("c0", initial),
+        ("c1", gate_a),
+        ("c2", credit_a),
+        ("c3", gate_i),
+        ("c4", current),
+    ]
+
+
 class PassBoundaryTests(unittest.TestCase):
     def test_valid_chain_passes(self):
         checker.validate_record(base_record(), MAPPING)
+
+    def test_valid_durable_history_passes(self):
+        value = base_record()
+        checker.validate_history_snapshots(value, MAPPING, history_snapshots())
+
+    def test_two_passes_first_credited_in_same_commit_are_rejected(self):
+        value = base_record()
+        initial = history_snapshots()[0][1]
+        both_gates = copy.deepcopy(initial)
+        both_gates["execution_gates"] = copy.deepcopy(value["execution_gates"])
+        snapshots = [("c0", initial), ("c1", both_gates), ("c2", value)]
+        with self.assertRaisesRegex(ValueError, "same or an earlier change-record commit"):
+            checker.validate_history_snapshots(value, MAPPING, snapshots)
+
+    def test_gate_must_preexist_pass_credit(self):
+        value = base_record()
+        initial = history_snapshots()[0][1]
+        credit_a = copy.deepcopy(initial)
+        credit_a["execution_gates"]["Adversarial"] = copy.deepcopy(value["execution_gates"]["Adversarial"])
+        credit_a["execution_completions"]["Adversarial"] = copy.deepcopy(value["execution_completions"]["Adversarial"])
+        credit_a["results"]["Adversarial"] = "supported"
+        gate_i = copy.deepcopy(credit_a)
+        gate_i["execution_gates"]["Interdependency"] = copy.deepcopy(value["execution_gates"]["Interdependency"])
+        snapshots = [("c0", initial), ("c1", credit_a), ("c2", gate_i), ("c3", value)]
+        with self.assertRaisesRegex(ValueError, "gate did not exist in the prior durable"):
+            checker.validate_history_snapshots(value, MAPPING, snapshots)
 
     def test_duplicate_execution_unit_rejected(self):
         value = base_record()
