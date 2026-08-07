@@ -1,6 +1,6 @@
 {
   "id": "2026-08-07-adaptive-review-execution",
-  "summary": "Add separated-default Adaptive Execution with bounded stage subdivision, isolated subpass escalation, evidence-gated FUSED permission, artifact-state binding, and deterministic execution-plan completion enforcement.",
+  "summary": "Add separated-default Adaptive Execution with bounded stage subdivision, isolated subpass escalation, evidence-gated FUSED permission, artifact-state binding, deterministic execution-plan completion enforcement, and ephemeral scratch cleanup.",
   "changed_files": [
     "skills/project-review-system/CHANGELOG.md",
     "skills/project-review-system/README.md",
@@ -34,26 +34,28 @@
     "capability-relaxation",
     "execution-gate-enforcement"
   ],
-  "reason": "The original adaptive design became too complex because it attempted to numerically choose among FUSED, SEPARATED, and ISOLATED for every review. The simplified policy makes SEPARATED the safe default, allows semantic judgment to declare when a stage needs bounded subdivision, mechanically requires ISOLATED context for any subpass declared too broad even after subdivision, and permits FUSED only through exact pre-existing externally validated capability permission. Deterministic enforcement is applied at the stage-result boundary: the gate binds the semantic assessment and resulting execution plan to the current artifact state, and a passing result requires completion evidence for every planned pass in the required context mode. The controls enforce the recorded plan without claiming to prove that the semantic stage-size judgment itself was correct.",
+  "reason": "The original adaptive design became too complex because it attempted to numerically choose among FUSED, SEPARATED, and ISOLATED for every review. The simplified policy makes SEPARATED the safe default, allows semantic judgment to declare when a stage needs bounded subdivision, mechanically requires ISOLATED context for any subpass declared too broad even after subdivision, and permits FUSED only through exact pre-existing externally validated capability permission. Deterministic enforcement is applied at the stage-result boundary: the gate binds the semantic assessment and resulting execution plan to the current artifact state, and a passing result requires completion evidence for every planned pass in the required context mode. Subpass scratch material is ephemeral by default; materialized scratch must be cleaned up before completion is accepted, while any intentionally retained subpass artifact must identify a downstream consumer and retention reason. The controls enforce the recorded plan and cleanup evidence without claiming to prove that the semantic stage-size judgment itself was correct or that an external temporary directory was actually deleted when the validator cannot inspect it.",
   "status": "in_progress",
-  "review_revision": 5,
+  "review_revision": 6,
   "execution_gates": {},
   "execution_completions": {},
   "execution_evidence": {
-    "policy": "SEPARATED by default; semantic subdivision when one pass is unsuitable; ISOLATED per declared overloaded subpass; FUSED only by exact externally VALIDATED permission.",
+    "policy": "SEPARATED by default; semantic subdivision when one pass is unsuitable; ISOLATED per declared overloaded subpass; FUSED only by exact externally VALIDATED permission; subpass scratch is ephemeral by default.",
     "deterministic_enforcement": [
       "Gate hashes bind reviewer, activity, review revision, target artifact state, workload class, semantic stage assessment, capability profile, and execution plan.",
       "Queue validation rejects passing stage results without the current gate and execution completion evidence.",
       "Completion must contain every planned pass in order, with exact pass_id, required context_mode, and status complete.",
+      "If scratch was materialized, completion is rejected unless scratch_cleanup_status is complete; if no scratch was materialized, cleanup status must be not_applicable.",
+      "Any retained durable subpass artifact must name an artifact, downstream consumer, and retention reason.",
       "Artifact-state changes automatically stale prior gates independently of manual review_revision updates."
     ],
-    "semantic_boundary": "The reviewer may use semantic judgment to decide whether a stage is suitable for one pass and which bounded subpasses require isolation. Deterministic controls enforce the consequences of that recorded judgment but do not prove the judgment was correct.",
+    "semantic_boundary": "The reviewer may use semantic judgment to decide whether a stage is suitable for one pass and which bounded subpasses require isolation. Deterministic controls enforce the consequences of that recorded judgment and required cleanup evidence but do not prove the judgment was correct or independently verify deletion of an external temporary workspace that the execution environment cannot inspect.",
     "reopening": {
       "earliest_reopened_stage": "Adversarial",
-      "current_review_revision": 5,
+      "current_review_revision": 6,
       "prior_results_status": "withdrawn_pending_ordered_revalidation",
-      "reason": "The execution policy was materially simplified from multidimensional workload-envelope selection to separated-default stage decomposition and execution-completion enforcement.",
-      "next_required_action": "Finish documentation normalization, regenerate the queue, then create a fresh revision-5 artifact-bound Adversarial gate under the simplified policy before rerunning Adversarial."
+      "reason": "The execution policy was materially simplified from multidimensional workload-envelope selection to separated-default stage decomposition and execution-completion enforcement, then strengthened so subpass scratch material is ephemeral by default and completion requires cleanup evidence.",
+      "next_required_action": "Regenerate the queue, then create a fresh revision-6 artifact-bound Adversarial gate under the simplified policy before rerunning Adversarial."
     }
   },
   "results": {}
