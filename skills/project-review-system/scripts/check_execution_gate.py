@@ -34,6 +34,23 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def normalize_repository_path(raw_path: str) -> str:
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        raise ValueError("artifact-state paths must be nonempty strings")
+    normalized = raw_path.replace("\\", "/")
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+    if (
+        not normalized
+        or normalized.startswith("/")
+        or normalized == ".."
+        or normalized.startswith("../")
+        or "/../" in normalized
+    ):
+        raise ValueError(f"invalid repository-relative artifact path: {raw_path!r}")
+    return normalized
+
+
 def repository_artifact_state_sha256(
     repository_relative_paths: Iterable[str], repository_root: Path = REPOSITORY_ROOT
 ) -> str:
@@ -45,17 +62,13 @@ def repository_artifact_state_sha256(
     """
     root = repository_root.resolve()
     digest = hashlib.sha256()
-    for raw_path in sorted(set(repository_relative_paths)):
-        if not isinstance(raw_path, str) or not raw_path.strip():
-            raise ValueError("artifact-state paths must be nonempty strings")
-        normalized = raw_path.replace("\\", "/").lstrip("./")
-        if not normalized or normalized.startswith("../") or "/../" in normalized:
-            raise ValueError(f"invalid repository-relative artifact path: {raw_path!r}")
+    normalized_paths = sorted({normalize_repository_path(path) for path in repository_relative_paths})
+    for normalized in normalized_paths:
         target = (root / normalized).resolve()
         try:
             target.relative_to(root)
         except ValueError as exc:
-            raise ValueError(f"artifact path escapes repository root: {raw_path!r}") from exc
+            raise ValueError(f"artifact path escapes repository root: {normalized!r}") from exc
 
         digest.update(normalized.encode("utf-8"))
         digest.update(b"\0")
