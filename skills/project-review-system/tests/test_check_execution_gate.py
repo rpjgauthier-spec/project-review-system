@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -31,6 +32,7 @@ def workload(**overrides):
         "schema_version": 1,
         "reviewer_subject_id": "test-reviewer",
         "activity": "Adversarial",
+        "target_state_id": "sha256:fixture",
         "review_revision": 2,
         "artifact_count": 2,
         "content_bytes": 2000,
@@ -52,13 +54,22 @@ def workload(**overrides):
 class ExecutionGateTests(unittest.TestCase):
     def test_valid_gate_passes(self) -> None:
         gate = selector.build_gate(workload(), CAPABILITY, current_mode="SEPARATED")
-        decision = checker.validate_execution_gate(gate, "Adversarial", 2)
+        decision = checker.validate_execution_gate(
+            gate, "Adversarial", 2, expected_target_state_id="sha256:fixture"
+        )
         self.assertEqual(decision["activity"], "Adversarial")
 
     def test_stale_review_revision_fails(self) -> None:
         gate = selector.build_gate(workload(), CAPABILITY)
         with self.assertRaisesRegex(ValueError, "does not match current review revision"):
             checker.validate_execution_gate(gate, "Adversarial", 3)
+
+    def test_stale_target_state_fails(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        with self.assertRaisesRegex(ValueError, "does not match current governed artifact state"):
+            checker.validate_execution_gate(
+                gate, "Adversarial", 2, expected_target_state_id="sha256:new-state"
+            )
 
     def test_zero_remaining_stage_count_fails_for_stage(self) -> None:
         gate = selector.build_gate(workload(remaining_stage_count=0), CAPABILITY)
@@ -70,6 +81,24 @@ class ExecutionGateTests(unittest.TestCase):
             workload(activity="Identity Pass", remaining_stage_count=0), CAPABILITY
         )
         checker.validate_execution_gate(gate, "Identity Pass", 2)
+
+    def test_repository_artifact_state_changes_when_content_changes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            target = root / "a.txt"
+            target.write_text("one", encoding="utf-8")
+            first = checker.repository_artifact_state_sha256(["a.txt"], root)
+            target.write_text("two", encoding="utf-8")
+            second = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertNotEqual(first, second)
+
+    def test_repository_artifact_state_represents_absence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            absent = checker.repository_artifact_state_sha256(["gone.txt"], root)
+            (root / "gone.txt").write_text("present", encoding="utf-8")
+            present = checker.repository_artifact_state_sha256(["gone.txt"], root)
+            self.assertNotEqual(absent, present)
 
 
 if __name__ == "__main__":
