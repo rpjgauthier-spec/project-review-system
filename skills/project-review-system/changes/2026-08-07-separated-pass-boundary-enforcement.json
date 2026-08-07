@@ -23,7 +23,7 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The existing gate/completion validator proved structural consistency of the recorded plan but could not establish that distinct semantic execution units actually occurred. This correction makes the intended execution discipline explicit and adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered stage credit, hashed outbound handoffs, exact downstream consumers, next-pass consumption of the prior handoff, and durable Git chronology requiring gate-before-credit and distinct first-credit commits per pass. ISOLATED passes additionally require an isolation-boundary declaration. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID. Revision-6 same-response semantic assurance is not relied upon for this correction; the behavior is being revalidated again under revision 7 using one semantic pass per assistant message or equivalent bounded execution unit.",
+  "reason": "PR #5 revision 6 recorded five SEPARATED semantic stages as complete even though they were effectively evaluated within one assistant response. The existing gate/completion validator proved structural consistency of the recorded plan but could not establish that distinct semantic execution units actually occurred. This correction makes the intended execution discipline explicit and adds deterministic enforcement of unique declared execution-unit/boundary identities, ordered stage credit, hashed outbound handoffs, exact downstream consumers, next-pass consumption of the prior handoff, a closed historical exemption set, and PR-scoped durable Git chronology requiring gate-before-credit and distinct first-credit commits per pass. ISOLATED passes additionally require an isolation-boundary declaration. The repository still does not claim to prove a ChatGPT message/context boundary unless the host supplies a trustworthy boundary ID. Revision-6 same-response semantic assurance is not relied upon for this correction; the behavior is being revalidated again under revision 7 using one semantic pass per assistant message or equivalent bounded execution unit.",
   "status": "in_progress",
   "review_revision": 7,
   "execution_gates": {
@@ -34,19 +34,19 @@
         "schema_version": 1,
         "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
         "activity": "Adversarial",
-        "target_state_id": "sha256:e5887ce09cb1fa1c91f4debaa3d27654b0c308a0ab51bfdf942c3ebdcc87dd22",
+        "target_state_id": "sha256:5d1ca463a56d29b7fa7430183b957e51563b18ca930082a1d9588623bc6892ef",
         "review_revision": 7,
         "workload_class": "bounded-revalidation-pass-boundary-v1",
         "stage_assessment": {
           "single_pass_suitable": true,
           "reasons": [
-            "The corrected scope is bounded to execution-unit separation, durable handoff chronology, isolation declarations, workflow enforcement, and assurance limits.",
-            "The material adversarial surfaces can be inspected in one bounded pass across the final checker, workflow, mapping, reference, evaluation, and regression tests."
+            "The final corrected scope is bounded to execution-unit separation, closed legacy exemptions, PR-scoped durable chronology, handoff chaining, isolation declarations, workflow enforcement, and assurance limits.",
+            "The material adversarial surfaces are directly represented in the final checker, workflow, mapping, reference, evaluation, and regression tests and are suitable for one bounded pass."
           ],
           "subpasses": []
         },
         "fused_authorization": null,
-        "notes": "SEPARATED one-pass Adversarial review. This assistant message is the semantic execution unit; no FUSED permission or subdivision is used."
+        "notes": "SEPARATED one-pass Adversarial review. The credited semantic pass is confined to this assistant message; no FUSED permission or subdivision is used."
       },
       "capability": {
         "schema_version": 1,
@@ -60,7 +60,7 @@
       "decision": {
         "schema_version": 1,
         "activity": "Adversarial",
-        "target_state_id": "sha256:e5887ce09cb1fa1c91f4debaa3d27654b0c308a0ab51bfdf942c3ebdcc87dd22",
+        "target_state_id": "sha256:5d1ca463a56d29b7fa7430183b957e51563b18ca930082a1d9588623bc6892ef",
         "review_revision": 7,
         "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
         "workload_class": "bounded-revalidation-pass-boundary-v1",
@@ -78,11 +78,11 @@
         "capability_subject_id": "unmeasured-reviewer-separated-default",
         "capability_validation_status": "DEFAULT_SEPARATED",
         "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "0fbc4de12c59b49795ee384f0964a629257ec40d400a081279df93ef3c2f6d80",
+        "workload_sha256": "dac256194edc8f8cae103e0eb6f1020bd051a49997926bda8b8497d87553bbc1",
         "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
-      "gate_sha256": "d04244ab04c673b655c7483cb730d406998b1334f0a8aadfd6d921e6073d56c5"
+      "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78"
     }
   },
   "execution_completions": {},
