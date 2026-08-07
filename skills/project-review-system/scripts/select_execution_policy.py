@@ -16,14 +16,15 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CAPABILITY = ROOT / "config" / "default-execution-capability.json"
 DEFAULT_PROFILE_ID = "default-conservative-v1"
+SUPPORTED_ENVELOPE_MODEL = "rectangular-v1"
 
 MODES = ("FUSED", "SEPARATED", "ISOLATED")
 MODE_INDEX = {mode: index for index, mode in enumerate(MODES)}
 NUMERIC_DIMENSIONS = (
     "artifact_count",
     "content_bytes",
-    "required_stage_count",
-    "required_evaluation_count",
+    "remaining_stage_count",
+    "remaining_evaluation_count",
     "dependency_count",
     "protected_control_count",
     "unresolved_uncertainty_count",
@@ -91,6 +92,11 @@ def validate_capability(capability: dict[str, Any], custom_profile: bool) -> Non
     require_nonempty_string(capability, "subject_id", "capability")
     require_nonempty_string(capability, "benchmark_suite", "capability")
     require_nonempty_string(capability, "benchmark_evidence", "capability")
+    envelope_model = require_nonempty_string(capability, "envelope_model", "capability")
+    if envelope_model != SUPPORTED_ENVELOPE_MODEL:
+        raise ValueError(
+            f"capability.envelope_model must be {SUPPORTED_ENVELOPE_MODEL}"
+        )
 
     if status == "DEFAULT_CONSERVATIVE" and profile_id != DEFAULT_PROFILE_ID:
         raise ValueError(
@@ -191,13 +197,14 @@ def select_policy(
         "capability_subject_id": capability["subject_id"],
         "capability_validation_status": capability["validation_status"],
         "capability_benchmark_suite": capability["benchmark_suite"],
+        "capability_envelope_model": capability["envelope_model"],
         "checkpoint": workload.get("checkpoint", "unspecified"),
         "envelope_evidence": evidence,
         "assurance_boundary": (
             "Execution mode changes context separation only; required stages, evaluations, "
             "stage order, evidence obligations, and independent-review requirements are unchanged. "
             "The selector validates declared workload/profile structure but cannot prove workload "
-            "truthfulness or benchmark validity."
+            "truthfulness, combined-envelope benchmark validity, or reviewer independence."
         ),
     }
 
