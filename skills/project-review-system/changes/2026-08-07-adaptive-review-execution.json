@@ -59,7 +59,7 @@
         "corrections": [
           "Define workload producer, capability-profile producer, selector, decision consumer, and handoff producer contracts.",
           "Require capability evidence to pre-exist the semantic review it governs; a stronger profile created or materially changed during that review cannot relax the same review.",
-          "For repository revalidation, derive required stage/evaluation counts from the generated queue and use deterministic inventory/diff/manifest evidence where available for workload measures."
+          "For repository revalidation, derive remaining stage/evaluation counts from unresolved work in the generated queue and use deterministic inventory/diff/manifest evidence where available for workload measures."
         ],
         "residual_conditions": [
           "Trust in benchmark provenance remains an external evidence boundary rather than something the selector can establish semantically."
@@ -74,12 +74,31 @@
           "content_bytes is used consistently as the deterministic size dimension; semantic complexity remains represented by separate workload dimensions.",
           "Capability validation status remains distinct from review-stage status and verdict vocabulary."
         ]
+      },
+      "Structural Optimization": {
+        "mode": "SEPARATED",
+        "checkpoint_mode": "SEPARATED",
+        "findings": [
+          "Using original total stage/evaluation counts would prevent the controller from recognizing that valid completion reduces remaining review load, weakening automatic relaxation.",
+          "Independent per-dimension maxima implicitly formed a rectangular capability envelope without stating that the benchmark must support combinations inside that envelope."
+        ],
+        "corrections": [
+          "Replace total required-stage/evaluation dimensions with remaining_stage_count and remaining_evaluation_count; valid completion decreases them and reopening or newly required work increases them.",
+          "Declare envelope_model rectangular-v1 and require validated capability evidence to support the combined rectangular envelope rather than isolated dimension maxima.",
+          "Add regression cases for completion-driven relaxation, reopening-driven tightening, unsupported envelope models, and explicit combined-envelope assurance limits."
+        ],
+        "checkpoint_basis": "After Structural Optimization, one semantic stage remains but eleven mapped evaluations and twelve changed artifacts remain; these exceed the default FUSED envelope, so execution stays SEPARATED for End-to-end validation.",
+        "residual_conditions": [
+          "The built-in conservative envelope remains a policy fallback rather than measured model capability.",
+          "A rectangular validated profile is only as trustworthy as the benchmark evidence supplied by its external capability authority."
+        ]
       }
     }
   },
   "results": {
     "Adversarial": "supported",
     "Interdependency": "supported",
-    "Normalization": "supported"
+    "Normalization": "supported",
+    "Structural Optimization": "supported"
   }
 }
