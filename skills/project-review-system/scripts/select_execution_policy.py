@@ -15,6 +15,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CAPABILITY = ROOT / "config" / "default-execution-capability.json"
+DEFAULT_PROFILE_ID = "default-conservative-v1"
 
 MODES = ("FUSED", "SEPARATED", "ISOLATED")
 MODE_INDEX = {mode: index for index, mode in enumerate(MODES)}
@@ -50,6 +51,13 @@ def require_nonnegative_int(container: dict[str, Any], key: str, where: str) -> 
     return value
 
 
+def require_nonempty_string(container: dict[str, Any], key: str, where: str) -> str:
+    value = container.get(key)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{where}.{key} is required")
+    return value.strip()
+
+
 def validate_workload(workload: dict[str, Any]) -> None:
     if workload.get("schema_version") != 1:
         raise ValueError("workload.schema_version must be 1")
@@ -78,12 +86,19 @@ def validate_capability(capability: dict[str, Any], custom_profile: bool) -> Non
         raise ValueError(
             "capability.validation_status must be DEFAULT_CONSERVATIVE or VALIDATED"
         )
+
+    profile_id = require_nonempty_string(capability, "profile_id", "capability")
+    require_nonempty_string(capability, "subject_id", "capability")
+    require_nonempty_string(capability, "benchmark_suite", "capability")
+    require_nonempty_string(capability, "benchmark_evidence", "capability")
+
+    if status == "DEFAULT_CONSERVATIVE" and profile_id != DEFAULT_PROFILE_ID:
+        raise ValueError(
+            "DEFAULT_CONSERVATIVE is reserved for the built-in default-conservative-v1 profile"
+        )
     if custom_profile and status != "VALIDATED":
         raise ValueError("custom capability profiles must have validation_status VALIDATED")
-    if not str(capability.get("profile_id", "")).strip():
-        raise ValueError("capability.profile_id is required")
-    if not str(capability.get("benchmark_evidence", "")).strip():
-        raise ValueError("capability.benchmark_evidence is required")
+
     validate_envelope(capability.get("fused_limits"), "fused_limits")
     validate_envelope(capability.get("separated_limits"), "separated_limits")
 
@@ -173,12 +188,16 @@ def select_policy(
         "current_mode": current_mode,
         "transition_reason": transition,
         "capability_profile_id": capability["profile_id"],
+        "capability_subject_id": capability["subject_id"],
         "capability_validation_status": capability["validation_status"],
+        "capability_benchmark_suite": capability["benchmark_suite"],
         "checkpoint": workload.get("checkpoint", "unspecified"),
         "envelope_evidence": evidence,
         "assurance_boundary": (
             "Execution mode changes context separation only; required stages, evaluations, "
-            "stage order, evidence obligations, and independent-review requirements are unchanged."
+            "stage order, evidence obligations, and independent-review requirements are unchanged. "
+            "The selector validates declared workload/profile structure but cannot prove workload "
+            "truthfulness or benchmark validity."
         ),
     }
 
