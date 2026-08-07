@@ -47,6 +47,9 @@ def completion_for(gate):
             {"pass_id": item["pass_id"], "context_mode": item["context_mode"], "status": "complete"}
             for item in decision["execution_plan"]
         ],
+        "scratch_materialized": False,
+        "scratch_cleanup_status": "not_applicable",
+        "retained_subpass_artifacts": [],
     }
 
 
@@ -98,6 +101,38 @@ class ExecutionGateTests(unittest.TestCase):
         completion["passes"][0]["status"] = "pending"
         with self.assertRaisesRegex(ValueError, "not complete"):
             checker.validate_execution_completion(completion, gate)
+
+    def test_materialized_scratch_requires_cleanup(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["scratch_materialized"] = True
+        completion["scratch_cleanup_status"] = "pending"
+        with self.assertRaisesRegex(ValueError, "must be deleted"):
+            checker.validate_execution_completion(completion, gate)
+
+    def test_materialized_scratch_with_cleanup_passes(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["scratch_materialized"] = True
+        completion["scratch_cleanup_status"] = "complete"
+        checker.validate_execution_completion(completion, gate)
+
+    def test_retained_artifact_requires_consumer(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["retained_subpass_artifacts"] = [
+            {"artifact": "evidence.md", "consumer": "", "reason": "needed later"}
+        ]
+        with self.assertRaisesRegex(ValueError, "consumer is required"):
+            checker.validate_execution_completion(completion, gate)
+
+    def test_retained_artifact_with_consumer_passes(self) -> None:
+        gate = selector.build_gate(workload(), CAPABILITY)
+        completion = completion_for(gate)
+        completion["retained_subpass_artifacts"] = [
+            {"artifact": "evidence.md", "consumer": "End-to-end validation", "reason": "required evidence"}
+        ]
+        checker.validate_execution_completion(completion, gate)
 
     def test_artifact_state_changes_with_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
