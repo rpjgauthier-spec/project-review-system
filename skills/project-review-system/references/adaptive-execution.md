@@ -59,10 +59,33 @@ For repository revalidation, `update_revalidation_queue.py` rejects a passing st
 - the gate does not match the current `review_revision` or governed artifact state;
 - execution completion is absent;
 - a required subpass is missing or extra;
-- a pass used a different context mode than the plan required; or
-- any required pass is incomplete.
+- a pass used a different context mode than the plan required;
+- any required pass is incomplete; or
+- materialized scratch work has not been recorded as cleaned up.
 
 This makes the **consequence** of the semantic stage-size judgment deterministically enforceable. It does not prove that the judgment itself was correct.
+
+## Ephemeral subpass workspace
+
+Subpass scratch material is **ephemeral by default**. Do not create durable subpass files merely because a stage was subdivided.
+
+When working material must be materialized, prefer an environment-provided temporary workspace outside the tracked project or repository. The normal lifecycle is:
+
+1. create or use the temporary workspace;
+2. perform the bounded pass or passes;
+3. write only the durable gate, completion record, bounded handoff, findings, or evidence that has an identified consumer;
+4. verify that required durable evidence exists; and
+5. delete the temporary workspace and its remaining contents before accepting the stage as complete.
+
+An execution completion record must declare:
+
+- `scratch_materialized`: whether a temporary workspace or scratch files were materialized;
+- `scratch_cleanup_status`: `complete` when materialized scratch has been deleted, otherwise `not_applicable`; and
+- `retained_subpass_artifacts`: any intentionally durable subpass artifacts, each with an identified artifact, downstream consumer, and retention reason.
+
+A durable subpass artifact is permitted only when it has an identified downstream consumer or is required as evidence. Convenience, debugging history, or the mere existence of a subpass is not sufficient reason for permanent retention.
+
+The execution host or orchestrator performs actual deletion. Deterministic validation can reject completion unless cleanup is recorded appropriately and retained artifacts have consumers, but a repository validator cannot prove deletion of an external temporary directory it cannot inspect. Environments that can inspect their own temporary workspace should verify its removal directly before recording cleanup as complete.
 
 ## Artifact-state binding
 
@@ -108,7 +131,8 @@ Adaptive Execution controls context separation. It does not prove:
 - semantic correctness of stage findings;
 - truthful reviewer identity;
 - benchmark validity;
-- reviewer independence; or
+- reviewer independence;
+- actual deletion of an external scratch workspace the validator cannot inspect; or
 - domain correctness.
 
-It does provide deterministic enforcement that a recorded plan was bound to the current artifact state and that a passing result cannot be accepted unless all required passes were completed in the required context modes.
+It does provide deterministic enforcement that a recorded plan was bound to the current artifact state and that a passing result cannot be accepted unless all required passes were completed in the required context modes and required cleanup evidence is present.
