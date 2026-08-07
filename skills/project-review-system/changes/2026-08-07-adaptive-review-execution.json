@@ -29,5 +29,30 @@
   ],
   "reason": "The five semantic stages can suffer context-load and cross-stage anchoring when collapsed into one continuous pass, but permanently requiring isolated stages would become unnecessary overhead as reviewer capability improves. This change adds a preflight before the Identity Pass or first semantic stage and checkpoint re-evaluation after Identity Pass and each completed stage. A deterministic selector compares observable workload dimensions with conservative or externally validated capability envelopes. It may tighten separation immediately as complexity grows and relax remaining work by at most one level per checkpoint when a stronger validated profile supports it. Execution mode never changes required stages, evaluations, stage order, evidence obligations, or independent-review requirements.",
   "status": "in_progress",
-  "results": {}
+  "execution_evidence": {
+    "initial_mode": "SEPARATED",
+    "capability_profile": "default-conservative-v1",
+    "basis": "The change is self-referential and requires all five review stages and eleven evaluations; those facts alone exceed the default FUSED envelope while remaining inside the default SEPARATED envelope.",
+    "stage_handoffs": {
+      "Adversarial": {
+        "mode": "SEPARATED",
+        "findings": [
+          "Library callers could previously pass a non-default profile marked DEFAULT_CONSERVATIVE even though the CLI rejected that custom-profile status.",
+          "The original semantic_units workload dimension lacked a reproducible unit definition."
+        ],
+        "corrections": [
+          "Reserve DEFAULT_CONSERVATIVE for default-conservative-v1 in the core validator, not only in the CLI path.",
+          "Bind capability profiles to subject_id and benchmark_suite provenance fields.",
+          "Replace semantic_units with reproducible content_bytes and state that declared workload truthfulness and benchmark validity remain outside deterministic proof."
+        ],
+        "residual_conditions": [
+          "The selector can validate declared structures and envelopes but cannot prove that workload counts or benchmark evidence are truthful.",
+          "Same-reviewer SEPARATED or ISOLATED execution is not independent review."
+        ]
+      }
+    }
+  },
+  "results": {
+    "Adversarial": "supported"
+  }
 }
