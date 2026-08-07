@@ -6,6 +6,11 @@ planned pass_id, and gate hash. When an occurrence first appears in the durable
 change-record history, its execution_unit_id and boundary identity must never
 have been used by an earlier occurrence. This applies equally to ordinary stage
 passes, subdivided subpasses, and reopened/redo executions.
+
+For a PR-scoped check, the history begins with the base-state snapshot when the
+change record already exists there, followed by change-record commits in
+base..head. Including the base snapshot is required to reject identity reuse by
+a reopened change in a later PR.
 """
 
 from __future__ import annotations
@@ -112,8 +117,35 @@ def changed_record_ids(base: str, head: str) -> set[str]:
     return ids
 
 
+def snapshot_at_ref(record_id: str, ref: str) -> dict[str, Any] | None:
+    path = f"{CHANGES_PREFIX}{record_id}.json"
+    try:
+        raw = subprocess.run(
+            ["git", "show", f"{ref}:{path}"],
+            cwd=REPOSITORY_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"change record {record_id!r} at {ref!r} is not valid JSON") from exc
+    if not isinstance(value, dict):
+        raise ValueError(f"change record {record_id!r} at {ref!r} must contain an object")
+    return value
+
+
 def load_pr_history(record_id: str, base: str, head: str) -> list[tuple[str, dict[str, Any]]]:
     path = f"{CHANGES_PREFIX}{record_id}.json"
+    snapshots: list[tuple[str, dict[str, Any]]] = []
+
+    base_snapshot = snapshot_at_ref(record_id, base)
+    if base_snapshot is not None:
+        snapshots.append((base, base_snapshot))
+
     try:
         log = subprocess.run(
             ["git", "log", "--format=%H", "--reverse", f"{base}..{head}", "--", path],
@@ -125,21 +157,10 @@ def load_pr_history(record_id: str, base: str, head: str) -> list[tuple[str, dic
     except (OSError, subprocess.CalledProcessError) as exc:
         raise ValueError(f"cannot read PR history for {record_id!r}") from exc
 
-    snapshots: list[tuple[str, dict[str, Any]]] = []
     for sha in [line.strip() for line in log.splitlines() if line.strip()]:
-        try:
-            raw = subprocess.run(
-                ["git", "show", f"{sha}:{path}"],
-                cwd=REPOSITORY_ROOT,
-                check=True,
-                capture_output=True,
-                text=True,
-            ).stdout
-            value = json.loads(raw)
-        except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
-            continue
-        if isinstance(value, dict):
-            snapshots.append((sha, value))
+        snapshot = snapshot_at_ref(record_id, sha)
+        if snapshot is not None:
+            snapshots.append((sha, snapshot))
     return snapshots
 
 
