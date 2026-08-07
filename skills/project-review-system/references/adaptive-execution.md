@@ -23,46 +23,49 @@ Before the Identity Pass or first semantic stage:
 1. Build a workload record using `templates/review-workload.json`.
 2. Record `reviewer_subject_id` for the reviewer/runtime actually being governed.
 3. Record `activity` for the Identity Pass or exact semantic stage being gated.
-4. Record the current `review_revision`. Increment it when a correction or reopening invalidates prior execution gates.
-5. Use deterministic or directly observable values where available: artifact count, content bytes, remaining required stages, remaining required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
-6. Select a reviewer capability profile. If no externally validated profile is available, use `config/default-execution-capability.json`.
-7. Run `scripts/select_execution_policy.py --gate` and retain the generated gate with the active review evidence.
-8. Validate the gate with `scripts/check_execution_gate.py` before treating the semantic activity as validly opened.
-9. Execute the Identity Pass or semantic stage under the selected mode.
+4. Record `target_state_id` for the exact governed artifact state. The semantic controller treats this as an environment-provided opaque identifier; the environment-specific enforcement layer is responsible for verifying it.
+5. Record the current `review_revision`. Increment it when a correction or reopening invalidates prior execution gates.
+6. Use deterministic or directly observable values where available: artifact count, content bytes, remaining required stages, remaining required evaluations, known dependencies, protected controls, known unknowns, self-referential scope, and exhaustive-claim status.
+7. Select a reviewer capability profile. If no externally validated profile is available, use `config/default-execution-capability.json`.
+8. Run `scripts/select_execution_policy.py --gate` and retain the generated gate with the active review evidence.
+9. Validate the gate with `scripts/check_execution_gate.py` before treating the semantic activity as validly opened.
+10. Execute the Identity Pass or semantic stage under the selected mode.
 
 Do not infer capability from model name, context-window size, provider marketing, subjective confidence, or a reviewer saying it can handle the work.
 
 ## Enforced execution gate
 
-Adaptive execution is not satisfied by prose stating that a preflight occurred. A governed semantic-stage result is valid only when a verifiable execution gate exists for that exact stage and current review revision.
+Adaptive execution is not satisfied by prose stating that a preflight occurred. A governed semantic-stage result is valid only when a verifiable execution gate exists for that exact stage, current review revision, and exact governed artifact state.
 
 `select_execution_policy.py --gate` records:
 
 - the workload snapshot;
+- the opaque `target_state_id` supplied by the current environment;
 - the capability profile consumed;
 - the prior/current execution mode when applicable;
 - the selector's decision;
 - hashes binding the decision to its workload and capability inputs; and
 - the semantic activity the gate authorizes.
 
-`check_execution_gate.py` recomputes the selector decision, verifies the gate hash, verifies the exact activity, and checks `review_revision` against the current change/review record. A stage gate must also show that at least one semantic stage remained when it was opened.
+`check_execution_gate.py` recomputes the selector decision, verifies the gate hash, verifies the exact activity, checks `review_revision`, and can compare the recorded `target_state_id` with the current environment-derived target state. A stage gate must also show that at least one semantic stage remained when it was opened.
 
-For repository revalidation, `update_revalidation_queue.py` enforces this at the result/advancement boundary: a passing result for a governed stage is rejected when its current execution gate is absent, stale, for another activity, based on a mismatched reviewer subject, or from an earlier review revision.
+For repository revalidation, `update_revalidation_queue.py` derives `target_state_id` as a SHA-256 identity over the current contents of every governed changed file, excluding the active change-impact record and generated queue because recording the gate/result would otherwise invalidate itself. A governed file that is intentionally deleted is represented explicitly as absent in the hash. The queue rejects a passing stage result when its gate was created against any different governed artifact state.
 
-Reopening or a material correction that invalidates prior review work must increment `review_revision`. This deterministically invalidates older gates for reopened work rather than relying on the reviewer to remember that a previous preflight is stale.
+This means an implementation/doc/test/evaluation change after a gate is created automatically stales the gate even when `review_revision` was not incremented. `review_revision` remains a separate lifecycle marker for reopening and explicit review-generation changes; artifact-state binding is an independent automatic stale-review control.
 
 Historical change records created before execution-gate enforcement may be explicitly grandfathered only through the closed legacy exemption list in `config/revalidation-map.json`. A current reviewer cannot self-declare an exemption in an individual change record.
 
-The gate proves only that the recorded execution decision matches its declared workload/capability inputs and current review revision. It does not prove that workload facts, benchmark evidence, semantic findings, or reviewer independence are truthful.
+The gate proves only that the recorded execution decision matches its declared workload/capability inputs and current environment-verified target state. It does not prove that workload facts, benchmark evidence, semantic findings, or reviewer independence are truthful.
 
 ## Producer-consumer contract
 
 Keep the adaptive execution inputs and decision ownership explicit:
 
-- **Workload producer:** the active review controller/reviewer derives the current workload from the authorized scope and evidence available at that checkpoint. The workload identifies the reviewer/runtime actually being governed through `reviewer_subject_id`. In repository revalidation, `remaining_stage_count` and `remaining_evaluation_count` come from unresolved work in the generated revalidation queue; artifact and content-size measures come from the current in-scope inventory, manifest, diff, or equivalent deterministic source when available. A valid completion reduces remaining counts; reopening or newly required work increases them again.
+- **Workload producer:** the active review controller/reviewer derives the current workload from the authorized scope and evidence available at that checkpoint. It records `reviewer_subject_id`, the exact semantic `activity`, and the environment-provided `target_state_id`. In repository revalidation, remaining stage/evaluation counts come from unresolved queue work and artifact/content measures come from the current in-scope inventory, diff, manifest, or equivalent deterministic source.
+- **Target-state producer:** the current environment derives a stable identity for the exact governed artifact state. The generic semantic controller does not prescribe Git, filesystem, vault, or other storage semantics.
 - **Capability-profile producer:** a benchmark/evaluation process or other explicitly trusted capability authority outside the semantic review currently being governed. The current review may consume a pre-existing validated profile but may not raise its own capability limits and immediately use that increase to reduce separation.
 - **Selector:** `scripts/select_execution_policy.py` deterministically consumes the workload and capability profile, verifies subject binding for validated profiles, and produces the execution decision plus envelope-failure evidence.
-- **Gate validator:** `scripts/check_execution_gate.py` verifies that the stored decision still matches its declared inputs, activity, and review revision.
+- **Gate validator:** `scripts/check_execution_gate.py` verifies that the stored decision still matches its declared inputs, activity, review revision, and—when supplied by the environment—the current target state.
 - **Decision consumer:** the review scheduler/reviewer applies the selected mode to the Identity Pass and stage execution while preserving the original stage/evaluation obligations.
 - **Handoff producer:** each completed `SEPARATED` or `ISOLATED` stage produces a bounded handoff for the next stage and updates workload facts that changed.
 - **Advancement consumer:** the revalidation queue rejects a passing governed stage result that lacks a valid current execution gate.
@@ -105,7 +108,7 @@ Current dimensions are:
 - `self_referential`
 - `exhaustive_claim`
 
-`reviewer_subject_id`, `activity`, and `review_revision` are control-binding fields rather than workload-magnitude dimensions. They bind the decision to the reviewer/runtime, semantic activity, and current revalidation generation.
+`reviewer_subject_id`, `activity`, `target_state_id`, and `review_revision` are control-binding fields rather than workload-magnitude dimensions. They bind the decision to the reviewer/runtime, semantic activity, governed artifact state, and explicit revalidation generation.
 
 `content_bytes` is the reproducible byte size of the in-scope content represented by the workload decision. Use the same counting boundary in the workload and the benchmark that produced a capability envelope. Do not replace it with an undefined semantic-unit estimate. When content is added to or removed from scope, update the byte count at the next checkpoint.
 
@@ -122,9 +125,9 @@ Re-run the selector after:
 - Interdependency review;
 - Normalization review;
 - Structural Optimization review;
-- any material scope expansion, unexpected dependency discovery, protected-control discovery, new unresolved uncertainty, reopening, or newly required evaluation.
+- any material scope expansion, governed-artifact change, unexpected dependency discovery, protected-control discovery, new unresolved uncertainty, reopening, or newly required evaluation.
 
-Before a reopened semantic stage begins, create and validate a new gate at the current `review_revision`. Never reuse a gate from the pre-reopening revision.
+Before a reopened semantic stage begins, create and validate a new gate at the current `review_revision` and current `target_state_id`. Never reuse a gate from an earlier artifact state.
 
 Update the workload record with facts discovered so far before each rerun.
 
@@ -178,15 +181,16 @@ Adaptive execution is correctly applied when:
 
 - the initial policy decision occurred before the Identity Pass or first semantic stage;
 - the decision used a declared workload and capability profile;
-- every governed passing stage result has a valid execution gate for the exact activity and current review revision;
+- every governed passing stage result has a valid execution gate for the exact activity, current artifact state, and current review revision;
 - the workload identified the reviewer/runtime actually being governed;
+- target-state identity was verified by the current environment rather than trusted solely because the reviewer wrote it;
 - input producers and decision consumers were identifiable;
 - validated capability evidence was bound to the same reviewer/runtime subject;
 - the current review did not self-authorize a stronger capability envelope;
 - a validated rectangular profile had evidence intended to support its combined envelope rather than only isolated dimension maxima;
 - mode changes did not remove required stages or evaluations;
-- material discoveries, valid completion, reopening, and newly required work updated the remaining workload and triggered re-evaluation;
-- reopening invalidated older gates through `review_revision`;
+- material discoveries, valid completion, reopening, artifact changes, and newly required work updated the workload and triggered re-evaluation;
+- stale gates are invalidated automatically by target-state mismatch even if `review_revision` was not manually changed;
 - relaxation never retroactively upgraded prior assurance;
 - independent-review requirements remained separate from context-capacity decisions; and
 - the final review record identifies which execution mode was used for each semantic stage or fused group.
