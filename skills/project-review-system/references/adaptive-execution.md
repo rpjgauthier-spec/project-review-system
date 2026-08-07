@@ -29,6 +29,20 @@ Before the Identity Pass or first semantic stage:
 
 Do not infer capability from model name, context-window size, provider marketing, subjective confidence, or a reviewer saying it can handle the work.
 
+## Producer-consumer contract
+
+Keep the adaptive execution inputs and decision ownership explicit:
+
+- **Workload producer:** the active review controller/reviewer derives the current workload from the authorized scope and evidence available at that checkpoint. In repository revalidation, `required_stage_count` and `required_evaluation_count` come from the generated revalidation queue; artifact and content-size measures come from the current in-scope inventory, manifest, diff, or equivalent deterministic source when available.
+- **Capability-profile producer:** a benchmark/evaluation process or other explicitly trusted capability authority outside the semantic review currently being governed. The current review may consume a pre-existing validated profile but may not raise its own capability limits and immediately use that increase to reduce separation.
+- **Selector:** `scripts/select_execution_policy.py` deterministically consumes the workload and capability profile and produces the execution decision plus envelope-failure evidence.
+- **Decision consumer:** the review scheduler/reviewer applies the selected mode to the Identity Pass and stage execution while preserving the original stage/evaluation obligations.
+- **Handoff producer:** each completed `SEPARATED` or `ISOLATED` stage produces a bounded handoff for the next stage and updates workload facts that changed.
+
+If a stronger capability profile is created or materially changed during the same semantic review it would govern, do not use the increased limits for that review. Continue with the prior validated profile or conservative default. The new profile may govern later reviews only after its capability evidence has completed its own required validation path.
+
+Do not duplicate mutable workload facts across several authorities. Keep one current workload record or equivalent current decision input and update it at checkpoints.
+
 ## Capability profiles
 
 A capability profile defines the largest workload envelope demonstrated for `FUSED` and `SEPARATED` execution. Anything outside the separated envelope selects `ISOLATED`.
@@ -113,7 +127,8 @@ Use the conservative default capability profile when:
 - no validated capability profile exists;
 - benchmark provenance is unavailable;
 - the supplied profile is malformed or expired under local policy;
-- the reviewer/runtime changed and prior capability evidence is not transferable.
+- the reviewer/runtime changed and prior capability evidence is not transferable;
+- a stronger profile was created or materially changed by the same semantic review it would govern.
 
 If workload data required for a reliable decision is unavailable, do not estimate it optimistically. Record the unknown and choose the more separated applicable mode.
 
@@ -123,6 +138,8 @@ Adaptive execution is correctly applied when:
 
 - the initial policy decision occurred before the Identity Pass or first semantic stage;
 - the decision used a declared workload and capability profile;
+- input producers and decision consumers were identifiable;
+- the current review did not self-authorize a stronger capability envelope;
 - mode changes did not remove required stages or evaluations;
 - material discoveries triggered workload updates and re-evaluation;
 - relaxation never retroactively upgraded prior assurance;
