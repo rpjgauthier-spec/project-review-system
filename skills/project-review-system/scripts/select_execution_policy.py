@@ -9,6 +9,7 @@ requirements.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -45,6 +46,11 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
+def canonical_hash(value: Any) -> str:
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def require_nonnegative_int(container: dict[str, Any], key: str, where: str) -> int:
     value = container.get(key)
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
@@ -63,6 +69,7 @@ def validate_workload(workload: dict[str, Any]) -> None:
     if workload.get("schema_version") != 1:
         raise ValueError("workload.schema_version must be 1")
     require_nonempty_string(workload, "reviewer_subject_id", "workload")
+    require_nonempty_string(workload, "activity", "workload")
     for key in NUMERIC_DIMENSIONS:
         require_nonnegative_int(workload, key, "workload")
     for key in BOOLEAN_DIMENSIONS:
@@ -201,6 +208,7 @@ def select_policy(
     selected, transition = apply_transition_policy(base, current_mode)
     return {
         "schema_version": 1,
+        "activity": workload["activity"],
         "selected_mode": selected,
         "base_mode": base,
         "current_mode": current_mode,
@@ -212,6 +220,8 @@ def select_policy(
         "capability_benchmark_suite": capability["benchmark_suite"],
         "capability_envelope_model": capability["envelope_model"],
         "checkpoint": workload.get("checkpoint", "unspecified"),
+        "workload_sha256": canonical_hash(workload),
+        "capability_sha256": canonical_hash(capability),
         "envelope_evidence": evidence,
         "assurance_boundary": (
             "Execution mode changes context separation only; required stages, evaluations, "
@@ -223,12 +233,61 @@ def select_policy(
     }
 
 
+def build_gate(
+    workload: dict[str, Any], capability: dict[str, Any], current_mode: str | None = None
+) -> dict[str, Any]:
+    decision = select_policy(workload, capability, current_mode)
+    payload = {
+        "activity": workload["activity"],
+        "workload": workload,
+        "capability": capability,
+        "current_mode": current_mode,
+        "decision": decision,
+    }
+    return {
+        "schema_version": 1,
+        **payload,
+        "gate_sha256": canonical_hash(payload),
+    }
+
+
+def validate_gate(gate: dict[str, Any], expected_activity: str | None = None) -> dict[str, Any]:
+    if not isinstance(gate, dict) or gate.get("schema_version") != 1:
+        raise ValueError("execution gate must be a schema_version 1 object")
+    workload = gate.get("workload")
+    capability = gate.get("capability")
+    decision = gate.get("decision")
+    if not isinstance(workload, dict) or not isinstance(capability, dict) or not isinstance(decision, dict):
+        raise ValueError("execution gate must include workload, capability, and decision objects")
+    activity = require_nonempty_string(gate, "activity", "execution_gate")
+    if expected_activity is not None and activity != expected_activity:
+        raise ValueError(
+            f"execution gate activity {activity!r} does not match expected {expected_activity!r}"
+        )
+    if workload.get("activity") != activity:
+        raise ValueError("execution gate workload activity does not match gate activity")
+    recomputed = select_policy(workload, capability, gate.get("current_mode"))
+    if decision != recomputed:
+        raise ValueError("execution gate decision does not match current workload/capability inputs")
+    payload = {
+        "activity": activity,
+        "workload": workload,
+        "capability": capability,
+        "current_mode": gate.get("current_mode"),
+        "decision": recomputed,
+    }
+    if gate.get("gate_sha256") != canonical_hash(payload):
+        raise ValueError("execution gate hash is stale or invalid")
+    return recomputed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--workload", type=Path, required=True)
     parser.add_argument("--capability", type=Path)
     parser.add_argument("--current-mode", choices=MODES)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--gate", action="store_true", help="emit a verifiable execution gate record")
     args = parser.parse_args()
 
     try:
@@ -237,12 +296,16 @@ def main() -> int:
         capability = load_json(capability_path)
         validate_workload(workload)
         validate_capability(capability, custom_profile=args.capability is not None)
-        decision = select_policy(workload, capability, args.current_mode)
+        value = (
+            build_gate(workload, capability, args.current_mode)
+            if args.gate
+            else select_policy(workload, capability, args.current_mode)
+        )
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
 
-    rendered = json.dumps(decision, indent=2, sort_keys=True) + "\n"
+    rendered = json.dumps(value, indent=2, sort_keys=True) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(rendered, encoding="utf-8")
