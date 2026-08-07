@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.9 — 2026-08-07
+
+Exhaustive semantic-coverage release candidate.
+
+### Added
+
+- deterministic Git-tree manifest builder for pinned target commits
+- explicit semantic review methods for tracked trees, blobs, and gitlinks
+- deterministic exhaustive coverage checker
+- coverage-ledger template
+- regression tests for inventory completeness, object identity, semantic status, and full line/byte/object-range coverage
+
+### Changed
+
+- an exhaustive repository-coverage claim now requires every tracked object in the pinned tree to be inventoried and semantically processed
+- `EXCLUDED`, sampled, search-only, and snippet-only treatment cannot satisfy exhaustive coverage
+- semantic comprehension remains a substantive review claim and is not inferred from deterministic range coverage
+
+### Revalidation status
+
+- bounded same-agent revalidation is in progress before the first unrelated-project pilot
+
 ## 0.1.8 — 2026-08-06
 
 Changed-file and pull-request enforcement release.
