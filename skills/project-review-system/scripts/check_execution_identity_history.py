@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Reject reuse of execution-unit or boundary identities across review history.
+"""Reject reuse or mutation of execution identities across review history.
 
 Each completed execution occurrence is identified by review revision, stage,
 planned pass_id, and gate hash. When an occurrence first appears in the durable
 change-record history, its execution_unit_id and boundary identity must never
-have been used by an earlier occurrence. This applies equally to ordinary stage
+have been used by an earlier occurrence, and that occurrence's identities must
+remain unchanged in later snapshots. This applies equally to ordinary stage
 passes, subdivided subpasses, and reopened/redo executions.
 
 For a PR-scoped check, the history begins with the base-state snapshot when the
@@ -73,14 +74,21 @@ def credited_occurrences(snapshot: dict[str, Any]) -> list[tuple[tuple[Any, ...]
 
 
 def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[str, dict[str, Any]]]) -> None:
-    seen_occurrences: set[tuple[Any, ...]] = set()
+    occurrence_identities: dict[tuple[Any, ...], tuple[str, tuple[str, str]]] = {}
     used_units: dict[str, tuple[Any, ...]] = {}
     used_boundaries: dict[tuple[str, str], tuple[Any, ...]] = {}
 
     for commit_sha, snapshot in snapshots:
         for occurrence, unit_id, boundary in credited_occurrences(snapshot):
-            if occurrence in seen_occurrences:
+            prior_identity = occurrence_identities.get(occurrence)
+            if prior_identity is not None:
+                if prior_identity != (unit_id, boundary):
+                    raise ValueError(
+                        f"record {record_id!r} mutates execution identity for {occurrence!r} at {commit_sha!r}; "
+                        f"first recorded as {prior_identity!r}, later recorded as {(unit_id, boundary)!r}"
+                    )
                 continue
+
             previous = used_units.get(unit_id)
             if previous is not None and previous != occurrence:
                 raise ValueError(
@@ -93,7 +101,7 @@ def validate_identity_history_snapshots(record_id: str, snapshots: list[tuple[st
                     f"record {record_id!r} reuses execution boundary {boundary!r} for {occurrence!r}; "
                     f"it was already used by {previous_boundary!r}"
                 )
-            seen_occurrences.add(occurrence)
+            occurrence_identities[occurrence] = (unit_id, boundary)
             used_units[unit_id] = occurrence
             used_boundaries[boundary] = occurrence
 
@@ -182,7 +190,7 @@ def main() -> int:
     except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
         print(f"ERROR: {exc}")
         return 2
-    print("Historical execution-unit and boundary identities are unique across review occurrences.")
+    print("Historical execution-unit and boundary identities are unique and immutable across review occurrences.")
     return 0
 
 
