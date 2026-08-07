@@ -1,10 +1,12 @@
 # Project Review System
 
-An Agent Skills-compatible workflow for reviewing repository-based projects through evidence-led repository identity discovery, adversarial, interdependency, normalization, structural optimization, and end-to-end validation.
+An Agent Skills-compatible workflow for reviewing repository-based projects through evidence-led identity discovery, adversarial, interdependency, normalization, structural optimization, and end-to-end validation.
+
+The review methods themselves are semantic and can reason about broader bodies of work. Git manifests, object identity, changed-file enforcement, pull requests, and GitHub Actions remain repository-specific evidence and enforcement mechanisms.
 
 ## Review model
 
-Pre-review when material: **Repository Identity Pass**
+Pre-review when material: **Identity Pass**
 
 1. Adversarial
 2. Interdependency
@@ -12,7 +14,7 @@ Pre-review when material: **Repository Identity Pass**
 4. Structural Optimization
 5. End-to-end validation
 
-The Repository Identity Pass is not a sixth stage. It discovers materially distinct repository purposes or lifecycles from evidence before the five-stage review so later stages do not accidentally conflate unrelated or only partially shared bodies of work. Bounded revalidation is a change-triggered lifecycle mechanism, not a sixth stage. Use the smallest review depth that answers the request: focused review, bounded revalidation, or full program.
+The Identity Pass is not a sixth stage. It discovers materially distinct purposes or lifecycles from evidence before the five-stage review so later stages do not accidentally conflate unrelated or only partially shared bodies of work. Bounded revalidation is a change-triggered lifecycle mechanism, not a sixth stage. Use the smallest review depth that answers the request: focused review, bounded revalidation, or full program.
 
 ## Package layout
 
@@ -51,7 +53,7 @@ See `INSTALL.md` for review-only and enforced-GitHub installation profiles. Repo
 1. Read `SKILL.md` and `references/shared-control-model.md`.
 2. Select the review mode and smallest sufficient depth.
 3. Define accessible scope, exclusions, and allowed actions.
-4. For repository-wide/full-program work, run the Repository Identity Pass when identity boundaries could materially change interpretation.
+4. For broad/full-program work, run the Identity Pass when identity boundaries could materially change interpretation.
 5. Identify one review-state authority when a durable staged program is justified.
 6. Record review changes under `changes/` and regenerate `reviews/revalidation-queue.md`.
 7. Run the required stage work, evaluations, and deterministic tests.
@@ -59,21 +61,37 @@ See `INSTALL.md` for review-only and enforced-GitHub installation profiles. Repo
 
 Focused reviews normally do not need permanent trackers or stage reports. Changes made during review still require a change-impact record. A supported `behavior-neutral` record does not reopen a review stage.
 
-## Repository Identity Pass
+## Identity Pass
 
-Use `references/repository-identity-pass.md` to discover whether one Git repository contains multiple materially distinct projects, workstreams, frameworks, experiments, templates, migrations, generated layers, or other purposes that affect review interpretation.
+Use `references/identity-pass.md` to discover whether the reviewed scope contains multiple materially distinct identities that affect interpretation.
 
-The pass is deliberately non-leading:
+The pass is deliberately non-leading and medium-independent:
 
 - collect evidence before assigning labels;
-- do not use user speculation, repository names, or a fixed taxonomy as a checklist;
-- distinguish explicit repository identities from reviewer inference;
+- do not use user speculation, container names, repository names, or a fixed taxonomy as a checklist;
+- distinguish explicit identities from reviewer inference;
 - allow shared artifacts and overlap;
 - leave insufficiently supported material uncertain or unassigned;
 - do not treat multiple identities as a defect by themselves;
-- do not recommend repository splitting merely because multiple identities exist.
+- do not recommend storage or repository restructuring merely because multiple identities exist.
 
-The output is context for the five review stages, not a new authority source or an additional stage. In an exhaustive parent review, identity conclusions remain subject to the exhaustive semantic-coverage boundary.
+The output is context for the five review stages, not a new authority source or an additional stage.
+
+For Git repositories, repository-specific evidence mechanisms may support the pass. In an exhaustive repository review, identity conclusions remain subject to the pinned-manifest and full-object semantic-coverage boundary. Other environments need evidence appropriate to their own claimed scope.
+
+## Abstraction boundary
+
+Structural Optimization now explicitly asks whether behavior is unnecessarily coupled to a platform, storage medium, implementation, domain, artifact type, or vendor.
+
+The intended separation is:
+
+```text
+invariant semantic behavior
+        ↓
+environment-specific evidence and enforcement where actually required
+```
+
+Do not generalize merely because reuse is imaginable, and do not preserve platform coupling merely because it appeared in an initial requirement or feature name. Use `evals/abstraction-boundary.md` when this distinction is material.
 
 ## Exhaustive semantic coverage
 
@@ -90,7 +108,7 @@ python skills/project-review-system/scripts/build_review_manifest.py \
 
 The manifest includes every tracked tree entry reachable from the pinned commit, including directories, blobs, and gitlinks. Each entry records its Git object identity and a required semantic method such as code, structured data, document, image, archive, binary, repository structure, or gitlink analysis.
 
-During review, maintain a coverage ledger based on `templates/review-coverage.json`. A complete exhaustive claim requires every manifest entry to have `semantic_status: COMPLETE` and full declared range coverage. There is no `EXCLUDED` or irrelevant-file shortcut for an exhaustive claim.
+During review, maintain a coverage ledger based on `templates/review-coverage.json`. A complete exhaustive repository claim requires every manifest entry to have `semantic_status: COMPLETE` and full declared range coverage. There is no `EXCLUDED` or irrelevant-file shortcut for an exhaustive claim.
 
 Validate the ledger with:
 
@@ -102,7 +120,7 @@ python skills/project-review-system/scripts/check_review_coverage.py \
 
 A passing coverage check proves that every inventoried object has matching identity, semantic method, and complete line/byte/object-range processing records. It does **not** prove comprehension, semantic correctness, domain correctness, or reviewer independence.
 
-Semantic search, sampled reading, snippets, summaries, or repository-wide search results cannot substitute for the exhaustive manifest-and-coverage path when an exhaustive claim is made.
+Semantic search, sampled reading, snippets, summaries, or repository-wide search results cannot substitute for the exhaustive manifest-and-coverage path when an exhaustive repository claim is made.
 
 ## Deterministic validation
 
@@ -122,7 +140,9 @@ The workflow reports `validate-revalidation-controls` for every pull request and
 
 ## Assurance limits
 
-Version `0.1.10` adds the evidence-led Repository Identity Pass as pre-review interpretation for repository-wide/full-program work where overlapping purposes could materially affect later conclusions. The pass explicitly rejects seeded candidate taxonomies, forced classification, automatic split recommendations, and use as a new authority source.
+Version `0.1.11` corrects an abstraction-boundary defect in Version 0.1.10: semantic identity discovery is now medium-independent, while Git-specific exhaustive evidence and enforcement remain repository-specific. Structural Optimization also gains a reusable accidental-environment-coupling check and regression evaluation.
+
+Version `0.1.10` introduced the evidence-led Identity Pass but framed the semantic capability too narrowly around Git repositories. The non-leading discovery controls remain valid; the abstraction boundary is corrected in Version 0.1.11.
 
 Version `0.1.9` adds deterministic exhaustive repository-object inventory and full-range semantic-processing coverage controls. Bounded same-agent revalidation covered all five review stages, the exhaustive-object-inventory, full-range-coverage, premature-completion, reopening-chain, semantic-coverage-boundary, and structural-validator evaluations, and a live protected pull-request run in which changed-file coverage and all 37 regression tests passed before the intentionally unresolved queue gate.
 

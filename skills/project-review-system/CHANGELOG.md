@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.1.11 — 2026-08-07
+
+Identity abstraction-boundary correction.
+
+### Added
+
+- medium-independent `references/identity-pass.md`
+- `evals/identity-discovery.md`
+- reusable `evals/abstraction-boundary.md`
+- Structural Optimization checks for accidental environment coupling, implementation assumptions treated as requirements, premature generalization, and missing abstraction boundaries
+
+### Changed
+
+- semantic identity discovery no longer treats Git repositories as intrinsic to the capability
+- Git manifests, object identity, exhaustive coverage, changed-file enforcement, pull requests, and GitHub Actions remain explicitly repository-specific evidence/enforcement mechanisms
+- the old repository-specific identity module and evaluation paths were replaced by generic paths
+- full-program instructions now distinguish invariant semantic behavior from environment-specific evidence and enforcement
+
+### Revalidation status
+
+- pending bounded revalidation at change creation; completion status is recorded in the change-impact record and generated queue
+- same-agent limitation remains
+
+## 0.1.10 — 2026-08-07
+
+Repository Identity Pass release.
+
+### Added
+
+- evidence-led pre-review identity discovery
+- explicit versus inferred identity distinction
+- overlap and uncertainty handling
+- non-leading identity-discovery evaluation
+
+### Limitation discovered after release
+
+- the semantic identity capability was unnecessarily framed around Git repositories even though its core behavior depends on purpose, lifecycle, authority, audience, artifact families, and delivery targets rather than Git itself
+- Version 0.1.11 corrects that abstraction boundary while retaining repository-specific exhaustive evidence controls where they are actually required
+
 ## 0.1.9 — 2026-08-07
 
 Exhaustive semantic-coverage release candidate.
