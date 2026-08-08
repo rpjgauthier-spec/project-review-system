@@ -1,0 +1,19 @@
+{
+  "id": "2026-08-08-revalidation-queue-projection",
+  "summary": "Cover regenerated revalidation-queue projection updates produced by authoritative change-impact state during the local-first roadmap review.",
+  "changed_files": [
+    "skills/project-review-system/changes/2026-08-08-revalidation-queue-projection.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "behavior-neutral"
+  ],
+  "claimed_earliest_stage": "None",
+  "additional_stages": [],
+  "additional_evaluations": [],
+  "reason": "The revalidation queue is a generated, non-authoritative projection of the canonical mapping and change-impact records. Its updates during this review reflect recorded source-state/result/status changes and do not independently alter review semantics, authority, gates, completion criteria, or governed roadmap content. This record exists solely to satisfy changed-file coverage for the generated projection.",
+  "status": "complete",
+  "results": {
+    "confirm-behavior-neutral": "passed"
+  }
+}
