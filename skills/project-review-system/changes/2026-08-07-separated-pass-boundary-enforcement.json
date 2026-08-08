@@ -20,49 +20,71 @@
     "skills/project-review-system/tests/test_pass_boundaries.py",
     "skills/project-review-system/tests/test_update_revalidation_queue.py"
   ],
-  "change_classes": [
-    "authority-or-propagation",
-    "simplification-or-structure",
-    "tracker-or-completion"
-  ],
+  "change_classes": ["authority-or-propagation", "simplification-or-structure", "tracker-or-completion"],
   "claimed_earliest_stage": "Adversarial",
   "additional_stages": [],
-  "additional_evaluations": [
-    "adaptive-execution",
-    "execution-gate-enforcement",
-    "pass-boundary-enforcement"
-  ],
+  "additional_evaluations": ["adaptive-execution", "execution-gate-enforcement", "pass-boundary-enforcement"],
   "reason": "Revision-8 Adversarial passed under convergence mode, then revision-8 Interdependency identified a material producer-consumer deadlock between the staged revalidation sequence and the generated-queue contract. Both SKILL.md and shared-control-model.md required update_revalidation_queue.py --check to pass before stage advancement while the checker intentionally remains nonzero for unresolved later stages/evaluations. Under those rules together, Adversarial could never validly hand off to Interdependency. The authorities now distinguish ordered inter-stage advancement from final completion: the regenerated queue must be current, the completed/current and all earlier required stages must have valid evidence, and no earlier prerequisite may be unresolved; unresolved later stages/evaluations remain scheduled and block final completion rather than progression to the next required stage. A fully current and clear --check remains mandatory before final completion/merge. Because this correction changes canonical behavioral authority after revision-8 Adversarial credit, review_revision is incremented to 9 and revalidation reopens at Adversarial. The revision-8 Interdependency pass receives no credit. Historical execution occurrences remain preserved in the append-only ledger.",
   "status": "in_progress",
   "review_revision": 9,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:db410db9e79bf6665b823cd7a406f973a67063eadd276d8ff57b69ca159660fb",
+        "review_revision": 9,
+        "workload_class": "bounded-revalidation-pass-boundary-convergence-v3",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 9 continues the same bounded separated-pass architecture under the established convergence threshold after the queue-advancement authority contract was corrected.",
+            "The bounded pass tests whether that correction introduces any blocking failure against the six predeclared core invariants; one SEPARATED pass is suitable."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "Fresh SEPARATED one-pass revision-9 Adversarial review under convergence mode; only blocking findings may invalidate the pass."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:db410db9e79bf6665b823cd7a406f973a67063eadd276d8ff57b69ca159660fb",
+        "review_revision": 9,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-pr6-revalidation",
+        "workload_class": "bounded-revalidation-pass-boundary-convergence-v3",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "bf04c3b7a7ba2b5c93c0f2d5f2f581d8a6fc3359495cab2cca8584895e4dd4d9",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "851e707e43f269f2417faed51d96703acfbbb3ffe34ac82b25b95ca0527af241"
+    }
+  },
   "execution_completions": {},
   "results": {},
   "execution_occurrence_history": [
-    {
-      "review_revision": 7,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78",
-      "execution_unit_id": "pr6-r7-adversarial-stage-main-1",
-      "boundary": {
-        "kind": "declared-execution-unit",
-        "id": "assistant-message-pr6-r7-adversarial-1"
-      },
-      "pass_evidence_sha256": "c724e5b1b583b5fd4d4dff05773a7e0d719af8c904f3b1a16266e79381bf888b"
-    },
-    {
-      "review_revision": 8,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843",
-      "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1",
-      "boundary": {
-        "kind": "declared-execution-unit",
-        "id": "assistant-message-pr6-r8-adversarial-convergence-1"
-      },
-      "pass_evidence_sha256": "1a4956716f698ff2392144e862a230d097e5817c373c040c21eca49e436e75f9"
-    }
+    {"review_revision": 7, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78", "execution_unit_id": "pr6-r7-adversarial-stage-main-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r7-adversarial-1"}, "pass_evidence_sha256": "c724e5b1b583b5fd4d4dff05773a7e0d719af8c904f3b1a16266e79381bf888b"},
+    {"review_revision": 8, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843", "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r8-adversarial-convergence-1"}, "pass_evidence_sha256": "1a4956716f698ff2392144e862a230d097e5817c373c040c21eca49e436e75f9"}
   ],
   "adversarial_convergence": {
     "mode": "active",
@@ -82,31 +104,19 @@
   "next_step_plan": {
     "consumer": "next reviewer or assistant message continuing PR #6",
     "retention_reason": "Preserve the exact reopening and continuation sequence outside chat context.",
-    "current_state": "Revision 9 is in progress and reopened at Adversarial because Interdependency found and corrected a canonical staged-queue contract deadlock. No revision-8 gate/completion/result may satisfy revision 9. Interdependency is uncredited.",
+    "current_state": "Revision 9 is in progress and reopened at Adversarial because Interdependency found and corrected a canonical staged-queue contract deadlock. A fresh revision-9 Adversarial gate is now bound to the corrected governed artifact state and must pre-exist any completion credit.",
     "procedure_coverage": "The Interdependency finding is a conflicting-authority / validator-contract deadlock covered directly by the Interdependency procedure. It does not require expanding the procedure itself.",
     "next_actions": [
-      "Read the corrected SKILL.md and shared-control-model.md together with the active change record and current governed implementation.",
-      "Create a fresh revision-9 Adversarial gate bound to the corrected governed artifact state.",
-      "Perform only revision-9 Adversarial in the next assistant message under convergence mode.",
-      "If no blocking Adversarial defect remains, record only Adversarial completion/result and handoff to Interdependency.",
+      "Perform only revision-9 Adversarial against the exact state bound by the current gate under the existing convergence threshold.",
+      "Classify every material Adversarial observation as blocking or non-blocking against adversarial_convergence.core_invariants before correcting anything.",
+      "If a blocking defect is found, correct it, discard the stale gate, leave Adversarial uncredited, and stop this semantic pass.",
+      "If no blocking Adversarial defect remains, record only Adversarial completion/result with a new unique execution occurrence identity, append it to execution_occurrence_history, and hand off to Interdependency.",
       "Then rerun Interdependency in a later assistant message, followed by Normalization, Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance."
     ]
   },
   "supersedes_assurance": [
-    {
-      "change_id": "2026-08-07-adaptive-review-execution",
-      "review_revision": 6,
-      "reason": "Revision-6 semantic completion records overstated actual separation."
-    },
-    {
-      "change_id": "2026-08-07-separated-pass-boundary-enforcement",
-      "review_revision": 7,
-      "reason": "Revision 7 predates the historical uniqueness and durable occurrence requirements."
-    },
-    {
-      "change_id": "2026-08-07-separated-pass-boundary-enforcement",
-      "review_revision": 8,
-      "reason": "Revision-8 Adversarial credit was invalidated by the Interdependency-discovered canonical queue/stage advancement contradiction and its authority correction; revision 9 reopens from Adversarial."
-    }
+    {"change_id": "2026-08-07-adaptive-review-execution", "review_revision": 6, "reason": "Revision-6 semantic completion records overstated actual separation."},
+    {"change_id": "2026-08-07-separated-pass-boundary-enforcement", "review_revision": 7, "reason": "Revision 7 predates the historical uniqueness and durable occurrence requirements."},
+    {"change_id": "2026-08-07-separated-pass-boundary-enforcement", "review_revision": 8, "reason": "Revision-8 Adversarial credit was invalidated by the Interdependency-discovered canonical queue/stage advancement contradiction and its authority correction; revision 9 reopens from Adversarial."}
   ]
 }
