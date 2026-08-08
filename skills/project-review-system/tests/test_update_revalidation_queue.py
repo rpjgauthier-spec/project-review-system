@@ -88,7 +88,12 @@ class QueueRegressionTests(unittest.TestCase):
     def test_render_prompts_unresolved_work_and_canonical_suite(self) -> None:
         record = {"id": "change-6", "summary": "Change authorization.", "change_classes": ["authorization"], "claimed_earliest_stage": "Adversarial", "status": "pending", "results": {}}
         rendered = MODULE.render(MAPPING, [record])
-        self.assertIn("**BLOCKED:**", rendered)
+        self.assertIn("## Final completion gate", rendered)
+        self.assertIn("**OPEN:**", rendered)
+        self.assertIn("before final completion or merge", rendered)
+        self.assertIn("Ordered revalidation may continue", rendered)
+        self.assertNotIn("## Advancement gate", rendered)
+        self.assertNotIn("**BLOCKED:**", rendered)
         self.assertIn("derived from change classes", rendered)
         self.assertIn("Revalidate **Adversarial**", rendered)
         self.assertIn("Run evaluation `unauthorized-action`", rendered)
