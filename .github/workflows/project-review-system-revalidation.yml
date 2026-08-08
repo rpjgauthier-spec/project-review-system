@@ -2,6 +2,7 @@ name: Project Review System Revalidation
 
 on:
   pull_request:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
@@ -24,7 +25,6 @@ jobs:
           import importlib.util
           import json
           from pathlib import Path
-
           root = Path('skills/project-review-system')
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
           record = json.loads(record_path.read_text(encoding='utf-8'))
@@ -32,52 +32,21 @@ jobs:
           assert record.get('results', {}) == {}
           assert record.get('execution_gates', {}) == {}
           assert record.get('execution_completions', {}) == {}
-          required = {
-              'skills/project-review-system/scripts/check_change_impact_coverage.py',
-              'skills/project-review-system/tests/test_check_change_impact_coverage.py',
-          }
+          required = {'skills/project-review-system/scripts/check_change_impact_coverage.py','skills/project-review-system/tests/test_check_change_impact_coverage.py'}
           assert required.issubset(set(record['changed_files']))
-
           def load(name, path):
               spec = importlib.util.spec_from_file_location(name, path)
               module = importlib.util.module_from_spec(spec)
               spec.loader.exec_module(module)
               return module
-
           queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
           selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
           target = queue.current_record_target_state_id(record)
-          workload = {
-              'schema_version': 1,
-              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
-              'activity': 'Adversarial',
-              'target_state_id': target,
-              'review_revision': 15,
-              'workload_class': 'bounded-revalidation-pass-boundary-convergence-v9',
-              'stage_assessment': {
-                  'single_pass_suitable': True,
-                  'reasons': [
-                      'Revision 15 reopens the same bounded architecture after correcting the changed-files declaration to include the coverage checker and its regression test.',
-                      'The pass is limited to testing whether the expanded artifact-binding set introduces or exposes a reusable false-credit bypass under the established convergence invariants.'
-                  ],
-                  'subpasses': []
-              },
-              'fused_authorization': None,
-              'notes': 'Fresh SEPARATED revision-15 Adversarial review under convergence mode; only blocking findings invalidate the pass.'
-          }
+          workload = {'schema_version':1,'reviewer_subject_id':'chatgpt-gpt-5.6-sol-pr6-revalidation','activity':'Adversarial','target_state_id':target,'review_revision':15,'workload_class':'bounded-revalidation-pass-boundary-convergence-v9','stage_assessment':{'single_pass_suitable':True,'reasons':['Revision 15 reopens the same bounded architecture after correcting the changed-files declaration to include the coverage checker and its regression test.','The pass is limited to testing whether the expanded artifact-binding set introduces or exposes a reusable false-credit bypass under the established convergence invariants.'],'subpasses':[]},'fused_authorization':None,'notes':'Fresh SEPARATED revision-15 Adversarial review under convergence mode; only blocking findings invalidate the pass.'}
           capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
           gate = selector.build_gate(workload, capability)
           record.setdefault('execution_gates', {})['Adversarial'] = gate
-          record['next_step_plan'] = {
-              'consumer': 'current assistant message continuing PR #6',
-              'current_state': 'Revision 15 queue is current and a fresh artifact-bound Adversarial gate is durably recorded.',
-              'procedure_coverage': 'Adversarial convergence review is bounded to the expanded changed-files/artifact-binding set and the established false-credit, stale-state, namespace, identity, chronology, and host-assurance invariants.',
-              'next_actions': [
-                  f"Perform revision-15 Adversarial only using gate sha256:{gate['gate_sha256']}.",
-                  'If supported, record only Adversarial completion/result and hand off to Interdependency.',
-                  'If a blocking reusable bypass is found, reopen rather than crediting the stage.'
-              ]
-          }
+          record['next_step_plan'] = {'consumer':'current assistant message continuing PR #6','current_state':'Revision 15 queue is current and a fresh artifact-bound Adversarial gate is durably recorded.','procedure_coverage':'Adversarial convergence review is bounded to the expanded changed-files/artifact-binding set and the established false-credit, stale-state, namespace, identity, chronology, and host-assurance invariants.','next_actions':[f"Perform revision-15 Adversarial only using gate sha256:{gate['gate_sha256']}.",'If supported, record only Adversarial completion/result and hand off to Interdependency.','If a blocking reusable bypass is found, reopen rather than crediting the stage.']}
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
           print('TARGET=' + target)
           print('GATE=' + gate['gate_sha256'])
