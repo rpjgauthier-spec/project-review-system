@@ -15,13 +15,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record PR 6 revision-14 Normalization completion
+      - name: Regenerate PR 6 queue and open revision-14 Structural Optimization gate
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Regenerate revision-14 queue after Normalization'
+            git push origin HEAD:enforce-separated-pass-boundaries
+          fi
+
           python - <<'PY'
-          import hashlib
+          import importlib.util
           import json
           from pathlib import Path
 
@@ -29,89 +38,57 @@ jobs:
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
           record = json.loads(record_path.read_text(encoding='utf-8'))
           assert record['review_revision'] == 14
+          assert record.get('results', {}).get('Adversarial') == 'supported'
           assert record.get('results', {}).get('Interdependency') == 'supported'
-          gate = record['execution_gates']['Normalization']
-          assert gate['gate_sha256'] == 'd0747cff4837b78c666190c8f3f794214a3f32def96d5e56fb3c517986753b5f'
-          assert 'Normalization' not in record.get('execution_completions', {})
-          assert 'Normalization' not in record.get('results', {})
-          inbound = record['execution_completions']['Interdependency']['passes'][0]['handoff']['sha256']
-          assert inbound == '3403f45118842820e55cd5e2721d9a2372ec3c04045b1c916d540af7408423a4'
+          assert record.get('results', {}).get('Normalization') == 'supported'
+          assert record['execution_completions']['Normalization']['passes'][0]['handoff']['sha256'] == '7cdea39a528e12f0f681990ff1cd32a3045d09e82be7a237100da1f0cc3d9c76'
+          assert 'Structural Optimization' not in record.get('execution_gates', {})
 
-          def canonical_hash(value):
-              return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+          def load(name, path):
+              spec = importlib.util.spec_from_file_location(name, path)
+              module = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+              return module
 
-          handoff = {
-              'consumer': 'Structural Optimization',
-              'findings': [
-                  'No material unjustified terminology, status, identity, target-state, queue, or completion representation inconsistency remains in the revision-14 scope.',
-                  'The canonical queue continues to distinguish final-completion OPEN/CLEAR state from ordered inter-stage progression, while stage results and execution-pass completion remain separate concepts.',
-                  'Top-level change-record namespace and filename/internal-id identity are represented consistently where they control queue and current-record behavior.',
-                  'SKILL.md names bare --check conceptually while the generated queue and CLI require explicit base/head; because the bare form fails closed with an actionable error and the protected workflow supplies scope, this is retained as non-material documentation precision rather than a control defect.'
-              ],
-              'evidence': [
-                  'skills/project-review-system/references/normalization-review.md',
-                  'skills/project-review-system/references/shared-control-model.md',
-                  'skills/project-review-system/SKILL.md',
-                  'skills/project-review-system/scripts/update_revalidation_queue.py',
-                  'skills/project-review-system/reviews/revalidation-queue.md',
-                  '.github/workflows/project-review-system-revalidation.yml',
-                  'revision-14 Interdependency handoff sha256:3403f45118842820e55cd5e2721d9a2372ec3c04045b1c916d540af7408423a4'
-              ],
-              'unresolved_conditions': [
-                  'Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance remain.',
-                  'A future documentation cleanup may make the SKILL.md example spell out --base/--head explicitly; no current safety or completion-credit path depends on that wording.'
-              ]
-          }
-          handoff['sha256'] = canonical_hash(handoff)
-          pass_item = {
-              'pass_id': 'stage-main',
-              'context_mode': 'SEPARATED',
-              'status': 'complete',
-              'execution_unit_id': 'pr6-r14-normalization-stage-main-1',
-              'boundary': {'kind': 'declared-execution-unit', 'id': 'assistant-message-pr6-r14-normalization-1'},
-              'inbound_handoff_sha256': inbound,
-              'handoff': handoff
-          }
-          completion = {
-              'gate_sha256': gate['gate_sha256'],
-              'target_state_id': gate['decision']['target_state_id'],
-              'passes': [pass_item],
-              'scratch_materialized': False,
-              'scratch_cleanup_status': 'not_applicable',
-              'retained_subpass_artifacts': []
-          }
-          record.setdefault('execution_completions', {})['Normalization'] = completion
-          record.setdefault('results', {})['Normalization'] = 'supported'
-          occurrence = {
+          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
+          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
+          target = queue.current_record_target_state_id(record)
+          workload = {
+              'schema_version': 1,
+              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
+              'activity': 'Structural Optimization',
+              'target_state_id': target,
               'review_revision': 14,
-              'stage': 'Normalization',
-              'pass_id': 'stage-main',
-              'gate_sha256': gate['gate_sha256'],
-              'execution_unit_id': pass_item['execution_unit_id'],
-              'boundary': pass_item['boundary'],
-              'pass_evidence_sha256': canonical_hash(pass_item)
+              'workload_class': 'bounded-revalidation-pass-boundary-structural-optimization-v3',
+              'stage_assessment': {
+                  'single_pass_suitable': True,
+                  'reasons': [
+                      'The revision-14 Structural Optimization pass is bounded to whether the current completion-path controls can be simplified or reorganized without weakening supported invariants.',
+                      'The prior Normalization handoff is exact and architectural redesign of orchestration remains explicitly deferred outside PR #6.'
+                  ],
+                  'subpasses': []
+              },
+              'fused_authorization': None,
+              'notes': 'Fresh SEPARATED revision-14 Structural Optimization review consuming the exact Normalization handoff.'
           }
-          record.setdefault('execution_occurrence_history', []).append(occurrence)
+          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
+          gate = selector.build_gate(workload, capability)
+          record.setdefault('execution_gates', {})['Structural Optimization'] = gate
           record['next_step_plan'] = {
-              'consumer': 'next reviewer or assistant message continuing PR #6',
-              'current_state': 'Revision 14 Adversarial, Interdependency, and Normalization are supported; the exact Normalization handoff targets Structural Optimization.',
-              'procedure_coverage': 'Material terminology and representation are consistent while legitimate lifecycle distinctions remain explicit; the one bare --check wording difference is fail-closed and non-material.',
+              'consumer': 'current assistant message continuing PR #6',
+              'current_state': 'Revision 14 queue is current after Normalization completion and a fresh artifact-bound Structural Optimization gate is durably recorded.',
+              'procedure_coverage': 'Structural Optimization must consume the exact revision-14 Normalization handoff and test the proportionality and separation of the completion-path controls without expanding PR #6 into the deferred deterministic orchestration redesign.',
               'next_actions': [
-                  'Regenerate the generated revalidation queue from the revision-14 Normalization completion state.',
-                  f"Read exact Normalization handoff sha256:{handoff['sha256']} and the current Structural Optimization authority.",
-                  'Create a fresh revision-14 Structural Optimization execution gate against the current governed artifact target.',
-                  'Perform revision-14 Structural Optimization only in the next assistant message.'
+                  f"Perform revision-14 Structural Optimization only using gate sha256:{gate['gate_sha256']}.",
+                  'Assess retain/defer/simplify/merge/split/generate alternatives for the current changed-file, queue, pass chronology, identity-history, workflow, and record-state controls.',
+                  'If supported, record only Structural Optimization completion/result with the exact inbound Normalization handoff and hand off to End-to-end validation.',
+                  'If a material governed structural defect is found, apply reopening semantics instead of crediting the stage.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('HANDOFF=' + handoff['sha256'])
-          print('PASS_EVIDENCE=' + occurrence['pass_evidence_sha256'])
+          print('TARGET=' + target)
+          print('GATE=' + gate['gate_sha256'])
           PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Complete revision-14 Normalization'
-          python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
-          python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
-          python skills/project-review-system/scripts/check_execution_identity_history.py --base origin/main --head HEAD
+          git commit -m 'Open revision-14 Structural Optimization gate'
           git push origin HEAD:enforce-separated-pass-boundaries
