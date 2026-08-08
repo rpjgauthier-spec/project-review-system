@@ -22,8 +22,7 @@ jobs:
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
           python - <<'PY'
-          import importlib.util
-          import json
+          import importlib.util, json
           from pathlib import Path
           root = Path('skills/project-review-system')
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
@@ -35,10 +34,7 @@ jobs:
           required = {'skills/project-review-system/scripts/check_change_impact_coverage.py','skills/project-review-system/tests/test_check_change_impact_coverage.py'}
           assert required.issubset(set(record['changed_files']))
           def load(name, path):
-              spec = importlib.util.spec_from_file_location(name, path)
-              module = importlib.util.module_from_spec(spec)
-              spec.loader.exec_module(module)
-              return module
+              spec = importlib.util.spec_from_file_location(name, path); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); return module
           queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
           selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
           target = queue.current_record_target_state_id(record)
@@ -48,8 +44,7 @@ jobs:
           record.setdefault('execution_gates', {})['Adversarial'] = gate
           record['next_step_plan'] = {'consumer':'current assistant message continuing PR #6','current_state':'Revision 15 queue is current and a fresh artifact-bound Adversarial gate is durably recorded.','procedure_coverage':'Adversarial convergence review is bounded to the expanded changed-files/artifact-binding set and the established false-credit, stale-state, namespace, identity, chronology, and host-assurance invariants.','next_actions':[f"Perform revision-15 Adversarial only using gate sha256:{gate['gate_sha256']}.",'If supported, record only Adversarial completion/result and hand off to Interdependency.','If a blocking reusable bypass is found, reopen rather than crediting the stage.']}
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('TARGET=' + target)
-          print('GATE=' + gate['gate_sha256'])
+          print('TARGET=' + target); print('GATE=' + gate['gate_sha256'])
           PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
