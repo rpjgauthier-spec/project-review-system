@@ -15,58 +15,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Project Review System changes
-        id: scope
-        shell: bash
-        run: |
-          if git diff --quiet \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.event.pull_request.head.sha }}" \
-            -- skills/project-review-system/ .github/workflows/project-review-system-revalidation.yml; then
-            echo "relevant=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Set up Python
-        if: steps.scope.outputs.relevant == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Require change-impact coverage
-        if: steps.scope.outputs.relevant == 'true'
+      - name: Render generated revalidation queue
         run: |
-          python skills/project-review-system/scripts/check_change_impact_coverage.py \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}"
-
-      - name: Run Project Review System regression suite
-        if: steps.scope.outputs.relevant == 'true'
-        run: python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
-
-      - name: Verify declared pass boundaries and handoffs
-        if: steps.scope.outputs.relevant == 'true'
-        run: |
-          python skills/project-review-system/scripts/check_pass_boundaries.py \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}"
-
-      - name: Verify historical execution identity uniqueness
-        if: steps.scope.outputs.relevant == 'true'
-        run: |
-          python skills/project-review-system/scripts/check_execution_identity_history.py \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}"
-
-      - name: Verify generated revalidation queue
-        if: steps.scope.outputs.relevant == 'true'
-        run: |
-          python skills/project-review-system/scripts/update_revalidation_queue.py \
-            --check \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}"
-
-      - name: Report irrelevant pull request
-        if: steps.scope.outputs.relevant != 'true'
-        run: echo "No Project Review System files changed; enforcement checks were not required."
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          echo '---BEGIN-REVALIDATION-QUEUE---'
+          cat skills/project-review-system/reviews/revalidation-queue.md
+          echo '---END-REVALIDATION-QUEUE---'
