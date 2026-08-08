@@ -188,8 +188,8 @@ Checklist:
 
 ```bash
 python skills/project-review-system/scripts/update_revalidation_queue.py
-python skills/project-review-system/scripts/update_revalidation_queue.py --check
+python skills/project-review-system/scripts/update_revalidation_queue.py --check --base <base-sha> --head <head-sha>
 python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
 ```
 
-`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, any recorded pass is bound to an absent/stale/invalid gate or target state, a passing stage has invalid completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed. Unresolved later work blocks final completion or merge, not ordered progression when the current stage and all earlier prerequisites are supported.
+`--check` exits nonzero when the generated queue is stale, a current-PR record has stale execution evidence, a completed record lacks passing results, a passing stage has invalid completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed. Completed historical records retain their recorded artifact target; current-PR records remain bound to current artifact state even after completion.
