@@ -273,6 +273,76 @@ Each branch should bind to:
 
 Only after branch convergence/freeze should the controller permit cross-branch comparison.
 
+### Ephemeral branch execution and parent-context firewall
+
+Branch independence does not necessarily require separate persistent chats. A stronger and lower-burden option is to let the primary model perform a rich local↔primary refinement loop inside one bounded execution while strictly limiting what is allowed to cross back into the parent conversation.
+
+Conceptually:
+
+```text
+Parent conversation
+    │
+    ├─ execute Branch A
+    │      requirements + rough A
+    │      primary ↔ local A
+    │      primary ↔ local A
+    │      primary ↔ local A
+    │      ↓
+    │   candidate-A stored durably
+    │      ↓
+    │   branch scratch/context discarded
+    │      ↓
+    └─ parent receives only: "Branch A complete"
+
+Next parent turn
+    │
+    ├─ execute Branch B
+    │      requirements + rough B
+    │      no candidate-A content or A critique history
+    │      ...
+```
+
+The substantive A refinement dialogue is therefore not part of the conversational context used to refine B. The parent conversation may retain only minimal metadata that A occurred, not what A proposed, what arguments were persuasive, what architecture the primary model preferred, what terminology was used, or how many rounds were needed.
+
+The branch may still persist the mature candidate and audit/provenance data outside the parent context. Those artifacts remain unavailable to other independent branches until the workflow explicitly enters cross-branch comparison.
+
+This creates a **lossy context boundary**:
+
+- rich branch-local working context exists temporarily;
+- the mature candidate is written to durable external state;
+- the parent receives only a tiny completion receipt;
+- intermediate branch dialogue/reasoning is discarded from subsequent independent branch context;
+- the comparison phase later loads the frozen mature candidates intentionally.
+
+A conceptual parent-return contract could be as small as:
+
+```json
+{
+  "branch_id": "A",
+  "status": "complete",
+  "candidate_ref": "sha256:..."
+}
+```
+
+For maximum isolation, the user-visible parent message could omit even the candidate reference and simply render `Branch A complete`; the deterministic controller keeps the durable reference internally.
+
+### Branch context firewall requirement
+
+The redesign should explicitly require a context firewall rather than trusting the primary model to merely avoid mentioning earlier branches:
+
+> After an independent branch execution completes, substantive branch inputs, intermediate dialogue, critiques, reasoning, and candidate content must not be automatically supplied to subsequent independent branch executions. Only the explicitly declared parent-return payload may cross the branch boundary. Durable branch candidate artifacts remain inaccessible to other branches until workflow state explicitly authorizes cross-branch comparison.
+
+This requirement is meaningful only if the execution environment actually discards or withholds branch scratch/context. Merely printing a short response while silently carrying the full hidden branch transcript into later model invocations does not provide isolation.
+
+The deterministic controller should therefore distinguish:
+
+- **branch scratch/context** — temporary and non-propagating;
+- **durable candidate artifact** — retained but access-controlled by workflow phase;
+- **parent-return payload** — intentionally tiny and allowed into the parent context;
+- **comparison input** — explicitly assembled later from frozen candidates.
+
+This topology also reduces context-window pressure: very large branch refinement dialogues can be discarded while only the mature candidate documents are retained for eventual comparison.
+
 ### Bounded local↔primary dialogue
 
 A branch can alternate between the primary model and the local model that originated it. Example:
@@ -472,6 +542,8 @@ Every artifact should bind to exact input hashes and job identity. The physical 
 - What deterministic stopping rule should govern local↔primary convergence loops?
 - How should the system detect when a primary model is collapsing nominally independent branches into one architecture?
 - When should converged minority designs be preserved for final comparison rather than eliminated during branch refinement?
+- What execution-environment guarantees are required to prove that ephemeral branch scratch/context is not propagated into later independent branches?
+- What is the minimum parent-return payload needed to resume orchestration without leaking substantive branch content?
 
 ## Status
 
