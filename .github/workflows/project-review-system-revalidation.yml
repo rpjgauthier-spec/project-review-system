@@ -16,21 +16,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Regenerate PR 6 queue and open revision-15 End-to-end validation gate
+      - name: Record PR 6 revision-15 End-to-end validation completion
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
-          python skills/project-review-system/scripts/update_revalidation_queue.py
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add skills/project-review-system/reviews/revalidation-queue.md
-          if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate revision-15 queue after Structural Optimization'
-            git push origin HEAD:enforce-separated-pass-boundaries
-          fi
           python - <<'PY'
-          import importlib.util, json
+          import hashlib, json
           from pathlib import Path
           root = Path('skills/project-review-system')
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
@@ -38,23 +30,93 @@ jobs:
           assert record['review_revision'] == 15
           for stage in ('Adversarial','Interdependency','Normalization','Structural Optimization'):
               assert record.get('results', {}).get(stage) == 'supported'
-          assert record['execution_completions']['Structural Optimization']['passes'][0]['handoff']['sha256'] == 'd0fe4d04d0a7d8c231152017f4f0725e358c899f813e429a70bc18af2f9f0314'
-          assert 'End-to-end validation' not in record.get('execution_gates', {})
-          def load(name, path):
-              spec = importlib.util.spec_from_file_location(name, path); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module); return module
-          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
-          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
-          target = queue.current_record_target_state_id(record)
-          workload = {'schema_version':1,'reviewer_subject_id':'chatgpt-gpt-5.6-sol-pr6-revalidation','activity':'End-to-end validation','target_state_id':target,'review_revision':15,'workload_class':'bounded-revalidation-pass-boundary-end-to-end-v5','stage_assessment':{'single_pass_suitable':True,'reasons':['Revision 15 End-to-end validation is bounded to the integrated completion path after the expanded changed-files/artifact-binding correction.','Normal, stale-state/reopening, interrupted or partial evidence, history preservation, and final-completion paths can be traced in one SEPARATED pass.'],'subpasses':[]},'fused_authorization':None,'notes':'Fresh SEPARATED revision-15 End-to-end validation consuming the exact Structural Optimization handoff.'}
-          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
-          gate = selector.build_gate(workload, capability)
-          record.setdefault('execution_gates', {})['End-to-end validation'] = gate
-          record['next_step_plan'] = {'consumer':'current assistant message continuing PR #6','current_state':'Revision 15 queue is current after Structural Optimization completion and a fresh artifact-bound End-to-end validation gate is durably recorded.','procedure_coverage':'Trace the integrated normal path, stale/current-target path, revision reopening, interrupted or partial completion rejection, historical occurrence preservation, mapped-evaluation/final-queue boundary, and protected final workflow.','next_actions':[f"Perform revision-15 End-to-end validation only using gate sha256:{gate['gate_sha256']}.",'Stop immediately on the first blocking integrated defect; non-blocking observations do not terminate the pass.','If supported, record only End-to-end completion/result and hand off to mapped evaluations/final completion work.']}
+          gate = record['execution_gates']['End-to-end validation']
+          assert gate['gate_sha256'] == '2b44d4355b5965e992eae6128a7866ba06e053492e1dad2650bb3c318149b55e'
+          assert gate['decision']['target_state_id'] == 'sha256:e732d30106010afac86d5aee9f6d26a69510e5c0117b8856eaa49477b8e88e36'
+          assert 'End-to-end validation' not in record.get('execution_completions', {})
+          assert 'End-to-end validation' not in record.get('results', {})
+          inbound = record['execution_completions']['Structural Optimization']['passes'][0]['handoff']['sha256']
+          assert inbound == 'd0fe4d04d0a7d8c231152017f4f0725e358c899f813e429a70bc18af2f9f0314'
+          def canonical_hash(value):
+              return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+          handoff = {
+              'consumer': 'review-completion',
+              'findings': [
+                  'No material integrated-path bypass, stale-state acceptance, unsafe reopening path, evidence-loss path, or nonterminating completion path was identified in the revision-15 bounded scope.',
+                  'Normal credited progression requires a durable artifact-bound gate, exact prior handoff consumption, unique execution identity, and valid completion before a supported stage result can satisfy the queue.',
+                  'Partial, stale-target, mismatched-plan, same-revision replacement, broken-handoff, and premature-later-stage states fail closed through queue, pass-boundary, or identity-history validation.',
+                  'Revision increment permits bounded redo with new identities while the append-only execution occurrence ledger preserves superseded credited evidence across reopening and squash-like history loss.',
+                  'Current-PR records remain rebound to current governed artifact state while unchanged completed historical records retain their recorded target; explicit base/head scoping prevents current work from being silently treated as historical.',
+                  'The protected workflow applies one pull-request base/head to changed-file coverage, regression tests, pass chronology, historical identity, and final queue validation; final completion remains blocked until mapped evaluations, regenerated queue state, and protected CI are clear.'
+              ],
+              'evidence': [
+                  'skills/project-review-system/references/end-to-end-validation.md',
+                  'skills/project-review-system/scripts/update_revalidation_queue.py',
+                  'skills/project-review-system/scripts/check_change_impact_coverage.py',
+                  'skills/project-review-system/scripts/check_pass_boundaries.py',
+                  'skills/project-review-system/scripts/check_execution_identity_history.py',
+                  'skills/project-review-system/tests/test_update_revalidation_queue.py',
+                  'skills/project-review-system/tests/test_execution_gate_queue.py',
+                  'skills/project-review-system/tests/test_pass_boundaries.py',
+                  'skills/project-review-system/tests/test_execution_identity_reopening.py',
+                  '.github/workflows/project-review-system-revalidation.yml',
+                  'revision-15 Structural Optimization handoff sha256:d0fe4d04d0a7d8c231152017f4f0725e358c899f813e429a70bc18af2f9f0314'
+              ],
+              'unresolved_conditions': [
+                  'Mapped evaluations required by the active change record remain to be recorded.',
+                  'The generated queue must be regenerated from final record state and scoped --check must clear before merge.',
+                  'Final protected GitHub Actions clearance remains required; current PR-triggered runs may require host-side action/approval and are not treated as semantic evidence of clearance.',
+                  'The non-blocking SKILL bare --check wording shorthand remains deferred.'
+              ]
+          }
+          handoff['sha256'] = canonical_hash(handoff)
+          pass_item = {
+              'pass_id': 'stage-main',
+              'context_mode': 'SEPARATED',
+              'status': 'complete',
+              'execution_unit_id': 'pr6-r15-end-to-end-validation-stage-main-1',
+              'boundary': {'kind':'declared-execution-unit','id':'assistant-message-pr6-r15-end-to-end-validation-1'},
+              'inbound_handoff_sha256': inbound,
+              'handoff': handoff
+          }
+          completion = {
+              'gate_sha256': gate['gate_sha256'],
+              'target_state_id': gate['decision']['target_state_id'],
+              'passes': [pass_item],
+              'scratch_materialized': False,
+              'scratch_cleanup_status': 'not_applicable',
+              'retained_subpass_artifacts': []
+          }
+          record.setdefault('execution_completions', {})['End-to-end validation'] = completion
+          record.setdefault('results', {})['End-to-end validation'] = 'supported'
+          occurrence = {
+              'review_revision': 15,
+              'stage': 'End-to-end validation',
+              'pass_id': 'stage-main',
+              'gate_sha256': gate['gate_sha256'],
+              'execution_unit_id': pass_item['execution_unit_id'],
+              'boundary': pass_item['boundary'],
+              'pass_evidence_sha256': canonical_hash(pass_item)
+          }
+          record.setdefault('execution_occurrence_history', []).append(occurrence)
+          record['next_step_plan'] = {
+              'consumer': 'next reviewer or assistant message continuing PR #6',
+              'current_state': 'All five revision-15 semantic stages are supported under distinct SEPARATED execution units; mapped evaluations and final completion checks remain.',
+              'procedure_coverage': 'Integrated normal, stale/partial, reopening, history-preservation, current-versus-historical target, and fail-closed final-completion paths were traced without a blocking defect.',
+              'next_actions': [
+                  'Regenerate the revision-15 queue from the End-to-end completion state.',
+                  'Run and record only the mapped evaluations required by the active change record.',
+                  'After mapped evaluations pass, set the record complete, regenerate the final queue, run scoped final checks, obtain protected CI clearance, and only then consider merge.'
+              ]
+          }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('TARGET=' + target); print('GATE=' + gate['gate_sha256'])
+          print('HANDOFF=' + handoff['sha256'])
+          print('PASS_EVIDENCE=' + occurrence['pass_evidence_sha256'])
           PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Open revision-15 End-to-end validation gate'
+          git commit -m 'Complete revision-15 End-to-end validation'
           python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
           python skills/project-review-system/scripts/check_change_impact_coverage.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
