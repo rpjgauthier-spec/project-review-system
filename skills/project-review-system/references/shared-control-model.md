@@ -143,6 +143,8 @@ The generator must:
 
 The generated queue is never edited manually. Update the source change record, regenerate the queue, and then run the listed work.
 
+An unresolved queue is expected while ordered revalidation is still in progress. During inter-stage advancement, the queue must be regenerated/current, execution evidence for the completed stage must be valid, and every earlier required stage must be supported. Unresolved **later** stages or evaluations remain scheduled work and do not by themselves block advancement to the next required stage. A fully current and clear `--check` is required before final review completion or merge.
+
 ## Canonical revalidation mapping
 
 `config/revalidation-map.json` is the mapping authority. Its mappings are minimum requirements. A reviewer may add rechecks but may not suppress mapped requirements through an individual change record.
@@ -155,29 +157,30 @@ After every behavioral change:
 
 1. Record and classify the change.
 2. Regenerate the revalidation queue.
-3. Revalidate every derived prior conclusion before advancement.
+3. Revalidate every derived prior conclusion before final completion.
 4. If a conclusion is invalidated or unresolved, reopen the earliest affected stage.
 5. Make it the sole open stage and suspend all later stages.
 6. Mark later terminal stages `Awaiting revalidation`.
 7. Correct or escalate the defect.
 8. Record results in the change-impact record and regenerate the queue.
 9. Revalidate affected later stages in order.
-10. Advance only after `update_revalidation_queue.py --check` passes.
+10. Advance from one required stage to the next only when the queue is current, the just-completed stage has valid execution evidence/result, and all earlier required stages remain supported. Require `update_revalidation_queue.py --check` to pass only at final completion/merge, after all required stages and evaluations are resolved.
 
 A reopened earlier stage suspends any prior completion claim until the affected chain is supported again.
 
 ## Backward-impact gate
 
-Before advancement, verify:
+Before inter-stage advancement, verify:
 
 - every changed behavior has a structured record;
-- the generated queue matches its source hash;
+- the generated queue has been regenerated from the current source state;
 - the earliest affected stage is derived correctly;
-- all listed stage rechecks and evaluations have recorded results;
-- suspension markers agree with current state;
-- the queue is clear under `--check`.
+- the current and every earlier required stage have valid current results and execution evidence;
+- no earlier required item is missing, stale, unsupported, invalidated, or failed.
 
-No stage advances while any item is missing, stale, unsupported, invalidated, failed, or unresolved.
+Before final completion or merge, additionally verify that all listed stage rechecks and evaluations have recorded passing/permitted results and that `update_revalidation_queue.py --check` passes with a current and clear queue.
+
+Unresolved later-stage or evaluation items remain blockers to **final completion**, but they do not deadlock ordered progression to the next required stage.
 
 ## Escalation rule
 
