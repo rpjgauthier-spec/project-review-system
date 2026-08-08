@@ -1,0 +1,19 @@
+{
+  "id": "2026-08-08-local-first-refactor-living-design-notes",
+  "summary": "Maintain a non-authoritative living design notebook for local-first refactor ideas discovered after the governed roadmap target was frozen.",
+  "changed_files": [
+    "skills/project-review-system/changes/2026-08-08-local-first-refactor-living-design-notes.json",
+    "skills/project-review-system/reviews/local-first-refactor-living-design-notes.md"
+  ],
+  "change_classes": [
+    "behavior-neutral"
+  ],
+  "claimed_earliest_stage": "None",
+  "additional_stages": [],
+  "additional_evaluations": [],
+  "reason": "The living design notes are explicitly non-authoritative and do not alter current Project Review System rules, workflow authority, reviewed roadmap behavior, gates, completion criteria, or production controls. They preserve proposals, dogfooding observations, and future redesign requirements for later implementation planning without silently mutating the already-reviewed roadmap target. This record exists to satisfy changed-file coverage while keeping the notebook outside the governed roadmap artifact identity.",
+  "status": "complete",
+  "results": {
+    "confirm-behavior-neutral": "passed"
+  }
+}
