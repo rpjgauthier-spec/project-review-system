@@ -16,6 +16,8 @@ Consider only surfaces present in scope:
 - concurrent edits, stale blobs, partial failures, and interrupted workflows
 - reviewer conflict of interest, confirmation bias, and unsupported confidence
 - incomplete access, sampling, hidden systems, and omitted dependencies
+- intermediate workflow states, resumptions, retries, subdivisions, and reopenings
+- durable evidence identities, historical state, and post-credit mutation
 
 ## Questions
 
@@ -39,6 +41,10 @@ Apply only relevant questions:
 16. Can concurrent changes, stale file state, or a partially failed write leave the repository internally inconsistent?
 17. Can review reports leak secrets, personal data, exploit details, or restricted evidence?
 18. Could a correction be technically reversible in version control but operationally irreversible because it triggered publication, deletion, payment, outreach, or another external action?
+19. Can every workflow, subdivision, retry, reopening, rollback, or state transition the system claims to support actually be represented and completed under its own evidence and state model?
+20. After evidence, an approval, or a completion receives durable credit, can its contents or identity be changed while retaining the same logical occurrence or authority?
+21. Are required controls enforced at intermediate and partially completed states, or only when the enclosing workflow reaches a terminal or passing state?
+22. Can historical or pre-existing state outside the current edit range be omitted in a way that permits reuse, replay, or contradiction that would be rejected if the full relevant history were considered?
 
 ## Finding classes
 
@@ -63,6 +69,10 @@ Apply only relevant questions:
 - concurrency or partial-write hazard
 - irreversible external side effect
 - domain-expertise substitution
+- workflow-representability contradiction
+- post-credit evidence mutation
+- intermediate-state validation gap
+- historical-boundary omission
 
 ## Correction order
 
@@ -92,5 +102,36 @@ For each material correction, test:
 - incomplete-access or partial-coverage case
 - concurrent-change or partial-write case when modifications are possible
 - withdrawal, cancellation, rollback, or failure case when relevant
+- intermediate or partial-completion state when the workflow can pause, subdivide, retry, or resume
+- post-credit mutation or replay when evidence or authority persists across durable states
+- representability of every newly claimed workflow/state path, including its failure and resumption path
+- historical or base-state interaction when current behavior depends on evidence that may predate the active edit range
 
-A stage is `Complete` when material adversarial defects in the accessible scope are corrected, coverage and independence limits are disclosed, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a material unsafe defect remains.
+## Procedure coverage after a finding
+
+After every material Adversarial finding, classify the finding before retrying the stage:
+
+1. **Already covered:** the current Adversarial procedure already requires a relevant attack or validation. Correct the implementation or design and rerun against the corrected state.
+2. **New reusable attack class:** the finding exposes a generally reusable failure mode that the current procedure does not adequately require. Update this Adversarial procedure before retrying, include that authority change in the active change-impact scope, and rebind subsequent review evidence to the resulting artifact state.
+
+Do not treat a newly discovered reusable attack class as a local implementation fix only. Conversely, do not expand this procedure merely because a specific implementation happened to fail when the existing questions already cover the failure mode.
+
+## Convergence and stopping
+
+Adversarial review must converge on the bounded stage claim rather than continue indefinitely searching for progressively smaller improvements.
+
+Before a retry after repeated corrections, declare the **core invariants** whose failure would invalidate the current stage conclusion. A finding is **blocking** and may force another correction/retry only when it does at least one of the following:
+
+- permits false semantic, stage, pass, authorization, or completion credit;
+- bypasses a required protected control, separation rule, reopening rule, state-binding rule, stop condition, or other core invariant declared for the bounded review;
+- materially overstates the assurance that the reviewed system can support;
+- invalidates a conclusion required by a mapped evaluation or a downstream required stage; or
+- exposes a genuinely new reusable Adversarial attack class that changes this procedure's required coverage.
+
+A finding is **non-blocking** when it is a minor documentation improvement, redundant hardening opportunity, low-impact edge case, stylistic inconsistency, optional diagnostic improvement, or other issue that does not threaten the declared core invariants or bounded stage conclusion. Record or hand off non-blocking findings with an appropriate disposition such as `Defer`; do not change governed artifacts during the current gated pass solely to perfect a non-blocking item, and do not restart Adversarial because of it.
+
+After **three consecutive restart-causing Adversarial attempts** following the most recent material architecture/control-model change, the next retry enters **convergence mode**. In convergence mode every new finding must be explicitly classified `blocking` or `non-blocking` against the predeclared core invariants before any correction is made. Only blocking findings may invalidate the pass. Discovering another implementation variant of an already-covered attack class does not by itself justify expanding this procedure or restarting the stage.
+
+Convergence mode is not permission to ignore defects. A blocking defect still prevents completion regardless of retry count. The retry budget changes the decision threshold for whether an observation is stage-invalidating; it does not weaken protected controls or permit known false credit.
+
+A stage is `Complete` when no blocking adversarial defect remains within the accessible bounded scope, declared core invariants hold, coverage and independence limits are disclosed, every material finding has received the procedure-coverage and blocking/non-blocking classification required above, and no blocking escalation remains. It is `Conditional` only when named external or user-controlled facts are required to determine a bounded control. It is `Failed` when a blocking unsafe defect remains.

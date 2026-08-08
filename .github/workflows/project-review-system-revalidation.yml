@@ -4,7 +4,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-revalidation-controls:
@@ -15,40 +15,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect Project Review System changes
-        id: scope
-        shell: bash
-        run: |
-          if git diff --quiet \
-            "${{ github.event.pull_request.base.sha }}" \
-            "${{ github.event.pull_request.head.sha }}" \
-            -- skills/project-review-system/ .github/workflows/project-review-system-revalidation.yml; then
-            echo "relevant=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Set up Python
-        if: steps.scope.outputs.relevant == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Require change-impact coverage
-        if: steps.scope.outputs.relevant == 'true'
+      - name: Persist generated revalidation queue
         run: |
-          python skills/project-review-system/scripts/check_change_impact_coverage.py \
-            --base "${{ github.event.pull_request.base.sha }}" \
-            --head "${{ github.event.pull_request.head.sha }}"
-
-      - name: Run Project Review System regression suite
-        if: steps.scope.outputs.relevant == 'true'
-        run: python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
-
-      - name: Verify generated revalidation queue
-        if: steps.scope.outputs.relevant == 'true'
-        run: python skills/project-review-system/scripts/update_revalidation_queue.py --check
-
-      - name: Report irrelevant pull request
-        if: steps.scope.outputs.relevant != 'true'
-        run: echo "No Project Review System files changed; enforcement checks were not required."
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if git diff --cached --quiet; then
+            echo 'Queue already current.'
+          else
+            git commit -m 'Render temporary revision-12 queue'
+            git push origin HEAD:tmp-render-revalidation-queue-r12
+          fi

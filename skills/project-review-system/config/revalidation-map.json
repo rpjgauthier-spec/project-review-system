@@ -17,6 +17,17 @@
       "2026-08-07-repository-identity-pass"
     ]
   },
+  "pass_boundary": {
+    "enabled": true,
+    "legacy_exempt_change_ids": [
+      "2026-08-07-dot-github-path-normalization",
+      "2026-08-07-exhaustive-semantic-coverage",
+      "2026-08-07-identity-abstraction-boundary",
+      "2026-08-07-public-repository-bootstrap",
+      "2026-08-07-repository-identity-pass",
+      "2026-08-07-adaptive-review-execution"
+    ]
+  },
   "change_classes": {
     "authorization": {
       "stages": ["Adversarial", "End-to-end validation"],

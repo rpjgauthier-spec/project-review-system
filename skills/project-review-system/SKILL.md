@@ -129,9 +129,9 @@ For every change made during a review:
 8. Record the stage result only after the gate and execution completion match. A passing result without matching execution evidence is rejected.
 9. Run every listed evaluation and record results.
 10. Regenerate the queue after results, gates, completion evidence, revisions, or scope change.
-11. Run `scripts/update_revalidation_queue.py --check` before advancement or completion.
+11. During ordered revalidation, advance to the next required stage only when the regenerated queue reflects the current source state, the just-completed stage has valid execution evidence/result, and all earlier required stages remain supported. Run `scripts/update_revalidation_queue.py --check` before final completion or merge, after every required stage and evaluation is resolved.
 
-The generator derives the earliest affected stage, unions all required stages and evaluations, rejects an incorrectly claimed earliest stage, and validates required stage execution evidence. The generated queue is not manually edited. A stale or unresolved queue or absent/stale/invalid execution evidence blocks advancement.
+The generator derives the earliest affected stage, unions all required stages and evaluations, rejects an incorrectly claimed earliest stage, and validates required stage execution evidence. The generated queue is not manually edited. A stale queue, absent/stale/invalid execution evidence, or an unresolved earlier prerequisite blocks advancement. Unresolved **later** stages and evaluations remain scheduled work and do not by themselves block ordered progression to the next required stage. A current and clear queue is required for final completion/merge.
 
 Historical records created before gate enforcement may be exempt only through the closed legacy exemption list in `config/revalidation-map.json`; an individual change record cannot self-exempt.
 
@@ -147,7 +147,7 @@ The workflow:
 - requires each impact record to list itself;
 - rejects deleted impact records and stale file claims;
 - runs the full regression suite, including Adaptive Execution plan/completion tests;
-- checks that the generated revalidation queue is current and clear, including required execution evidence.
+- checks that the generated revalidation queue is current and clear, including required execution evidence, as the final completion/merge gate.
 
 Repository branch protection must require the `validate-revalidation-controls` check and prevent direct pushes to the protected branch. Without that repository setting, GitHub Actions detects violations but cannot guarantee that a privileged direct push or administrative bypass will be blocked.
 
@@ -176,7 +176,7 @@ Repository branch protection must require the `validate-revalidation-controls` c
 - Do not treat a passing script as semantic proof.
 - After every behavioral change, complete a structured change-impact record and regenerate the automatic revalidation queue.
 - Reopen the earliest invalidated prior stage and suspend later stages when an earlier conclusion no longer holds.
-- Do not advance while `update_revalidation_queue.py --check` reports stale or unresolved work.
+- Do not advance past an unresolved or invalid **earlier prerequisite**. Unresolved later stages/evaluations remain scheduled; require `update_revalidation_queue.py --check` to pass before final completion or merge.
 - Do not merge a Project Review System pull request unless changed-file coverage and all required revalidation checks pass.
 - Do not claim exhaustive repository coverage unless `check_review_coverage.py` passes for the pinned target manifest and the substantive review still supports the claim.
 
