@@ -16,19 +16,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record PR 6 revision-15 mapped evaluations
+      - name: Finalize PR 6 revision-15 record and verify final queue
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
-          python skills/project-review-system/scripts/update_revalidation_queue.py
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add skills/project-review-system/reviews/revalidation-queue.md
-          if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate revision-15 queue after End-to-end validation'
-            git push origin HEAD:enforce-separated-pass-boundaries
-          fi
           python - <<'PY'
           import json
           from pathlib import Path
@@ -40,7 +32,6 @@ jobs:
           assert record['status'] == 'in_progress'
           for stage in mapping['stages']:
               assert record.get('results', {}).get(stage) == 'supported'
-          assert record['execution_completions']['End-to-end validation']['passes'][0]['handoff']['sha256'] == 'd42e3b7aa74f9dfab8febbd19471c96db6ed496f8d375890d1017de3ffc6246e'
           evaluations = set(record.get('additional_evaluations', []))
           for change_class in record['change_classes']:
               evaluations.update(mapping['change_classes'][change_class]['evaluations'])
@@ -49,30 +40,35 @@ jobs:
               'execution-gate-enforcement', 'pass-boundary-enforcement', 'premature-completion',
               'protected-control-retention', 'reopening-chain', 'status-propagation', 'structural-validator'
           }
-          assert evaluations == expected, (sorted(evaluations), sorted(expected))
-          results = record.setdefault('results', {})
+          assert evaluations == expected
           for evaluation in sorted(evaluations):
-              assert evaluation not in results
-              results[evaluation] = 'passed'
+              assert record.get('results', {}).get(evaluation) == 'passed'
+          assert record['execution_completions']['End-to-end validation']['passes'][0]['handoff']['sha256'] == 'd42e3b7aa74f9dfab8febbd19471c96db6ed496f8d375890d1017de3ffc6246e'
+          record['status'] = 'complete'
           record['next_step_plan'] = {
-              'consumer': 'next reviewer or assistant message continuing PR #6',
-              'current_state': 'All five revision-15 semantic stages and all eleven mapped evaluations are supported/passed; final completion mechanics remain.',
-              'procedure_coverage': 'Mapped evaluations confirm separated-default adaptive execution, exact execution-gate enforcement, durable pass-boundary/handoff chronology, authority/status propagation, reopening, premature-completion resistance, protected-control retention, proportionate artifact-family/duplicate-control structure, and structural-validator behavior. Deterministic checks remain supporting evidence rather than semantic proof.',
+              'consumer': 'post-PR6 follow-up planning',
+              'current_state': 'Revision 15 is complete: all five semantic stages are supported and all eleven mapped evaluations passed. Final queue and protected CI must remain clear before merge.',
+              'procedure_coverage': 'Final completion preserves the exact stage/evaluation evidence and records no new semantic credit.',
+              'deferred_follow_up': [
+                  'Make the mapped-evaluation layer explicit in the workflow/UI, or integrate evaluation completion into stage completion, so it is not a mostly hidden second review layer.',
+                  'Proceed with the previously deferred deterministic orchestration and active-state/history decomposition refactor after PR #6.'
+              ],
               'next_actions': [
-                  'Set the active record to complete only after confirming the mapped results remain current.',
-                  'Regenerate the final revalidation queue from that completed state.',
+                  'Regenerate the final revalidation queue from this completed state.',
                   'Run regression, changed-file coverage, pass-boundary, identity-history, and scoped final queue --check against the PR base/head.',
                   'Obtain protected GitHub Actions clearance before considering merge.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('EVALUATIONS=' + ','.join(sorted(evaluations)))
           PY
           python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json skills/project-review-system/reviews/revalidation-queue.md
-          git commit -m 'Record revision-15 mapped evaluations'
+          git commit -m 'Complete revision-15 revalidation'
           python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
           python skills/project-review-system/scripts/check_change_impact_coverage.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_execution_identity_history.py --base origin/main --head HEAD
+          python skills/project-review-system/scripts/update_revalidation_queue.py --check --base origin/main --head HEAD
           git push origin HEAD:enforce-separated-pass-boundaries
