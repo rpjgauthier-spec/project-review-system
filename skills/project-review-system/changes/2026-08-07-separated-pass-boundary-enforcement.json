@@ -24,7 +24,7 @@
   "claimed_earliest_stage": "Adversarial",
   "additional_stages": [],
   "additional_evaluations": ["adaptive-execution", "execution-gate-enforcement", "pass-boundary-enforcement"],
-  "reason": "Revision-8 Adversarial passed under convergence mode, then revision-8 Interdependency identified a material producer-consumer deadlock between the staged revalidation sequence and the generated-queue contract. Both SKILL.md and shared-control-model.md required update_revalidation_queue.py --check to pass before stage advancement while the checker intentionally remains nonzero for unresolved later stages/evaluations. Under those rules together, Adversarial could never validly hand off to Interdependency. The authorities now distinguish ordered inter-stage advancement from final completion: the regenerated queue must be current, the completed/current and all earlier required stages must have valid evidence, and no earlier prerequisite may be unresolved; unresolved later stages/evaluations remain scheduled and block final completion rather than progression to the next required stage. A fully current and clear --check remains mandatory before final completion/merge. Because this correction changes canonical behavioral authority after revision-8 Adversarial credit, review_revision is incremented to 9 and revalidation reopens at Adversarial. The revision-8 Interdependency pass receives no credit. Historical execution occurrences remain preserved in the append-only ledger.",
+  "reason": "Revision-8 Adversarial passed under convergence mode, then revision-8 Interdependency identified a material producer-consumer deadlock between the staged revalidation sequence and the generated-queue contract. Both SKILL.md and shared-control-model.md required update_revalidation_queue.py --check to pass before stage advancement while the checker intentionally remains nonzero for unresolved later stages/evaluations. Under those rules together, Adversarial could never validly hand off to Interdependency. The authorities now distinguish ordered inter-stage advancement from final completion: the regenerated queue must be current, the completed/current and all earlier required stages must have valid evidence, and no earlier prerequisite may be unresolved; unresolved later stages/evaluations remain scheduled and block final completion rather than progression to the next required stage. A fully current and clear --check remains mandatory before final completion/merge. Because this correction changes canonical behavioral authority after revision-8 Adversarial credit, review_revision is incremented to 9 and revalidation reopens at Adversarial. The revision-8 Interdependency pass receives no credit. Historical execution occurrences remain preserved in the append-only ledger. The fresh revision-9 Adversarial convergence pass found no blocking defect against the six core invariants. It classified the generated queue's remaining 'Advancement gate/BLOCKED' wording as a non-blocking representation inconsistency and handed that observation to Interdependency rather than restarting Adversarial.",
   "status": "in_progress",
   "review_revision": 9,
   "execution_gates": {
@@ -80,11 +80,52 @@
       "gate_sha256": "851e707e43f269f2417faed51d96703acfbbb3ffe34ac82b25b95ca0527af241"
     }
   },
-  "execution_completions": {},
-  "results": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "851e707e43f269f2417faed51d96703acfbbb3ffe34ac82b25b95ca0527af241",
+      "target_state_id": "sha256:db410db9e79bf6665b823cd7a406f973a67063eadd276d8ff57b69ca159660fb",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr6-r9-adversarial-stage-main-convergence-1",
+          "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r9-adversarial-convergence-1"},
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "No blocking Adversarial defect remains against the six declared convergence core invariants in the revision-9 gated state after correcting the staged-queue advancement authority contract.",
+              "The corrected authorities preserve final fail-closed completion while allowing ordered stage progression only after the current stage and all earlier prerequisites have valid evidence.",
+              "The generated queue still labels any in-progress record as an 'Advancement gate' that is 'BLOCKED' until final resolution; this is a non-blocking terminology/representation inconsistency because the canonical authorities now distinguish inter-stage advancement from final completion. It is handed to Interdependency for disposition rather than used to restart Adversarial.",
+              "Deterministic pass-boundary, historical-identity, artifact-state, and final queue checks remain the enforcement path; repository evidence still does not prove a host message/context boundary without a trustworthy host identifier."
+            ],
+            "evidence": [
+              "skills/project-review-system/SKILL.md",
+              "skills/project-review-system/references/shared-control-model.md",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/scripts/check_pass_boundaries.py",
+              "skills/project-review-system/scripts/check_execution_identity_history.py"
+            ],
+            "unresolved_conditions": [
+              "Interdependency must assess and disposition the queue's remaining 'Advancement gate/BLOCKED' wording against the corrected staged-progression contract.",
+              "Later revision-9 semantic stages and mapped evaluations remain unperformed.",
+              "The chat host supplies no independently trustworthy message/context boundary identifier."
+            ],
+            "sha256": "efe5d3c699580b5055e9ff344e84f5e48477d217c82ffd75d65dd78b091b841d"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {"Adversarial": "supported"},
   "execution_occurrence_history": [
     {"review_revision": 7, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "2d9c99e6e242f34de0423c59837c616f6b59704313b730b77f78097b558b3b78", "execution_unit_id": "pr6-r7-adversarial-stage-main-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r7-adversarial-1"}, "pass_evidence_sha256": "c724e5b1b583b5fd4d4dff05773a7e0d719af8c904f3b1a16266e79381bf888b"},
-    {"review_revision": 8, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843", "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r8-adversarial-convergence-1"}, "pass_evidence_sha256": "1a4956716f698ff2392144e862a230d097e5817c373c040c21eca49e436e75f9"}
+    {"review_revision": 8, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "6cd5d9b77749049190ec8383f261f5eca9872671510de7bf44f1feaff4317843", "execution_unit_id": "pr6-r8-adversarial-stage-main-convergence-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r8-adversarial-convergence-1"}, "pass_evidence_sha256": "1a4956716f698ff2392144e862a230d097e5817c373c040c21eca49e436e75f9"},
+    {"review_revision": 9, "stage": "Adversarial", "pass_id": "stage-main", "gate_sha256": "851e707e43f269f2417faed51d96703acfbbb3ffe34ac82b25b95ca0527af241", "execution_unit_id": "pr6-r9-adversarial-stage-main-convergence-1", "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr6-r9-adversarial-convergence-1"}, "pass_evidence_sha256": "d526d26382739a0beb8d197b88d322ad77ec85c805ad995a9fc407a9e898f1b6"}
   ],
   "adversarial_convergence": {
     "mode": "active",
@@ -103,15 +144,15 @@
   },
   "next_step_plan": {
     "consumer": "next reviewer or assistant message continuing PR #6",
-    "retention_reason": "Preserve the exact reopening and continuation sequence outside chat context.",
-    "current_state": "Revision 9 is in progress and reopened at Adversarial because Interdependency found and corrected a canonical staged-queue contract deadlock. A fresh revision-9 Adversarial gate is now bound to the corrected governed artifact state and must pre-exist any completion credit.",
-    "procedure_coverage": "The Interdependency finding is a conflicting-authority / validator-contract deadlock covered directly by the Interdependency procedure. It does not require expanding the procedure itself.",
+    "retention_reason": "Preserve the exact revision-9 continuation sequence outside chat context.",
+    "current_state": "Revision 9 Adversarial is supported under convergence mode. Its gate, completion, durable occurrence-ledger entry, and bounded handoff to Interdependency are recorded. Do not rerun Adversarial unless a later blocking finding invalidates it.",
+    "procedure_coverage": "The revision-9 Adversarial pass found no blocking defect and no new reusable attack class. The queue's stale 'Advancement gate/BLOCKED' terminology was classified non-blocking and explicitly handed to Interdependency.",
     "next_actions": [
-      "Perform only revision-9 Adversarial against the exact state bound by the current gate under the existing convergence threshold.",
-      "Classify every material Adversarial observation as blocking or non-blocking against adversarial_convergence.core_invariants before correcting anything.",
-      "If a blocking defect is found, correct it, discard the stale gate, leave Adversarial uncredited, and stop this semantic pass.",
-      "If no blocking Adversarial defect remains, record only Adversarial completion/result with a new unique execution occurrence identity, append it to execution_occurrence_history, and hand off to Interdependency.",
-      "Then rerun Interdependency in a later assistant message, followed by Normalization, Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance."
+      "Read the revision-9 Adversarial handoff sha256:efe5d3c699580b5055e9ff344e84f5e48477d217c82ffd75d65dd78b091b841d and the current Interdependency authority.",
+      "Create a fresh revision-9 Interdependency execution gate bound to the current governed artifact state and commit it before semantic credit.",
+      "Perform only revision-9 Interdependency in the next assistant message, explicitly dispositioning the queue 'Advancement gate/BLOCKED' representation inconsistency.",
+      "If Interdependency changes governed behavioral artifacts in a way that invalidates Adversarial, increment review_revision and reopen the earliest affected stage; otherwise record only Interdependency completion/result and handoff to Normalization.",
+      "Continue one semantic pass per assistant message: Normalization, Structural Optimization, End-to-end validation, then mapped evaluations and final queue/CI clearance."
     ]
   },
   "supersedes_assurance": [
