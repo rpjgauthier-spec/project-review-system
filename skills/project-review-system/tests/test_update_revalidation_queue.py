@@ -135,7 +135,7 @@ class QueueRegressionTests(unittest.TestCase):
             "validate_execution_gate",
             return_value={},
         ):
-            with self.assertRaisesRegex(ValueError, "completion target state is stale"):
+            with self.assertRaisesRegex(ValueError, "completion target state does not match its execution gate"):
                 MODULE.normalize_record(record, GATED_MAPPING)
 
 
