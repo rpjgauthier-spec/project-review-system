@@ -15,13 +15,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record PR 6 revision-14 Adversarial completion
+      - name: Regenerate PR 6 queue and open revision-14 Interdependency gate
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Regenerate revision-14 queue after Adversarial'
+            git push origin HEAD:enforce-separated-pass-boundaries
+          fi
+
           python - <<'PY'
-          import hashlib
           import importlib.util
           import json
           from pathlib import Path
@@ -30,85 +38,55 @@ jobs:
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
           record = json.loads(record_path.read_text(encoding='utf-8'))
           assert record['review_revision'] == 14
-          gate = record['execution_gates']['Adversarial']
-          assert gate['gate_sha256'] == '0f205d489b3011348ce2dd351258b34609656ecdba36a4f5553fca587f617853'
-          assert 'Adversarial' not in record.get('execution_completions', {})
-          assert 'Adversarial' not in record.get('results', {})
+          assert record.get('results', {}).get('Adversarial') == 'supported'
+          assert record['execution_completions']['Adversarial']['passes'][0]['handoff']['sha256'] == 'ae545708474a52d97173071b2dafc6da4389d5e9156abf52b03654192b30503b'
+          assert 'Interdependency' not in record.get('execution_gates', {})
 
-          def canonical_hash(value):
-              return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+          def load(name, path):
+              spec = importlib.util.spec_from_file_location(name, path)
+              module = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+              return module
 
-          handoff = {
-              'consumer': 'Interdependency',
-              'findings': [
-                  'No blocking Adversarial defect remains against the six convergence invariants in the revision-14 gated state.',
-                  'Change-record coverage, queue collection, and current-record detection now use the same top-level changes/*.json namespace.',
-                  'Each collected change record is bound to its filename stem, preventing mutable internal-id reclassification of current PR records as historical.',
-                  'Scoped final queue checking continues to rebind current-PR records to current governed artifact state while preserving unchanged historical targets.'
-              ],
-              'evidence': [
-                  'skills/project-review-system/scripts/check_change_impact_coverage.py',
-                  'skills/project-review-system/scripts/update_revalidation_queue.py',
-                  'skills/project-review-system/tests/test_check_change_impact_coverage.py',
-                  'skills/project-review-system/tests/test_update_revalidation_queue.py',
-                  'skills/project-review-system/scripts/check_pass_boundaries.py',
-                  'skills/project-review-system/scripts/check_execution_identity_history.py'
-              ],
-              'unresolved_conditions': [
-                  'Interdependency, Normalization, Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance remain.',
-                  'Repository checks still do not prove an actual host message/context boundary when the host supplies no independent boundary identity.'
-              ]
-          }
-          handoff['sha256'] = canonical_hash(handoff)
-          pass_item = {
-              'pass_id': 'stage-main',
-              'context_mode': 'SEPARATED',
-              'status': 'complete',
-              'execution_unit_id': 'pr6-r14-adversarial-stage-main-convergence-1',
-              'boundary': {'kind': 'declared-execution-unit', 'id': 'assistant-message-pr6-r14-adversarial-convergence-1'},
-              'inbound_handoff_sha256': None,
-              'handoff': handoff
-          }
-          completion = {
-              'gate_sha256': gate['gate_sha256'],
-              'target_state_id': gate['decision']['target_state_id'],
-              'passes': [pass_item],
-              'scratch_materialized': False,
-              'scratch_cleanup_status': 'not_applicable',
-              'retained_subpass_artifacts': []
-          }
-          record.setdefault('execution_completions', {})['Adversarial'] = completion
-          record.setdefault('results', {})['Adversarial'] = 'supported'
-          occurrence = {
+          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
+          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
+          target = queue.current_record_target_state_id(record)
+          workload = {
+              'schema_version': 1,
+              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
+              'activity': 'Interdependency',
+              'target_state_id': target,
               'review_revision': 14,
-              'stage': 'Adversarial',
-              'pass_id': 'stage-main',
-              'gate_sha256': gate['gate_sha256'],
-              'execution_unit_id': pass_item['execution_unit_id'],
-              'boundary': pass_item['boundary'],
-              'pass_evidence_sha256': canonical_hash(pass_item)
+              'workload_class': 'bounded-revalidation-pass-boundary-interdependency-v4',
+              'stage_assessment': {
+                  'single_pass_suitable': True,
+                  'reasons': [
+                      'The revision-14 Interdependency pass is bounded to direct authority, producer/consumer, propagation, fallback, queue, and validator contracts affected by the completion-path corrections.',
+                      'The prior Adversarial handoff is exact and the direct dependency graph is small enough for one SEPARATED pass.'
+                  ],
+                  'subpasses': []
+              },
+              'fused_authorization': None,
+              'notes': 'Fresh SEPARATED revision-14 Interdependency review consuming the exact Adversarial handoff.'
           }
-          record.setdefault('execution_occurrence_history', []).append(occurrence)
+          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
+          gate = selector.build_gate(workload, capability)
+          record.setdefault('execution_gates', {})['Interdependency'] = gate
           record['next_step_plan'] = {
-              'consumer': 'next reviewer or assistant message continuing PR #6',
-              'current_state': 'Revision 14 Adversarial is supported under convergence mode and its exact handoff targets Interdependency.',
-              'procedure_coverage': 'The corrected top-level record namespace, filename/id identity binding, PR-scoped current-record detection, current artifact rebinding, pass chronology, and historical occurrence controls expose no blocking Adversarial defect.',
+              'consumer': 'current assistant message continuing PR #6',
+              'current_state': 'Revision 14 queue is current after Adversarial completion and a fresh artifact-bound Interdependency gate is durably recorded.',
+              'procedure_coverage': 'Interdependency must consume the exact revision-14 Adversarial handoff and trace direct authority, namespace, current/historical target, propagation, fallback, and validator contracts.',
               'next_actions': [
-                  'Regenerate the generated revalidation queue from the revision-14 Adversarial completion state.',
-                  f"Read exact Adversarial handoff sha256:{handoff['sha256']} and the current Interdependency authority.",
-                  'Create a fresh revision-14 Interdependency execution gate against the current governed artifact target.',
-                  'Perform revision-14 Interdependency only in the next assistant message.'
+                  f"Perform revision-14 Interdependency only using gate sha256:{gate['gate_sha256']}.",
+                  'Verify the producer/consumer chain across changed-file coverage, queue collection, current-record detection, current-target rebinding, pass chronology, historical identity, and final workflow invocation.',
+                  'If supported, record only Interdependency completion/result with the exact inbound Adversarial handoff and hand off to Normalization.',
+                  'If a material governed defect is found, apply reopening semantics instead of crediting the stage.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('HANDOFF=' + handoff['sha256'])
-          print('PASS_EVIDENCE=' + occurrence['pass_evidence_sha256'])
+          print('TARGET=' + target)
+          print('GATE=' + gate['gate_sha256'])
           PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Complete revision-14 Adversarial'
-          python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
-          python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
-          python skills/project-review-system/scripts/check_execution_identity_history.py --base origin/main --head HEAD
+          git commit -m 'Open revision-14 Interdependency gate'
           git push origin HEAD:enforce-separated-pass-boundaries
