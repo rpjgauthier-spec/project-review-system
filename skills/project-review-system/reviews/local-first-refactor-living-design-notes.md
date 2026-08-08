@@ -221,6 +221,117 @@ The deterministic controller can verify process facts such as same requirements 
 
 Consensus should increase confidence, while disagreement should create focused adversarial work. Do not treat majority vote as proof.
 
+## Hierarchical draft-and-converge topology
+
+An additional optional topology is to use several cheaper/local models as parallel draft generators, then use a stronger primary model to refine each draft separately. Each branch remains independent and becomes its own converged candidate document before cross-branch comparison.
+
+Conceptually:
+
+```text
+requirements-only packet
+        │
+   ┌────┼────┐
+   │    │    │
+ local A local B local C
+   │    │    │
+ rough A rough B rough C
+   │    │    │
+   └─ primary model refines each branch separately ─┘
+            │       │       │
+        refined A refined B refined C
+            │       │       │
+       local↔primary bounded critique loops
+            │       │       │
+       converged A converged B converged C
+            └───────┼───────┘
+                    │
+        compare converged documents
+                    │
+        disagreements / synthesis / selection
+```
+
+### Why this may be useful
+
+- local models cheaply increase solution-space breadth;
+- a stronger primary model can repair weak prose, missing reasoning, and incomplete architectural articulation without collapsing every branch into one design immediately;
+- back-and-forth critique can force each branch to defend and improve itself;
+- several independently converged documents provide a stronger comparison set than several raw first drafts;
+- semantic disagreements that survive repeated critique become more informative because easy mistakes and wording differences have already been reduced.
+
+### Preserve branch independence during refinement
+
+The primary model should refine candidate A without seeing B/C during A's branch-convergence loop, and likewise for the other branches. Otherwise the primary model can prematurely homogenize the candidates.
+
+Each branch should bind to:
+
+- the same requirements snapshot;
+- its original rough-draft hash;
+- every critique/refinement occurrence in order;
+- reviewer/model provenance for every turn;
+- a branch identity that remains stable through convergence;
+- proposal visibility state.
+
+Only after branch convergence/freeze should the controller permit cross-branch comparison.
+
+### Bounded local↔primary dialogue
+
+A branch can alternate between the primary model and the local model that originated it. Example:
+
+1. local model produces rough architecture;
+2. primary model identifies defects and produces a refined version or structured critique;
+3. local model responds to the critique, defending or revising its distinctive choices;
+4. primary model re-evaluates the response and updates the candidate;
+5. continue until a deterministic stopping condition is reached.
+
+The objective is not unlimited debate. The controller should enforce a bounded convergence policy, such as a maximum number of rounds plus semantic stop outcomes like `no_material_change`, `unresolved_disagreement`, or `candidate_rejected`.
+
+### Avoid primary-model collapse
+
+A major risk is that the stronger primary model rewrites every branch into its preferred architecture. The protocol should therefore distinguish **refinement** from **replacement**.
+
+During branch convergence, the primary model should be required to preserve the branch's defensible distinctive choices unless it records why a choice violates a requirement/invariant or is dominated by a simpler alternative. Material architectural changes should be explicitly listed rather than hidden inside prose rewriting.
+
+The controller can mechanically require fields such as:
+
+```json
+{
+  "branch_id": "candidate-b",
+  "round": 2,
+  "material_changes": [],
+  "retained_distinctive_choices": [],
+  "rejected_choices": [],
+  "unresolved_disagreements": []
+}
+```
+
+It cannot judge whether the primary model preserved diversity honestly, but it can make silent homogenization visible and reviewable.
+
+### Compare converged documents, not only final recommendations
+
+Do not immediately synthesize the branches into one document. Freeze the converged branch documents first and compare them as separate alternatives.
+
+The comparison should identify:
+
+- architecture shared by all converged branches;
+- choices supported by only some branches;
+- disagreements that survived critique;
+- branches that converged only semantically/terminologically versus structurally;
+- assumptions shared by all branches;
+- components/boundaries that one branch eliminated successfully;
+- reasons a minority branch may still be superior on a specific invariant or failure mode.
+
+Only after this comparison should a final synthesis or selection occur.
+
+### Optional nested diversity
+
+The same topology can be expanded without changing the controller model. For example, two or more local models could seed each branch, or different strong models could independently refine different branches. The controller should model this as reviewer assignments to immutable jobs/branches rather than hard-coding a particular model hierarchy.
+
+### Cost and assurance role
+
+This topology can use local models for high-volume drafting/critique and reserve the strongest/most expensive model for refinement and cross-candidate judgment. It therefore offers a way to spend scarce high-capability model usage on the parts where it has the most leverage while still producing multiple competing design trajectories.
+
+It is an optional assurance/performance topology, not a requirement for core Project Review System correctness.
+
 ## Deterministic orchestration of independent reviewers
 
 Deterministic software and files can enforce the review protocol even though semantic work is external.
@@ -358,6 +469,9 @@ Every artifact should bind to exact input hashes and job identity. The physical 
 - How should user-visible Git commit SHA observability interact with a persistence-neutral local state engine?
 - What exact conditions should allow deterministic `repair` to modify state without triggering semantic reopening?
 - How should the current validated Project Review System govern migration/cutover into this redesigned controller without circular self-certification?
+- What deterministic stopping rule should govern local↔primary convergence loops?
+- How should the system detect when a primary model is collapsing nominally independent branches into one architecture?
+- When should converged minority designs be preserved for final comparison rather than eliminated during branch refinement?
 
 ## Status
 
