@@ -102,6 +102,10 @@ class QueueRegressionTests(unittest.TestCase):
         self.assertNotIn("test_update_revalidation_queue.py", rendered)
         self.assertNotIn("test_check_change_impact_coverage.py", rendered)
 
+    def test_check_requires_explicit_base_and_head(self) -> None:
+        with patch("sys.argv", ["update_revalidation_queue.py", "--check"]):
+            self.assertEqual(MODULE.main(), 2)
+
     def test_complete_record_requires_all_results(self) -> None:
         record = {"id": "change-7", "summary": "Falsely claim completion.", "change_classes": ["authorization"], "claimed_earliest_stage": "Adversarial", "status": "complete", "results": {}}
         with self.assertRaisesRegex(ValueError, "is complete but lacks passing results"):
