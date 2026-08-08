@@ -15,60 +15,78 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Apply PR 6 record-identity correction and reopen revision 13
+      - name: Regenerate PR 6 revision-13 queue and open Adversarial gate
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries
           git checkout -B target origin/enforce-separated-pass-boundaries
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Regenerate revision-13 revalidation queue'
+            git push origin HEAD:enforce-separated-pass-boundaries
+          fi
+
           python - <<'PY'
+          import importlib.util
           import json
           from pathlib import Path
 
-          script = Path('skills/project-review-system/scripts/update_revalidation_queue.py')
-          text = script.read_text(encoding='utf-8')
-          old = '''def collect_records(directory: Path) -> list[dict[str, Any]]:\n    if not directory.exists():\n        return []\n    return [load_json(path) for path in sorted(directory.glob("*.json"))]\n'''
-          new = '''def collect_records(directory: Path) -> list[dict[str, Any]]:\n    if not directory.exists():\n        return []\n    records: list[dict[str, Any]] = []\n    for path in sorted(directory.glob("*.json")):\n        record = load_json(path)\n        record_id = record.get("id") if isinstance(record, dict) else None\n        if record_id != path.stem:\n            raise ValueError(f"change record id must match filename stem: {path.name!r} declares {record_id!r}")\n        records.append(record)\n    return records\n'''
-          assert old in text
-          script.write_text(text.replace(old, new), encoding='utf-8')
-
-          test = Path('skills/project-review-system/tests/test_update_revalidation_queue.py')
-          text = test.read_text(encoding='utf-8')
-          marker = '''    def test_escalated_record_requires_resumption_contract(self) -> None:\n'''
-          addition = '''    def test_collect_records_rejects_id_filename_mismatch(self) -> None:\n        import json\n        import tempfile\n\n        with tempfile.TemporaryDirectory() as tmp:\n            directory = Path(tmp)\n            (directory / "current.json").write_text(json.dumps({"id": "historical"}), encoding="utf-8")\n            with self.assertRaisesRegex(ValueError, "id must match filename stem"):\n                MODULE.collect_records(directory)\n\n'''
-          assert marker in text
-          test.write_text(text.replace(marker, addition + marker), encoding='utf-8')
-
-          record_path = Path('skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json')
+          root = Path('skills/project-review-system')
+          record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
           record = json.loads(record_path.read_text(encoding='utf-8'))
-          assert record['review_revision'] == 12
-          assert record.get('execution_gates', {}).get('Adversarial', {}).get('gate_sha256') == 'dba87eb7d463e7bee2c0f3652a3a57dec97552e3490514f0c9d121a7dba5e8e1'
-          record['reason'] += " Revision-12 Adversarial then found a blocking identity-binding bypass: current-PR detection used the changed record filename while queue validation compared that filename-derived identity with the record's mutable internal id. A completed changed record could therefore alter its id and be misclassified as historical, skipping current artifact rebinding. Queue collection now requires every change-record id to equal its filename stem, with regression coverage. Because this changes governed completion behavior, revision-12 Adversarial is uncredited, review_revision increments to 13, and semantic revalidation reopens at Adversarial."
-          record['review_revision'] = 13
-          record['execution_gates'] = {}
-          record['execution_completions'] = {}
-          record['results'] = {}
-          record['supersedes_assurance'].append({
-              'change_id': '2026-08-07-separated-pass-boundary-enforcement',
-              'review_revision': 12,
-              'reason': 'Revision-12 Adversarial exposed a mutable internal record-id bypass that could cause a changed completed record to be treated as historical and skip current artifact rebinding. The filename/id identity invariant invalidated the revision-12 gate before credit.'
-          })
-          record['adversarial_convergence']['trigger'] = 'The separated-pass architecture exceeded the three-retry convergence threshold during revision 8. Revision 13 preserves that stopping policy after bounded final-completion and record-identity corrections discovered by End-to-end and Adversarial validation.'
+          assert record['review_revision'] == 13
+          assert not record.get('execution_gates')
+          assert not record.get('execution_completions')
+          assert not record.get('results')
+
+          def load(name, path):
+              spec = importlib.util.spec_from_file_location(name, path)
+              module = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+              return module
+
+          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
+          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
+          target = queue.current_record_target_state_id(record)
+          workload = {
+              'schema_version': 1,
+              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
+              'activity': 'Adversarial',
+              'target_state_id': target,
+              'review_revision': 13,
+              'workload_class': 'bounded-revalidation-pass-boundary-convergence-v7',
+              'stage_assessment': {
+                  'single_pass_suitable': True,
+                  'reasons': [
+                      'Revision 13 reopens the same bounded architecture after enforcing filename/internal-id correspondence for change records.',
+                      'The pass is limited to testing the current-versus-historical identity and target-binding boundary plus the six established convergence invariants.'
+                  ],
+                  'subpasses': []
+              },
+              'fused_authorization': None,
+              'notes': 'Fresh SEPARATED revision-13 Adversarial review under convergence mode; only blocking findings may invalidate the pass.'
+          }
+          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
+          gate = selector.build_gate(workload, capability)
+          record['execution_gates'] = {'Adversarial': gate}
           record['next_step_plan'] = {
-              'consumer': 'next reviewer or assistant message continuing PR #6',
-              'current_state': 'Revision 13 is reopened at Adversarial. Revision-12 Adversarial is uncredited after enforcing immutable correspondence between each change record internal id and its filename stem. Historical credited occurrences through revision 10 remain preserved.',
-              'procedure_coverage': 'The final queue checker now requires scoped base/head for --check and rejects any change record whose internal id differs from its filename stem, closing the historical/current classification bypass.',
+              'consumer': 'current assistant message continuing PR #6',
+              'current_state': 'Revision 13 queue is current and a fresh artifact-bound Adversarial gate is durably recorded.',
+              'procedure_coverage': 'The gate is bound to the filename/id-corrected governed artifact target under the existing convergence threshold.',
               'next_actions': [
-                  'Regenerate the generated revalidation queue from the revision-13 record.',
-                  'Create a fresh revision-13 Adversarial execution gate against the new governed artifact target.',
-                  'Perform revision-13 Adversarial only under the existing convergence threshold.',
-                  'Continue one semantic pass per assistant message through Interdependency, Normalization, Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance.'
+                  f"Perform revision-13 Adversarial only using gate sha256:{gate['gate_sha256']}.",
+                  'Classify every material observation against the six convergence invariants before correction.',
+                  'If no blocking defect is found, record only Adversarial completion/result and hand off to Interdependency.',
+                  'If a blocking correction changes governed artifacts, increment review_revision and reopen the earliest affected stage.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
+          print('TARGET=' + target)
+          print('GATE=' + gate['gate_sha256'])
           PY
-          python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add skills/project-review-system/scripts/update_revalidation_queue.py skills/project-review-system/tests/test_update_revalidation_queue.py skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Bind change record ids to filenames'
+          git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
+          git commit -m 'Open revision-13 Adversarial gate'
           git push origin HEAD:enforce-separated-pass-boundaries
