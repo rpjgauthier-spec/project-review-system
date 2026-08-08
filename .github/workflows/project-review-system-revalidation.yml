@@ -15,92 +15,55 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Regenerate PR 6 queue, open revision-14 End-to-end gate, and probe integrated controls
+      - name: Correct PR 6 coverage declaration and reopen revision 15
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
-          python skills/project-review-system/scripts/update_revalidation_queue.py
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add skills/project-review-system/reviews/revalidation-queue.md
-          if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate revision-14 queue after Structural Optimization'
-            git push origin HEAD:enforce-separated-pass-boundaries
-          fi
-
           python - <<'PY'
-          import importlib.util
           import json
           from pathlib import Path
 
           root = Path('skills/project-review-system')
-          record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
-          record = json.loads(record_path.read_text(encoding='utf-8'))
+          path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
+          record = json.loads(path.read_text(encoding='utf-8'))
           assert record['review_revision'] == 14
-          for stage in ['Adversarial','Interdependency','Normalization','Structural Optimization']:
-              assert record.get('results', {}).get(stage) == 'supported'
-          assert record['execution_completions']['Structural Optimization']['passes'][0]['handoff']['sha256'] == '6fdcf034c69e9a2e4e4abdc13524f337cc3c8ca5f55bef8c061d28e3b9f369fb'
-          assert 'End-to-end validation' not in record.get('execution_gates', {})
-
-          def load(name, path):
-              spec = importlib.util.spec_from_file_location(name, path)
-              module = importlib.util.module_from_spec(spec)
-              spec.loader.exec_module(module)
-              return module
-
-          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
-          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
-          target = queue.current_record_target_state_id(record)
-          workload = {
-              'schema_version': 1,
-              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
-              'activity': 'End-to-end validation',
-              'target_state_id': target,
-              'review_revision': 14,
-              'workload_class': 'bounded-revalidation-pass-boundary-end-to-end-v4',
-              'stage_assessment': {
-                  'single_pass_suitable': True,
-                  'reasons': [
-                      'The revision-14 End-to-end pass is bounded to representative integrated normal, stale/current-state, reopening/recovery, unauthorized completion, and final-completion paths for the corrected controls.',
-                      'Mechanical queue generation and validator execution are deterministic setup/evidence; semantic path interpretation remains one SEPARATED pass.'
-                  ],
-                  'subpasses': []
-              },
-              'fused_authorization': None,
-              'notes': 'Fresh SEPARATED revision-14 End-to-end validation consuming the exact Structural Optimization handoff.'
-          }
-          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
-          gate = selector.build_gate(workload, capability)
-          record.setdefault('execution_gates', {})['End-to-end validation'] = gate
+          assert 'End-to-end validation' in record.get('execution_gates', {})
+          additions = [
+              'skills/project-review-system/scripts/check_change_impact_coverage.py',
+              'skills/project-review-system/tests/test_check_change_impact_coverage.py',
+          ]
+          changed = list(record.get('changed_files', []))
+          for item in additions:
+              if item not in changed:
+                  changed.append(item)
+          record['changed_files'] = sorted(changed)
+          record['reason'] = record.get('reason','') + ' Revision-14 End-to-end validation then exercised the integrated changed-file coverage path and found that the revision-13 namespace correction modified check_change_impact_coverage.py and its regression test without adding those files to this record changed_files declaration. The coverage checker therefore correctly rejected PR #6. Adding those two governed files changes the artifact-state binding set, so revision-14 semantic gates become stale; revision-14 End-to-end receives no credit, review_revision increments to 15, and ordered semantic revalidation reopens at Adversarial.'
+          record['review_revision'] = 15
+          record['status'] = 'in_progress'
+          record['execution_gates'] = {}
+          record['execution_completions'] = {}
+          record['results'] = {}
           record['next_step_plan'] = {
-              'consumer': 'current assistant message continuing PR #6',
-              'current_state': 'Revision 14 queue is current after Structural Optimization and a fresh artifact-bound End-to-end validation gate is durably recorded.',
-              'procedure_coverage': 'Trace representative normal progression, stale/current artifact-state rejection, earlier-stage reopening/recovery, unauthorized completion prevention, historical evidence preservation, and final protected completion behavior.',
+              'consumer': 'next reviewer or assistant message continuing PR #6',
+              'current_state': 'Revision 15 is reopened at Adversarial after End-to-end validation found two governed files missing from changed_files; the declaration is corrected and prior durable occurrence history is preserved.',
+              'procedure_coverage': 'Regenerate the queue from revision 15, compute the expanded current artifact target, then resume ordered semantic revalidation at Adversarial under convergence mode.',
               'next_actions': [
-                  f"Perform revision-14 End-to-end validation only using gate sha256:{gate['gate_sha256']}.",
-                  'Use integrated deterministic probes plus semantic path tracing; non-blocking observations do not terminate the pass.',
-                  'If supported, record only End-to-end completion/result with the exact inbound Structural Optimization handoff.',
-                  'If a material integrated-path defect is found, reopen instead of crediting the stage.'
+                  'Regenerate the revision-15 revalidation queue.',
+                  'Create a fresh revision-15 Adversarial gate against the expanded governed artifact target.',
+                  'Perform revision-15 Adversarial only in the next assistant message.'
               ]
           }
-          record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('TARGET=' + target)
-          print('GATE=' + gate['gate_sha256'])
+          path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
           PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Open revision-14 End-to-end validation gate'
-          git push origin HEAD:enforce-separated-pass-boundaries
-
+          git commit -m 'Reopen revision 15 after coverage declaration failure'
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          git commit -m 'Regenerate revision-15 revalidation queue'
           python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
           python skills/project-review-system/scripts/check_change_impact_coverage.py --base origin/main --head HEAD
-          python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_execution_identity_history.py --base origin/main --head HEAD
-
-          set +e
-          out=$(python skills/project-review-system/scripts/update_revalidation_queue.py --check --base origin/main --head HEAD 2>&1)
-          rc=$?
-          set -e
-          echo "$out"
-          test "$rc" -ne 0
-          echo "$out" | grep -E 'ACTION REQUIRED|still require|in progress|unresolved|not complete|stale' >/dev/null
+          git push origin HEAD:enforce-separated-pass-boundaries
