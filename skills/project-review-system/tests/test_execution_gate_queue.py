@@ -135,6 +135,37 @@ class QueueExecutionGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must be deleted"):
             queue.normalize_record(value, MAPPING)
 
+    def test_historical_completion_keeps_recorded_artifact_target(self) -> None:
+        value = record()
+        gate = selector.build_gate(workload(target="sha256:historical"), CAPABILITY)
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion_for(gate)
+        value["results"]["Adversarial"] = "supported"
+        queue.validate_stage_execution(
+            value,
+            MAPPING,
+            ["Adversarial"],
+            value["results"],
+            True,
+            False,
+        )
+
+    def test_current_pr_completion_rejects_historical_artifact_target(self) -> None:
+        value = record()
+        gate = selector.build_gate(workload(target="sha256:historical"), CAPABILITY)
+        value["execution_gates"]["Adversarial"] = gate
+        value["execution_completions"]["Adversarial"] = completion_for(gate)
+        value["results"]["Adversarial"] = "supported"
+        with self.assertRaisesRegex(ValueError, "target_state_id does not match current governed artifact state"):
+            queue.validate_stage_execution(
+                value,
+                MAPPING,
+                ["Adversarial"],
+                value["results"],
+                True,
+                True,
+            )
+
     def test_legacy_record_remains_exempt(self) -> None:
         value = record("legacy")
         value["results"]["Adversarial"] = "supported"
