@@ -300,7 +300,14 @@ def render(
 def collect_records(directory: Path) -> list[dict[str, Any]]:
     if not directory.exists():
         return []
-    return [load_json(path) for path in sorted(directory.glob("*.json"))]
+    records: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("*.json")):
+        record = load_json(path)
+        record_id = record.get("id") if isinstance(record, dict) else None
+        if record_id != path.stem:
+            raise ValueError(f"change record id must match filename stem: {path.name!r} declares {record_id!r}")
+        records.append(record)
+    return records
 
 
 def main() -> int:

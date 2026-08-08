@@ -116,6 +116,16 @@ class QueueRegressionTests(unittest.TestCase):
         normalized = MODULE.normalize_record(record, MAPPING)
         self.assertEqual(normalized["derived_incomplete_results"], [])
 
+    def test_collect_records_rejects_id_filename_mismatch(self) -> None:
+        import json
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            (directory / "current.json").write_text(json.dumps({"id": "historical"}), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "id must match filename stem"):
+                MODULE.collect_records(directory)
+
     def test_escalated_record_requires_resumption_contract(self) -> None:
         record = {"id": "change-9", "summary": "Escalate an authorization concern.", "change_classes": ["authorization"], "claimed_earliest_stage": "Adversarial", "status": "escalated", "results": {}}
         with self.assertRaisesRegex(ValueError, "has no escalation object"):
