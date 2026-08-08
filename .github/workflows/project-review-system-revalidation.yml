@@ -4,7 +4,7 @@ on:
   pull_request:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate-revalidation-controls:
@@ -20,9 +20,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Render generated revalidation queue
+      - name: Persist generated revalidation queue
         run: |
           python skills/project-review-system/scripts/update_revalidation_queue.py
-          echo '---BEGIN-REVALIDATION-QUEUE---'
-          cat skills/project-review-system/reviews/revalidation-queue.md
-          echo '---END-REVALIDATION-QUEUE---'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if git diff --cached --quiet; then
+            echo 'Queue already current.'
+          else
+            git commit -m 'Render temporary revision-12 queue'
+            git push origin HEAD:tmp-render-revalidation-queue-r12
+          fi
