@@ -15,13 +15,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Record PR 6 revision-14 Structural Optimization completion
+      - name: Regenerate PR 6 queue, open revision-14 End-to-end gate, and probe integrated controls
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries main
           git checkout -B target origin/enforce-separated-pass-boundaries
+          python skills/project-review-system/scripts/update_revalidation_queue.py
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/reviews/revalidation-queue.md
+          if ! git diff --cached --quiet; then
+            git commit -m 'Regenerate revision-14 queue after Structural Optimization'
+            git push origin HEAD:enforce-separated-pass-boundaries
+          fi
+
           python - <<'PY'
-          import hashlib
+          import importlib.util
           import json
           from pathlib import Path
 
@@ -29,90 +38,69 @@ jobs:
           record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
           record = json.loads(record_path.read_text(encoding='utf-8'))
           assert record['review_revision'] == 14
-          assert record.get('results', {}).get('Normalization') == 'supported'
-          gate = record['execution_gates']['Structural Optimization']
-          assert gate['gate_sha256'] == '2502f064990651299136c0336034a6922c88dc074b429f772f31f1a0265d1af7'
-          assert 'Structural Optimization' not in record.get('execution_completions', {})
-          assert 'Structural Optimization' not in record.get('results', {})
-          inbound = record['execution_completions']['Normalization']['passes'][0]['handoff']['sha256']
-          assert inbound == '7cdea39a528e12f0f681990ff1cd32a3045d09e82be7a237100da1f0cc3d9c76'
+          for stage in ['Adversarial','Interdependency','Normalization','Structural Optimization']:
+              assert record.get('results', {}).get(stage) == 'supported'
+          assert record['execution_completions']['Structural Optimization']['passes'][0]['handoff']['sha256'] == '6fdcf034c69e9a2e4e4abdc13524f337cc3c8ca5f55bef8c061d28e3b9f369fb'
+          assert 'End-to-end validation' not in record.get('execution_gates', {})
 
-          def canonical_hash(value):
-              return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode('utf-8')).hexdigest()
+          def load(name, path):
+              spec = importlib.util.spec_from_file_location(name, path)
+              module = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+              return module
 
-          handoff = {
-              'consumer': 'End-to-end validation',
-              'findings': [
-                  'No material unnecessary burden, accidental coupling, unjustified abstraction, or materially inferior structure remains within the bounded revision-14 completion-path scope.',
-                  'Changed-file coverage, queue/current-target validation, pass chronology, historical identity, the protected workflow, and the active change record retain distinct consumers and failure responsibilities; merging them inside PR #6 would increase coupling and reopening risk.',
-                  'The generated queue remains an appropriate derived consumer view rather than mutable authority, while the change record remains the durable source for current review state and evidence.',
-                  'The larger deterministic orchestration redesign is deferred outside PR #6 because it changes architecture and should be evaluated as its own bounded change after this corrective PR is completed.'
-              ],
-              'evidence': [
-                  'skills/project-review-system/references/structural-optimization-review.md',
-                  'skills/project-review-system/scripts/check_change_impact_coverage.py',
-                  'skills/project-review-system/scripts/update_revalidation_queue.py',
-                  'skills/project-review-system/scripts/check_pass_boundaries.py',
-                  'skills/project-review-system/scripts/check_execution_identity_history.py',
-                  '.github/workflows/project-review-system-revalidation.yml',
-                  'skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json',
-                  'revision-14 Normalization handoff sha256:7cdea39a528e12f0f681990ff1cd32a3045d09e82be7a237100da1f0cc3d9c76'
-              ],
-              'unresolved_conditions': [
-                  'End-to-end validation, mapped evaluations, final queue regeneration, and final protected CI clearance remain.',
-                  'Deterministic orchestration/state decomposition remains intentionally deferred to a separate follow-up rather than expanding this corrective PR.'
-              ]
-          }
-          handoff['sha256'] = canonical_hash(handoff)
-          pass_item = {
-              'pass_id': 'stage-main',
-              'context_mode': 'SEPARATED',
-              'status': 'complete',
-              'execution_unit_id': 'pr6-r14-structural-optimization-stage-main-1',
-              'boundary': {'kind': 'declared-execution-unit', 'id': 'assistant-message-pr6-r14-structural-optimization-1'},
-              'inbound_handoff_sha256': inbound,
-              'handoff': handoff
-          }
-          completion = {
-              'gate_sha256': gate['gate_sha256'],
-              'target_state_id': gate['decision']['target_state_id'],
-              'passes': [pass_item],
-              'scratch_materialized': False,
-              'scratch_cleanup_status': 'not_applicable',
-              'retained_subpass_artifacts': []
-          }
-          record.setdefault('execution_completions', {})['Structural Optimization'] = completion
-          record.setdefault('results', {})['Structural Optimization'] = 'supported'
-          occurrence = {
+          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
+          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
+          target = queue.current_record_target_state_id(record)
+          workload = {
+              'schema_version': 1,
+              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
+              'activity': 'End-to-end validation',
+              'target_state_id': target,
               'review_revision': 14,
-              'stage': 'Structural Optimization',
-              'pass_id': 'stage-main',
-              'gate_sha256': gate['gate_sha256'],
-              'execution_unit_id': pass_item['execution_unit_id'],
-              'boundary': pass_item['boundary'],
-              'pass_evidence_sha256': canonical_hash(pass_item)
+              'workload_class': 'bounded-revalidation-pass-boundary-end-to-end-v4',
+              'stage_assessment': {
+                  'single_pass_suitable': True,
+                  'reasons': [
+                      'The revision-14 End-to-end pass is bounded to representative integrated normal, stale/current-state, reopening/recovery, unauthorized completion, and final-completion paths for the corrected controls.',
+                      'Mechanical queue generation and validator execution are deterministic setup/evidence; semantic path interpretation remains one SEPARATED pass.'
+                  ],
+                  'subpasses': []
+              },
+              'fused_authorization': None,
+              'notes': 'Fresh SEPARATED revision-14 End-to-end validation consuming the exact Structural Optimization handoff.'
           }
-          record.setdefault('execution_occurrence_history', []).append(occurrence)
+          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
+          gate = selector.build_gate(workload, capability)
+          record.setdefault('execution_gates', {})['End-to-end validation'] = gate
           record['next_step_plan'] = {
-              'consumer': 'next reviewer or assistant message continuing PR #6',
-              'current_state': 'Revision 14 Adversarial, Interdependency, Normalization, and Structural Optimization are supported; the exact Structural Optimization handoff targets End-to-end validation.',
-              'procedure_coverage': 'The current controls have distinct responsibilities and no material structural simplification belongs inside PR #6; broader deterministic orchestration remains deferred.',
+              'consumer': 'current assistant message continuing PR #6',
+              'current_state': 'Revision 14 queue is current after Structural Optimization and a fresh artifact-bound End-to-end validation gate is durably recorded.',
+              'procedure_coverage': 'Trace representative normal progression, stale/current artifact-state rejection, earlier-stage reopening/recovery, unauthorized completion prevention, historical evidence preservation, and final protected completion behavior.',
               'next_actions': [
-                  'Regenerate the generated revalidation queue from the revision-14 Structural Optimization completion state.',
-                  f"Read exact Structural Optimization handoff sha256:{handoff['sha256']} and the current End-to-end validation authority.",
-                  'Create a fresh revision-14 End-to-end validation execution gate against the current governed artifact target.',
-                  'Perform revision-14 End-to-end validation only in the next assistant message.'
+                  f"Perform revision-14 End-to-end validation only using gate sha256:{gate['gate_sha256']}.",
+                  'Use integrated deterministic probes plus semantic path tracing; non-blocking observations do not terminate the pass.',
+                  'If supported, record only End-to-end completion/result with the exact inbound Structural Optimization handoff.',
+                  'If a material integrated-path defect is found, reopen instead of crediting the stage.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('HANDOFF=' + handoff['sha256'])
-          print('PASS_EVIDENCE=' + occurrence['pass_evidence_sha256'])
+          print('TARGET=' + target)
+          print('GATE=' + gate['gate_sha256'])
           PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Complete revision-14 Structural Optimization'
+          git commit -m 'Open revision-14 End-to-end validation gate'
+          git push origin HEAD:enforce-separated-pass-boundaries
+
           python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
+          python skills/project-review-system/scripts/check_change_impact_coverage.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_pass_boundaries.py --base origin/main --head HEAD
           python skills/project-review-system/scripts/check_execution_identity_history.py --base origin/main --head HEAD
-          git push origin HEAD:enforce-separated-pass-boundaries
+
+          set +e
+          out=$(python skills/project-review-system/scripts/update_revalidation_queue.py --check --base origin/main --head HEAD 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          test "$rc" -ne 0
+          echo "$out" | grep -E 'ACTION REQUIRED|still require|in progress|unresolved|not complete|stale' >/dev/null
