@@ -61,7 +61,11 @@ jobs:
 
       - name: Verify generated revalidation queue
         if: steps.scope.outputs.relevant == 'true'
-        run: python skills/project-review-system/scripts/update_revalidation_queue.py --check
+        run: |
+          python skills/project-review-system/scripts/update_revalidation_queue.py \
+            --check \
+            --base "${{ github.event.pull_request.base.sha }}" \
+            --head "${{ github.event.pull_request.head.sha }}"
 
       - name: Report irrelevant pull request
         if: steps.scope.outputs.relevant != 'true'
