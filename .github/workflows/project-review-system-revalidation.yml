@@ -15,78 +15,67 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Regenerate PR 6 revision-13 queue and open Adversarial gate
+      - name: Align change-record namespace and reopen PR 6 revision 14
         shell: bash
         run: |
           git fetch origin enforce-separated-pass-boundaries
           git checkout -B target origin/enforce-separated-pass-boundaries
-          python skills/project-review-system/scripts/update_revalidation_queue.py
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add skills/project-review-system/reviews/revalidation-queue.md
-          if ! git diff --cached --quiet; then
-            git commit -m 'Regenerate revision-13 revalidation queue'
-            git push origin HEAD:enforce-separated-pass-boundaries
-          fi
-
           python - <<'PY'
-          import importlib.util
           import json
           from pathlib import Path
 
-          root = Path('skills/project-review-system')
-          record_path = root / 'changes/2026-08-07-separated-pass-boundary-enforcement.json'
+          coverage = Path('skills/project-review-system/scripts/check_change_impact_coverage.py')
+          text = coverage.read_text(encoding='utf-8')
+          old = '''def load_changed_records(paths: set[str]) -> list[tuple[str, dict]]:\n    records: list[tuple[str, dict]] = []\n    for path in sorted(paths):\n        if not path.startswith(CHANGE_PREFIX) or not path.endswith(".json"):\n            continue\n'''
+          new = '''def is_change_record_path(path: str) -> bool:\n    if not path.startswith(CHANGE_PREFIX) or not path.endswith(".json"):\n        return False\n    relative = path[len(CHANGE_PREFIX):]\n    return bool(relative) and "/" not in relative\n\n\ndef load_changed_records(paths: set[str]) -> list[tuple[str, dict]]:\n    records: list[tuple[str, dict]] = []\n    for path in sorted(paths):\n        if not is_change_record_path(path):\n            continue\n'''
+          assert old in text
+          coverage.write_text(text.replace(old, new), encoding='utf-8')
+
+          queue = Path('skills/project-review-system/scripts/update_revalidation_queue.py')
+          text = queue.read_text(encoding='utf-8')
+          old = '''        if not path.startswith(CHANGES_REPOSITORY_PREFIX) or not path.endswith(".json"):\n            continue\n        record_ids.add(Path(path).stem)\n'''
+          new = '''        if not path.startswith(CHANGES_REPOSITORY_PREFIX) or not path.endswith(".json"):\n            continue\n        relative = path[len(CHANGES_REPOSITORY_PREFIX):]\n        if not relative or "/" in relative:\n            continue\n        record_ids.add(Path(relative).stem)\n'''
+          assert old in text
+          queue.write_text(text.replace(old, new), encoding='utf-8')
+
+          test = Path('skills/project-review-system/tests/test_check_change_impact_coverage.py')
+          text = test.read_text(encoding='utf-8')
+          marker = '''    def test_rejects_record_that_does_not_list_itself(self) -> None:\n'''
+          addition = '''    def test_nested_change_record_does_not_satisfy_impact_record_requirement(self) -> None:\n        skill = self.root / "skills/project-review-system/SKILL.md"\n        skill.write_text("changed\\n", encoding="utf-8")\n        nested = self.root / "skills/project-review-system/changes/nested/change.json"\n        nested.parent.mkdir(parents=True)\n        nested.write_text(json.dumps({\n            "id": "change",\n            "summary": "nested bypass",\n            "changed_files": ["SKILL.md", "changes/nested/change.json"],\n            "change_classes": ["status-or-schema"],\n            "claimed_earliest_stage": "Interdependency",\n            "status": "pending",\n        }), encoding="utf-8")\n        subprocess.run(["git", "add", "."], cwd=self.root, check=True)\n        subprocess.run(["git", "commit", "-qm", "nested change"], cwd=self.root, check=True)\n        errors = self.validate()\n        self.assertTrue(any("no impact record" in error for error in errors), errors)\n\n'''
+          assert marker in text
+          test.write_text(text.replace(marker, addition + marker), encoding='utf-8')
+
+          record_path = Path('skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json')
           record = json.loads(record_path.read_text(encoding='utf-8'))
           assert record['review_revision'] == 13
-          assert not record.get('execution_gates')
-          assert not record.get('execution_completions')
-          assert not record.get('results')
-
-          def load(name, path):
-              spec = importlib.util.spec_from_file_location(name, path)
-              module = importlib.util.module_from_spec(spec)
-              spec.loader.exec_module(module)
-              return module
-
-          queue = load('queue_for_gate', root / 'scripts/update_revalidation_queue.py')
-          selector = load('selector_for_gate', root / 'scripts/select_execution_policy.py')
-          target = queue.current_record_target_state_id(record)
-          workload = {
-              'schema_version': 1,
-              'reviewer_subject_id': 'chatgpt-gpt-5.6-sol-pr6-revalidation',
-              'activity': 'Adversarial',
-              'target_state_id': target,
+          assert record.get('execution_gates', {}).get('Adversarial', {}).get('gate_sha256') == 'c99e3161f6dfd54b2a25130de2c261c9291fca2ca4501dd821c0a52208a395d7'
+          record['reason'] += " Revision-13 Adversarial then found a distinct reusable completion-path bypass: changed-file coverage accepted nested JSON files anywhere under changes/ as impact records, while the canonical queue only loaded top-level changes/*.json. A nested record could therefore satisfy coverage without entering queue, gate, result, or current-target validation. Coverage and current-record detection now recognize only the same top-level change-record namespace used by queue collection, with regression coverage. Because this changes governed completion behavior, revision-13 Adversarial is uncredited, review_revision increments to 14, and semantic revalidation reopens at Adversarial."
+          record['review_revision'] = 14
+          record['execution_gates'] = {}
+          record['execution_completions'] = {}
+          record['results'] = {}
+          record['supersedes_assurance'].append({
+              'change_id': '2026-08-07-separated-pass-boundary-enforcement',
               'review_revision': 13,
-              'workload_class': 'bounded-revalidation-pass-boundary-convergence-v7',
-              'stage_assessment': {
-                  'single_pass_suitable': True,
-                  'reasons': [
-                      'Revision 13 reopens the same bounded architecture after enforcing filename/internal-id correspondence for change records.',
-                      'The pass is limited to testing the current-versus-historical identity and target-binding boundary plus the six established convergence invariants.'
-                  ],
-                  'subpasses': []
-              },
-              'fused_authorization': None,
-              'notes': 'Fresh SEPARATED revision-13 Adversarial review under convergence mode; only blocking findings may invalidate the pass.'
-          }
-          capability = json.loads((root / 'config/default-execution-capability.json').read_text(encoding='utf-8'))
-          gate = selector.build_gate(workload, capability)
-          record['execution_gates'] = {'Adversarial': gate}
+              'reason': 'Revision-13 Adversarial exposed a namespace mismatch where nested change records could satisfy changed-file coverage while remaining invisible to the canonical queue. Aligning both detectors to top-level changes/*.json invalidated the revision-13 gate before credit.'
+          })
+          record['adversarial_convergence']['trigger'] = 'The separated-pass architecture exceeded the three-retry convergence threshold during revision 8. Revision 14 preserves that stopping policy after bounded completion-path identity and namespace corrections discovered by End-to-end and Adversarial validation.'
           record['next_step_plan'] = {
-              'consumer': 'current assistant message continuing PR #6',
-              'current_state': 'Revision 13 queue is current and a fresh artifact-bound Adversarial gate is durably recorded.',
-              'procedure_coverage': 'The gate is bound to the filename/id-corrected governed artifact target under the existing convergence threshold.',
+              'consumer': 'next reviewer or assistant message continuing PR #6',
+              'current_state': 'Revision 14 is reopened at Adversarial. Revision-13 Adversarial is uncredited after aligning changed-file coverage, current-record detection, and queue collection to the same top-level change-record namespace. Historical credited occurrences through revision 10 remain preserved.',
+              'procedure_coverage': 'Change records are now identified consistently by top-level changes/*.json paths, their internal ids must match filename stems, and final --check remains scoped to explicit PR base/head.',
               'next_actions': [
-                  f"Perform revision-13 Adversarial only using gate sha256:{gate['gate_sha256']}.",
-                  'Classify every material observation against the six convergence invariants before correction.',
-                  'If no blocking defect is found, record only Adversarial completion/result and hand off to Interdependency.',
-                  'If a blocking correction changes governed artifacts, increment review_revision and reopen the earliest affected stage.'
+                  'Regenerate the generated revalidation queue from the revision-14 record.',
+                  'Create a fresh revision-14 Adversarial execution gate against the new governed artifact target.',
+                  'Perform revision-14 Adversarial only under the existing convergence threshold.',
+                  'Continue one semantic pass per assistant message through Interdependency, Normalization, Structural Optimization, End-to-end validation, mapped evaluations, and final queue/CI clearance.'
               ]
           }
           record_path.write_text(json.dumps(record, separators=(',', ':')), encoding='utf-8')
-          print('TARGET=' + target)
-          print('GATE=' + gate['gate_sha256'])
           PY
-          git add skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
-          git commit -m 'Open revision-13 Adversarial gate'
+          python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skills/project-review-system/scripts/check_change_impact_coverage.py skills/project-review-system/scripts/update_revalidation_queue.py skills/project-review-system/tests/test_check_change_impact_coverage.py skills/project-review-system/changes/2026-08-07-separated-pass-boundary-enforcement.json
+          git commit -m 'Align change record namespace'
           git push origin HEAD:enforce-separated-pass-boundaries
