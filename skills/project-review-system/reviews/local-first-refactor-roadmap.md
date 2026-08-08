@@ -41,6 +41,14 @@ Full-program five-stage review. One semantic stage per separate execution unit/m
 25. **Tamper-evidence boundary:** on a machine fully controlled by one user, the system cannot prove that the user did not rewrite all local state and history. The architecture may detect accidental corruption and make evidence tamper-evident, and may support stronger optional external/signed checkpoints, but must not claim impossible local non-repudiation.
 26. **Human-operable failure mode:** if automation, retrieval, or models are unavailable, the system must expose enough current state, required inputs, conflicts, and next actions for a person to recover without reverse-engineering internal files.
 27. **No bootstrap circularity:** implementing the new state engine must have a bounded migration/transition path that can be reviewed under the existing system without requiring the unfinished new engine to certify itself.
+28. **Review-breadth enforcement:** for a declared full-program stage, user requirements, recent defects, and the proposed implementation are constraints and inputs, not implicit limits on the review lens. Stage completion must account for the complete applicable analysis surface defined by the canonical stage procedure, explicitly disposition non-applicable categories, answer what could still be materially wrong if every stated requirement were satisfied, and pass a breadth check against anchoring on recent prompts or defects. A materially narrow stage that receives completion credit is a false-credit defect and must be reopened. Deterministic tooling may enforce the presence and structure of this coverage evidence but must not claim to prove review quality.
+29. **Canonical snapshot identity:** deterministic inventory, state transitions, retrieval/index caches, semantic packets, and completion evidence that claim to describe the same reviewed state must bind to one canonical snapshot identity produced by an explicit snapshot authority. Individual providers may not invent competing definitions of the current target.
+30. **Provider-neutral semantic contracts:** human reviewers, local models, hosted models, retrieval systems, and alternate implementations must exchange bounded inputs and outputs through documented provider-neutral contracts where substitution is claimed. Manual fallback is not satisfied if internal state requires artifacts only a specific provider can produce.
+31. **Workflow authority is separate from storage:** the workflow/state engine owns transition semantics, eligibility, logical occurrence identity, and validation rules. SQLite, files, an event log, Git, or another persistence backend may store that state but must not silently become a second workflow authority merely because its native behavior differs.
+32. **User-owned provider permissions:** executable-provider enablement, capability grants, data-egress permission, and remote-provider fallback policy are controlled by explicit user configuration outside untrusted repository content. Provider self-description may advertise capabilities but cannot grant them.
+33. **Collaboration conflict boundary:** when more than one clone/process/person can advance the same review, synchronization must detect divergent authoritative histories or stale bases and require deterministic reconciliation/reopening rather than silently accepting both as one valid lineage.
+34. **Current-control transition completeness:** the refactor cannot claim local-first completion while canonical production rules still require GitHub Actions, branch protection, PR-specific evidence, or other hosted mechanisms for ordinary review correctness. The implementation plan must identify each current PR6-era control as retained locally, replaced, generated as an optional host integration, migrated, or deliberately removed with equivalent assurance.
+35. **Single ownership for evaluation results:** until Normalization decides whether mapped evaluations remain independent or become stage acceptance criteria, each evaluation result must still have exactly one authoritative owner and stage/final advancement must consume it through one defined contract rather than duplicate it across reports, queues, and state views.
 
 ## Candidate roadmap to challenge
 
@@ -112,7 +120,75 @@ These did not require choosing an implementation during Adversarial, but later s
 
 ### Adversarial completion boundary
 
-No remaining identified defect within the accessible roadmap scope currently permits the roadmap itself to claim an unsafe guarantee, silently require hosted CI, make a plug-in/provider authoritative, or erase the need for atomicity, replay safety, migration integrity, data-boundary controls, manual recovery, and assurance limits. The implementation does not yet exist, so those requirements must be tested again against the concrete architecture and code later.
+No remaining identified defect within the accessible roadmap scope currently permits the roadmap itself to claim an unsafe guarantee, silently require hosted CI, make a plug-in/provider authoritative, or erase the need for atomicity, replay safety, migration integrity, data-boundary controls, manual recovery, breadth enforcement, and assurance limits. The implementation does not yet exist, so those requirements must be tested again against the concrete architecture and code later.
+
+## Interdependency review
+
+**Verdict: Complete.** Same-agent self-review; no independent-validation claim.
+
+The pass mapped the material producers, consumers, authorities, fallbacks, and transition duties without selecting a persistence technology or implementation decomposition prematurely.
+
+### Authority and dependency map
+
+- **User/operator configuration authority:** owns provider installation/trust decisions, executable capability grants, data-egress permission, remote fallback policy, and any optional host-enforcement choice. Repository content and provider self-description are consumers/inputs only and cannot elevate those permissions.
+- **Snapshot authority:** owns the canonical identity of the reviewed source state. Deterministic inventory, retrieval/index caches, semantic work packets, state transitions, and completion evidence consume this identity. A stale or mismatched snapshot blocks current-state credit.
+- **Workflow/state engine:** owns current review state, allowed transitions, logical occurrence identity, revision/reopening semantics, mechanical completion eligibility, conflict detection, and deterministic status/resume projections. It consumes semantic judgments and deterministic evidence but does not own their semantic truth.
+- **Persistence backend:** stores authoritative workflow events/state and historical evidence under the state engine's schema/transition rules. It may be files, SQLite, an event log, Git-backed storage, or another implementation. Native backend behavior is not a second workflow authority.
+- **Deterministic inventory/validation layer:** produces mechanically checkable inventory, hashes, schema validation, coverage accounting, stale-state detection, replay/conflict checks, and bounded resource/error signals. The state engine consumes these results. Passing checks do not certify semantic correctness.
+- **Semantic reviewer:** human, local model, hosted model, or another reviewer produces bounded semantic judgments/findings through provider-neutral contracts. The state engine records/consumes those judgments only when required mechanical prerequisites are satisfied.
+- **Retrieval/index provider:** consumes a canonical snapshot plus bounded retrieval request and produces candidate context with snapshot/provenance metadata. It is optional, replaceable, and cannot define exhaustive scope or workflow authority.
+- **Local/hosted model provider:** consumes bounded semantic packets and returns proposal/judgment payloads under the same provider-neutral contract where substitution is claimed. It has no repository/state permissions unless separately and explicitly granted for another role.
+- **Evaluation result owner:** exactly one authoritative result per evaluation is recorded by the workflow state model. Stage/final advancement consumes that result once. Reports and human-readable status views reference/project it rather than re-own it. Normalization may later decide whether evaluations remain separate objects or become stage acceptance criteria.
+- **History/archive:** preserves credited occurrences, revisions, migrations, and evidence references with identity/provenance. It is consumed for replay prevention, reopening, audit, and migration. It does not advance current state by itself.
+- **Migration adapter:** consumes legacy PR6-era evidence and produces a distinguishable migrated representation or compatibility view. It cannot silently rewrite historical guarantees or certify itself with the unfinished new engine.
+- **Collaboration/synchronization layer:** exchanges state between processes/clones/collaborators and must surface divergent lineage/stale bases to the state engine. It cannot silently merge two authoritative histories into one valid progression.
+- **Repository host/GitHub integration:** optional consumer/publisher of locally valid state and optional provider of stronger remote merge enforcement. Host status does not become the source of truth for local review correctness.
+- **Human-readable status/queue/report views:** generated consumers of authoritative state. They explain current state, missing inputs, conflicts, and next actions, but cannot independently advance or redefine the workflow.
+
+### Material dependency findings corrected in the roadmap
+
+1. **No single target-state owner.** Snapshot binding appeared in several requirements but no component owned the definition of current reviewed state. Added a canonical snapshot authority consumed by inventory, retrieval, semantic packets, state, and completion evidence.
+2. **Provider substitution lacked a shared contract.** "Plug-and-play" and manual fallback would be nominal if each provider produced private shapes. Added provider-neutral semantic contracts so humans, Phi, ChatGPT, Claude, retrieval systems, or later providers can substitute where the capability is claimed.
+3. **Storage risked becoming workflow authority.** Choosing SQLite/event-log/files first could accidentally let storage-native behavior define transition semantics. Added an explicit boundary: the state engine owns workflow meaning; persistence only stores it.
+4. **Provider permissions had no unique owner.** Least privilege was required, but the producer of capability grants/egress permission was ambiguous. Added explicit user-owned provider configuration outside repository-controlled data.
+5. **Multiple-clone collaboration was underdefined.** Local process locking does not solve two clones or collaborators advancing from the same base. Added a divergence/stale-base contract requiring reconciliation or reopening rather than silent lineage merge.
+6. **Current hosted controls could survive unnoticed.** The merged production system currently describes GitHub Actions/branch protection as mandatory enforcement for Project Review System pull requests. A local-first refactor would be internally contradictory if it added local tools but left those canonical dependencies untouched. Added a transition-completeness requirement requiring every current PR6 control to be classified as retained locally, replaced, optional host integration, migrated, or deliberately removed with equivalent assurance.
+7. **Evaluation ownership could remain duplicated.** Until the hidden-evaluation-layer design is normalized, the roadmap now requires one authoritative result owner and one consumption path, preventing reports/queues/state from becoming competing sources.
+8. **Breadth enforcement needed a downstream implementation contract.** Added review-breadth enforcement as a core requirement: full-program stage completion must account for canonical analysis families, explicit N/A rationales, scope inversion, and anti-anchoring breadth evidence; deterministic tooling may enforce structure but not semantic quality.
+
+### Required propagation and fallback contracts
+
+- A **source snapshot change** invalidates or stales any current retrieval cache, semantic packet, gate/transition evidence, or completion claim bound to the previous snapshot unless its role is explicitly historical.
+- A **provider unavailable/failing** condition falls back to another explicitly configured compatible provider or manual semantic input; it must not silently expand permissions or export data remotely.
+- A **provider output schema/snapshot mismatch** is rejected before semantic or state consumption; the fallback is retry/alternate provider/manual input, not coercion into the expected shape.
+- A **state write conflict or divergence** blocks advancement and exposes competing bases/lineages for deterministic reconciliation or explicit reopening.
+- A **persistence failure** must leave either the prior authoritative state or one committed next state, never a partially authoritative intermediate state.
+- A **migration failure** leaves legacy evidence readable under the old authority path and does not partially convert it into current guarantees.
+- A **missing retrieval/index service** must not block ordinary/manual review; only capabilities explicitly requiring semantic retrieval become unavailable.
+- A **remote host unavailable/quota exhausted** does not block local review progression or completion; only optional host collaboration/enforcement is unavailable.
+- A **generated status/report disagreement** is resolved in favor of authoritative state and treated as a stale/generated-view defect, not as permission to advance from the report.
+- A **breadth-accounting omission** blocks full-program stage completion structurally; a passing breadth structure still does not prove the substantive review was adequate.
+
+### Current-control transition inventory required before implementation completion
+
+The implementation plan must explicitly account for at least these current control families rather than assuming the refactor automatically supersedes them:
+
+- Adaptive Execution gate creation and completion evidence;
+- pass-boundary/handoff chronology;
+- review revision/reopening rules;
+- occurrence identity/history and replay protection;
+- artifact/current-state binding;
+- change-impact records and class-to-stage/evaluation mapping;
+- generated revalidation queue and final completion gate;
+- changed-file coverage enforcement;
+- regression and structural validators;
+- Git/GitHub-specific exhaustive inventory controls where Git is the evidence model;
+- GitHub Actions/branch-protection enforcement as an optional host layer rather than ordinary local-review authority;
+- legacy/historical evidence and migration semantics.
+
+### Interdependency completion boundary
+
+Within the roadmap's accessible scope, every material proposed role now has a bounded authority/producer/consumer relationship, major fallback paths are identified, and the current production controls have an explicit transition-accounting obligation. The stage deliberately does not choose Git versus non-Git snapshots, SQLite versus files/event log, or separate versus stage-integrated evaluations; those are terminology/structure choices for Normalization and Structural Optimization so long as the ownership contracts above are preserved.
 
 ## Reviewer independence
 
@@ -121,13 +197,13 @@ Same-agent self-review. This review may improve the design but is not independen
 ## Current review state
 
 - Adversarial: Complete
-- Interdependency: Ready
-- Normalization: Pending
+- Interdependency: Complete
+- Normalization: Ready
 - Structural Optimization: Pending
 - End-to-end validation: Pending
 
 ## Next bounded handoff
 
-Interdependency must map the proposed local state engine, semantic reviewer, retrieval provider, model provider, plug-in trust/install boundary, Git/repository-host layers, evaluations, historical evidence, migration, recovery, concurrency, sensitive-data boundary, and optional host enforcement as producers/consumers/authorities. It must determine which current PR6 controls are replaced, retained, generated, or made optional before any implementation architecture is selected.
+Normalization must resolve ambiguous or overlapping concepts before architecture selection, especially snapshot/target identity, state versus evidence versus generated views, provider versus capability versus adapter, evaluation versus stage acceptance criteria, completion versus eligibility versus host enforcement, review breadth versus exhaustive semantic coverage, and migration/legacy terminology. It must retain the authority and propagation boundaries established by Interdependency.
 
 No implementation phase or pull-request breakdown is authoritative until the five-stage review completes.
