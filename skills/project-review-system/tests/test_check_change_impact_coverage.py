@@ -73,6 +73,24 @@ class CoverageRegressionTests(unittest.TestCase):
         self.commit_change(declared=["SKILL.md", "changes/change.json"])
         self.assertEqual(self.validate(), [])
 
+    def test_nested_change_record_does_not_satisfy_impact_record_requirement(self) -> None:
+        skill = self.root / "skills/project-review-system/SKILL.md"
+        skill.write_text("changed\n", encoding="utf-8")
+        nested = self.root / "skills/project-review-system/changes/nested/change.json"
+        nested.parent.mkdir(parents=True)
+        nested.write_text(json.dumps({
+            "id": "change",
+            "summary": "nested bypass",
+            "changed_files": ["SKILL.md", "changes/nested/change.json"],
+            "change_classes": ["status-or-schema"],
+            "claimed_earliest_stage": "Interdependency",
+            "status": "pending",
+        }), encoding="utf-8")
+        subprocess.run(["git", "add", "."], cwd=self.root, check=True)
+        subprocess.run(["git", "commit", "-qm", "nested change"], cwd=self.root, check=True)
+        errors = self.validate()
+        self.assertTrue(any("no impact record" in error for error in errors), errors)
+
     def test_rejects_record_that_does_not_list_itself(self) -> None:
         self.commit_change(declared=["SKILL.md"])
         errors = self.validate()

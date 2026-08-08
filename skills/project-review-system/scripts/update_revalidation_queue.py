@@ -3,9 +3,8 @@
 
 Inputs are JSON change-impact records in changes/*.json plus the canonical
 config/revalidation-map.json. The generated Markdown queue is the reviewer's
-prompt and the tracker/CI handoff. This script does not decide whether a change
-record is truthful; it deterministically expands declared change classes and
-enforces recorded Adaptive Execution plans at the stage-result boundary.
+prompt and the tracker/CI handoff. Current-PR records are bound to current
+artifact state; completed historical records retain their recorded target state.
 """
 
 from __future__ import annotations
@@ -14,10 +13,12 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = ROOT.parents[1]
 DEFAULT_MAP = ROOT / "config" / "revalidation-map.json"
 DEFAULT_CHANGES = ROOT / "changes"
 DEFAULT_OUTPUT = ROOT / "reviews" / "revalidation-queue.md"
@@ -25,6 +26,7 @@ VALID_STATUSES = {"pending", "in_progress", "complete", "failed", "escalated"}
 PASS_RESULTS = {"passed", "supported", "complete"}
 BEHAVIOR_NEUTRAL_CLASS = "behavior-neutral"
 GATE_CHECKER_PATH = ROOT / "scripts" / "check_execution_gate.py"
+CHANGES_REPOSITORY_PREFIX = "skills/project-review-system/changes/"
 QUEUE_REPOSITORY_PATH = "skills/project-review-system/reviews/revalidation-queue.md"
 
 
@@ -75,7 +77,57 @@ def current_record_target_state_id(record: dict[str, Any]) -> str:
     return f"sha256:{GATE_CHECKER.repository_artifact_state_sha256(paths)}"
 
 
-def validate_stage_execution(record: dict[str, Any], mapping: dict[str, Any], stages: list[str], results: dict[str, Any], behavioral: bool) -> None:
+def changed_record_ids(base: str, head: str, repository_root: Path = REPOSITORY_ROOT) -> set[str]:
+    """Return change-record IDs added or modified between base and head."""
+    try:
+        completed = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--name-only",
+                "--diff-filter=ACMRT",
+                base,
+                head,
+                "--",
+                CHANGES_REPOSITORY_PREFIX,
+            ],
+            cwd=repository_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError(f"cannot determine current-PR change records for {base}..{head}: {exc}") from exc
+
+    record_ids: set[str] = set()
+    for raw_path in completed.stdout.splitlines():
+        path = raw_path.strip().replace("\\", "/")
+        if not path.startswith(CHANGES_REPOSITORY_PREFIX) or not path.endswith(".json"):
+            continue
+        relative = path[len(CHANGES_REPOSITORY_PREFIX):]
+        if not relative or "/" in relative:
+            continue
+        record_ids.add(Path(relative).stem)
+    return record_ids
+
+
+def _recorded_passes(completion: Any) -> list[dict[str, Any]]:
+    if not isinstance(completion, dict):
+        return []
+    passes = completion.get("passes")
+    if not isinstance(passes, list):
+        return []
+    return [item for item in passes if isinstance(item, dict) and item.get("status") == "complete"]
+
+
+def validate_stage_execution(
+    record: dict[str, Any],
+    mapping: dict[str, Any],
+    stages: list[str],
+    results: dict[str, Any],
+    behavioral: bool,
+    enforce_current_target: bool,
+) -> None:
     if not execution_gate_required(record, mapping, behavioral):
         return
     revision = record.get("review_revision")
@@ -87,25 +139,52 @@ def validate_stage_execution(record: dict[str, Any], mapping: dict[str, Any], st
         raise ValueError(f"record {record['id']!r} execution_gates must be an object")
     if not isinstance(completions, dict):
         raise ValueError(f"record {record['id']!r} execution_completions must be an object")
-    expected_target_state_id = current_record_target_state_id(record)
+    expected_target_state_id = current_record_target_state_id(record) if enforce_current_target else None
 
     for stage in stages:
-        if results.get(stage) not in PASS_RESULTS:
+        stage_passed = results.get(stage) in PASS_RESULTS
+        completion = completions.get(stage)
+        has_recorded_passes = bool(_recorded_passes(completion))
+        if not stage_passed and not has_recorded_passes:
             continue
+
         gate = gates.get(stage)
         if not isinstance(gate, dict):
-            raise ValueError(f"record {record['id']!r} has passing result for {stage!r} without a current execution gate")
-        completion = completions.get(stage)
-        if not isinstance(completion, dict):
-            raise ValueError(f"record {record['id']!r} has passing result for {stage!r} without execution completion evidence")
+            what = "passing result" if stage_passed else "recorded pass completion"
+            raise ValueError(f"record {record['id']!r} has {what} for {stage!r} without a current execution gate")
         try:
-            decision = GATE_CHECKER.validate_execution_gate(gate, stage, revision, expected_target_state_id=expected_target_state_id)
-            GATE_CHECKER.validate_execution_completion(completion, gate, decision)
+            decision = GATE_CHECKER.validate_execution_gate(
+                gate,
+                stage,
+                revision,
+                expected_target_state_id=expected_target_state_id,
+            )
         except (ValueError, TypeError, RuntimeError) as exc:
-            raise ValueError(f"record {record['id']!r} has invalid execution evidence for {stage!r}: {exc}") from exc
+            raise ValueError(f"record {record['id']!r} has invalid execution gate for {stage!r}: {exc}") from exc
+
+        if not isinstance(completion, dict):
+            raise ValueError(f"record {record['id']!r} has execution evidence for {stage!r} without an execution completion object")
+        if completion.get("gate_sha256") != gate.get("gate_sha256"):
+            raise ValueError(f"record {record['id']!r} completion gate hash does not match the current gate for {stage!r}")
+        recorded_target_state_id = decision.get("target_state_id")
+        if completion.get("target_state_id") != recorded_target_state_id:
+            raise ValueError(f"record {record['id']!r} completion target state does not match its execution gate for {stage!r}")
+        if enforce_current_target and recorded_target_state_id != expected_target_state_id:
+            raise ValueError(f"record {record['id']!r} completion target state is stale for {stage!r}")
+
+        if stage_passed:
+            try:
+                GATE_CHECKER.validate_execution_completion(completion, gate, decision)
+            except (ValueError, TypeError, RuntimeError) as exc:
+                raise ValueError(f"record {record['id']!r} has invalid execution completion for {stage!r}: {exc}") from exc
 
 
-def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[str, Any]:
+def normalize_record(
+    record: dict[str, Any],
+    mapping: dict[str, Any],
+    *,
+    enforce_current_target: bool | None = None,
+) -> dict[str, Any]:
     required = {"id", "summary", "change_classes", "status"}
     missing = sorted(required - record.keys())
     if missing:
@@ -140,7 +219,9 @@ def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[st
     results = record.get("results", {})
     if not isinstance(results, dict):
         raise ValueError(f"record {record['id']!r} results must be an object")
-    validate_stage_execution(record, mapping, stages, results, behavioral)
+    if enforce_current_target is None:
+        enforce_current_target = record["status"] != "complete"
+    validate_stage_execution(record, mapping, stages, results, behavioral, enforce_current_target)
 
     required_result_keys = [*stages, *sorted(evaluations)]
     incomplete_results = [key for key in required_result_keys if results.get(key) not in PASS_RESULTS]
@@ -167,12 +248,30 @@ def normalize_record(record: dict[str, Any], mapping: dict[str, Any]) -> dict[st
     }
 
 
-def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
+def render(
+    mapping: dict[str, Any],
+    records: list[dict[str, Any]],
+    *,
+    current_record_ids: set[str] | None = None,
+) -> str:
     digest = source_hash(mapping, records)
-    normalized = [normalize_record(record, mapping) for record in records]
+    normalized = [
+        normalize_record(
+            record,
+            mapping,
+            enforce_current_target=(record["id"] in current_record_ids or record.get("status") != "complete")
+            if current_record_ids is not None
+            else None,
+        )
+        for record in records
+    ]
     pending = [r for r in normalized if r["status"] not in {"complete", "escalated"}]
-    lines = ["# Generated Revalidation Queue", "", "> Generated by `scripts/update_revalidation_queue.py`. Do not edit manually.", f"> Source hash: `{digest}`", "", "## Advancement gate", ""]
-    lines.append(f"**BLOCKED:** {len(pending)} change-impact record(s) still require evaluation or correction." if pending else "**CLEAR:** all declared change-impact records are complete or escalated.")
+    lines = ["# Generated Revalidation Queue", "", "> Generated by `scripts/update_revalidation_queue.py`. Do not edit manually.", f"> Source hash: `{digest}`", "", "## Final completion gate", ""]
+    lines.append(
+        f"**OPEN:** {len(pending)} change-impact record(s) still require evaluation or correction before final completion or merge. Ordered revalidation may continue when the current stage and all earlier prerequisites are supported."
+        if pending
+        else "**CLEAR:** all declared change-impact records are complete or escalated; the final completion gate is clear."
+    )
     lines.extend(["", "## Required reviewer actions", ""])
     if not normalized:
         lines.append("No change-impact records were found.")
@@ -197,14 +296,21 @@ def render(mapping: dict[str, Any], records: list[dict[str, Any]]) -> str:
             mark = "x" if results.get(evaluation) in PASS_RESULTS else " "
             lines.append(f"- [{mark}] Run evaluation `{evaluation}` and record the result.")
         lines.append("")
-    lines.extend(["## Commands", "", "```bash", "python skills/project-review-system/scripts/update_revalidation_queue.py", "python skills/project-review-system/scripts/update_revalidation_queue.py --check", "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'", "```", "", "`--check` exits nonzero when the generated queue is stale, a completed record lacks passing results, an execution-gated stage has absent/stale/invalid gate or completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed."])
+    lines.extend(["## Commands", "", "```bash", "python skills/project-review-system/scripts/update_revalidation_queue.py", "python skills/project-review-system/scripts/update_revalidation_queue.py --check --base <base-sha> --head <head-sha>", "python -m unittest discover -s skills/project-review-system/tests -p 'test_*.py'", "```", "", "`--check` exits nonzero when the generated queue is stale, a current-PR record has stale execution evidence, a completed record lacks passing results, a passing stage has invalid completion evidence, an escalation lacks a resumption contract, or any record remains pending, in progress, or failed. Completed historical records retain their recorded artifact target; current-PR records remain bound to current artifact state even after completion."])
     return "\n".join(lines) + "\n"
 
 
 def collect_records(directory: Path) -> list[dict[str, Any]]:
     if not directory.exists():
         return []
-    return [load_json(path) for path in sorted(directory.glob("*.json"))]
+    records: list[dict[str, Any]] = []
+    for path in sorted(directory.glob("*.json")):
+        record = load_json(path)
+        record_id = record.get("id") if isinstance(record, dict) else None
+        if record_id != path.stem:
+            raise ValueError(f"change record id must match filename stem: {path.name!r} declares {record_id!r}")
+        records.append(record)
+    return records
 
 
 def main() -> int:
@@ -213,11 +319,18 @@ def main() -> int:
     parser.add_argument("--changes", type=Path, default=DEFAULT_CHANGES)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--base")
+    parser.add_argument("--head")
     args = parser.parse_args()
     try:
+        if (args.base is None) != (args.head is None):
+            raise ValueError("--base and --head must be provided together")
+        if args.check and args.base is None:
+            raise ValueError("--check requires --base and --head so current-PR records cannot be mistaken for historical records")
         mapping = load_json(args.map)
         records = collect_records(args.changes)
-        generated = render(mapping, records)
+        current_ids = changed_record_ids(args.base, args.head) if args.base is not None else None
+        generated = render(mapping, records, current_record_ids=current_ids)
     except (OSError, json.JSONDecodeError, ValueError, KeyError, TypeError, RuntimeError) as exc:
         print(f"ERROR: {exc}")
         return 2
@@ -240,7 +353,7 @@ def main() -> int:
     args.output.write_text(generated, encoding="utf-8")
     print(f"Updated {args.output}")
     if unresolved:
-        print("ACTION REQUIRED: run the evaluations listed in the generated queue before advancing.")
+        print("ACTION REQUIRED: complete the listed revalidation work before final completion or merge; ordered stage progression may continue when current and earlier prerequisites are supported.")
     return 0
 
 

@@ -65,6 +65,29 @@ For repository revalidation, `update_revalidation_queue.py` rejects a passing st
 
 This makes the **consequence** of the semantic stage-size judgment deterministically enforceable. It does not prove that the judgment itself was correct.
 
+## Pass boundaries and handoff chaining
+
+A declared `SEPARATED` or `ISOLATED` pass is not satisfied by listing several semantic stages as completed inside one undifferentiated reasoning episode. Each credited execution-plan pass must be its own bounded execution unit and must externalize the information needed by the next pass before that next pass begins.
+
+For every credited pass, record:
+
+- a unique `execution_unit_id`;
+- a boundary `kind` and boundary `id`;
+- `inbound_handoff_sha256`, which is `null` only for the first credited pass and otherwise exactly matches the previous pass handoff;
+- an outbound `handoff` containing its exact downstream consumer, bounded findings, evidence references when applicable, unresolved conditions when applicable, and a canonical SHA-256 over the handoff contents.
+
+The next credited pass must explicitly consume the prior handoff hash. Later required stages may not receive passing credit while an earlier required stage remains unpassed. A handoff from the final pass of a stage targets the next required stage; a handoff between already-planned subpasses targets the exact next subpass. The final credited pass hands off to `review-completion`.
+
+In a chat host where one assistant message is the selected bounded execution unit for `SEPARATED`, perform only one semantic pass per assistant message. Put that pass's findings and bounded handoff in the message itself or in a durable artifact that the next pass reads before beginning. Do not perform several stages in one assistant response and later assign them separate execution-unit identifiers.
+
+`ISOLATED` is not merely another name for subdivision. Subdivision makes the work more granular. An individual subdivided pass uses `ISOLATED` only when it additionally requires a fresh context or equivalent isolation. A credited ISOLATED pass must declare an `isolated-context` boundary.
+
+`scripts/check_pass_boundaries.py` deterministically checks uniqueness, ordering, handoff hashes, handoff consumption, and the ISOLATED boundary declaration. In Git repository execution it also checks durable chronology: the current gate must already exist in a prior change-record state before a pass first receives credit; two passes may not first receive credit in the same change-record commit; and the exact previous handoff must already be durably recorded before the next pass first receives credit. This prevents several nominally separate passes from being backfilled together in one final record state.
+
+`scripts/check_execution_identity_history.py` additionally preserves completed execution occurrences across repository-history compaction. Every completed occurrence observed in PR history must be represented in the final change record's append-only `execution_occurrence_history` ledger with its revision, stage, pass ID, gate hash, execution-unit identity, boundary identity, and canonical completed-pass evidence hash. Superseding or clearing the live completion does not remove that ledger entry. This is required because squash or rebase merge can discard the unsquashed commits that originally contained the occurrence; the ledger allows a future base snapshot to continue rejecting identity reuse, evidence mutation, or same-revision gate replacement.
+
+The checker still cannot independently prove that a ChatGPT message boundary or fresh context actually occurred unless the execution host supplies a trustworthy boundary identifier. When the host exposes no such identifier, the recorded boundary remains an attestation and the reviewer must actually follow the required execution discipline.
+
 ## Ephemeral subpass workspace
 
 Subpass scratch material is **ephemeral by default**. Do not create durable subpass files merely because a stage was subdivided.
@@ -132,7 +155,8 @@ Adaptive Execution controls context separation. It does not prove:
 - truthful reviewer identity;
 - benchmark validity;
 - reviewer independence;
+- an actual host message/context boundary when the host supplies no trustworthy boundary identity;
 - actual deletion of an external scratch workspace the validator cannot inspect; or
 - domain correctness.
 
-It does provide deterministic enforcement that a recorded plan was bound to the current artifact state and that a passing result cannot be accepted unless all required passes were completed in the required context modes and required cleanup evidence is present.
+It does provide deterministic enforcement that a recorded plan was bound to the current artifact state, that recorded execution units and handoffs form a consistent ordered chain, that repository pass credit follows durable gate-before-credit and one-credit-commit-per-pass chronology, that completed occurrence identities remain durable across squash/rebase history loss, and that a passing result cannot be accepted unless all required passes were completed in the required context modes with required cleanup evidence.

@@ -62,10 +62,17 @@ def normalize_declared(path: str) -> str:
     return SKILL_PREFIX + clean
 
 
+def is_change_record_path(path: str) -> bool:
+    if not path.startswith(CHANGE_PREFIX) or not path.endswith(".json"):
+        return False
+    relative = path[len(CHANGE_PREFIX):]
+    return bool(relative) and "/" not in relative
+
+
 def load_changed_records(paths: set[str]) -> list[tuple[str, dict]]:
     records: list[tuple[str, dict]] = []
     for path in sorted(paths):
-        if not path.startswith(CHANGE_PREFIX) or not path.endswith(".json"):
+        if not is_change_record_path(path):
             continue
         file_path = Path(path)
         if not file_path.exists():
