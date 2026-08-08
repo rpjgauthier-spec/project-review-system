@@ -104,7 +104,10 @@ def changed_record_ids(base: str, head: str, repository_root: Path = REPOSITORY_
         path = raw_path.strip().replace("\\", "/")
         if not path.startswith(CHANGES_REPOSITORY_PREFIX) or not path.endswith(".json"):
             continue
-        record_ids.add(Path(path).stem)
+        relative = path[len(CHANGES_REPOSITORY_PREFIX):]
+        if not relative or "/" in relative:
+            continue
+        record_ids.add(Path(relative).stem)
     return record_ids
 
 
