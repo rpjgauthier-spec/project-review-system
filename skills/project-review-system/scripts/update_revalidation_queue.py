@@ -315,6 +315,8 @@ def main() -> int:
     try:
         if (args.base is None) != (args.head is None):
             raise ValueError("--base and --head must be provided together")
+        if args.check and args.base is None:
+            raise ValueError("--check requires --base and --head so current-PR records cannot be mistaken for historical records")
         mapping = load_json(args.map)
         records = collect_records(args.changes)
         current_ids = changed_record_ids(args.base, args.head) if args.base is not None else None
