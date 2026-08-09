@@ -71,11 +71,7 @@
         "selected_mode": "SEPARATED",
         "plan_kind": "ONE_PASS",
         "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
+          {"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}
         ],
         "fused_permission_id": null,
         "capability_profile_id": "default-separated-v1",
@@ -89,44 +85,49 @@
       "gate_sha256": "32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b"
     }
   },
-  "execution_completions": {},
-  "execution_occurrence_history": [
-    {
-      "review_revision": 1,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a",
-      "execution_unit_id": "phase2-r1-adversarial-stage-main-1",
-      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r1-adversarial-1"},
-      "pass_evidence_sha256": "1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"
-    },
-    {
-      "review_revision": 2,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "db67632ce5f3bf44150d4e5ea08efe504fee84b682898f838ec1b4ac0c5ae9b0",
-      "execution_unit_id": "phase2-r2-adversarial-stage-main-1",
-      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r2-adversarial-1"},
-      "pass_evidence_sha256": "afead0690fae6df51ef699b3d23e6a547815e62f0f65d2a45dcb2b2d0c68e6d8"
-    },
-    {
-      "review_revision": 3,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "e8b16b88d66e0f356b6c0302fed67b2259f3f0b80f7d5b2a737dd746638526d9",
-      "execution_unit_id": "phase2-r3-adversarial-stage-main-1",
-      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r3-adversarial-1"},
-      "pass_evidence_sha256": "031485a6aac201e3103440de2b360f4e24fa71fcda76bd036e78fc059cf1962f"
-    },
-    {
-      "review_revision": 4,
-      "stage": "Adversarial",
-      "pass_id": "stage-main",
-      "gate_sha256": "077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7",
-      "execution_unit_id": "phase2-r4-adversarial-stage-main-1",
-      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r4-adversarial-1"},
-      "pass_evidence_sha256": "b9dc721fcc57760e6a8c06faa866aa8a6a14d51687d717ccecc7383ffebb8ba6"
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b",
+      "target_state_id": "sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r5-adversarial-stage-main-1",
+          "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r5-adversarial-1"},
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "BLOCKING: TransitionCommit permits review_id to disagree with next_state.review_id. Both fields are individually well typed, but the DTO can still represent a cross-review authoritative transition. Because the persistence protocol accepts a controller-supplied TransitionCommit as the exact atomic transition intent, this contradictory binding can cross the backend-neutral authority boundary unless every backend independently rediscovers and rejects it, which would move controller-owned workflow identity validation into storage."
+            ],
+            "evidence": [
+              "src/project_review_system/persistence.py",
+              "tests/test_persistence.py",
+              "Issue #10 atomic transition and exact review/state binding requirements",
+              "Issue #11 Slice 1 controller-owned TransitionCommit/persistence boundary",
+              "revision-5 target sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
+              "revision-5 Adversarial gate sha256:32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b"
+            ],
+            "unresolved_conditions": [
+              "Do not advance to Interdependency. Enforce the cross-field invariant that TransitionCommit.review_id exactly equals TransitionCommit.next_state.review_id, add a focused regression test for a mismatched but individually valid ReviewId/StateSnapshot pair, record the correction, increment review_revision, regenerate the queue, and reopen Adversarial against the corrected governed target."
+            ],
+            "sha256": "fe23b28fb014497fdbd727de92d82cc9038ec6dbe7954a55b44db7e319faaa26"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
     }
+  },
+  "execution_occurrence_history": [
+    {"review_revision":1,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a","execution_unit_id":"phase2-r1-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r1-adversarial-1"},"pass_evidence_sha256":"1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"},
+    {"review_revision":2,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"db67632ce5f3bf44150d4e5ea08efe504fee84b682898f838ec1b4ac0c5ae9b0","execution_unit_id":"phase2-r2-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r2-adversarial-1"},"pass_evidence_sha256":"afead0690fae6df51ef699b3d23e6a547815e62f0f65d2a45dcb2b2d0c68e6d8"},
+    {"review_revision":3,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"e8b16b88d66e0f356b6c0302fed67b2259f3f0b80f7d5b2a737dd746638526d9","execution_unit_id":"phase2-r3-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r3-adversarial-1"},"pass_evidence_sha256":"031485a6aac201e3103440de2b360f4e24fa71fcda76bd036e78fc059cf1962f"},
+    {"review_revision":4,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7","execution_unit_id":"phase2-r4-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r4-adversarial-1"},"pass_evidence_sha256":"b9dc721fcc57760e6a8c06faa866aa8a6a14d51687d717ccecc7383ffebb8ba6"},
+    {"review_revision":5,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b","execution_unit_id":"phase2-r5-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r5-adversarial-1"},"pass_evidence_sha256":"964d9ec5e524dcc98b93a6d60bf02dbf323a63af9f3736b1c5dde859ae60f662"}
   ],
-  "results": {}
+  "results": {"Adversarial": "failed"}
 }
