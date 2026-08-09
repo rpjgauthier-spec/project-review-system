@@ -135,3 +135,10 @@ class OperationResult(Generic[T]):
         payload_review_id = getattr(self.data, "review_id", None)
         if self.review_id is not None and payload_review_id is not None and self.review_id != payload_review_id:
             raise ValueError("result review_id must match payload review_id")
+
+
+__all__ = [
+    "OutcomeCode", "ErrorCode",
+    "InitializationData", "StatusData", "BeginPassData", "CompletePassData", "RepairData",
+    "OperationData", "OperationResult",
+]

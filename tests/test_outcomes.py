@@ -1,5 +1,6 @@
 import unittest
 
+import project_review_system as prs
 from project_review_system.domain import (
     GateId, LineageToken, OccurrenceId, ReviewId, Stage, _controller_derived_id,
 )
@@ -66,6 +67,12 @@ class OutcomeTests(unittest.TestCase):
     def test_repair_payload_requires_real_bool(self):
         payload = RepairData(changed=False)
         self.assertFalse(payload.changed)
+
+    def test_package_root_exports_only_declared_module_surface(self):
+        self.assertIs(prs.OperationResult, OperationResult)
+        self.assertTrue(hasattr(prs, "PersistenceBackend"))
+        for leaked_name in ("Generic", "TypeVar", "Protocol", "runtime_checkable"):
+            self.assertFalse(hasattr(prs, leaked_name), leaked_name)
 
 
 if __name__ == "__main__": unittest.main()

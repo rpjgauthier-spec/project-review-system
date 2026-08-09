@@ -119,3 +119,9 @@ class PersistenceBackend(Protocol):
     def read_occurrence(self, occurrence_id: OccurrenceId) -> PassOccurrence | None: ...
     def read_completion(self, occurrence_id: OccurrenceId) -> CompletionEvidence | None: ...
     def read_initialization(self, review_id: ReviewId) -> InitializationRecord | None: ...
+
+
+__all__ = [
+    "ImmutableHistoryItem", "AuthoritativeRecord", "InitializationCommit", "TransitionCommit",
+    "PersistenceOutcome", "CreateResult", "TransitionResult", "PersistenceBackend",
+]
