@@ -28,9 +28,98 @@
     "pass-boundary-enforcement"
   ],
   "reason": "Revision 6 Adversarial revalidation found that the frozen Slice-1 typed identity set omitted AuditEventId, leaving controller-produced audit-event identity without the required opaque immutable typed boundary. Revision 7 adds AuditEventId using the same validated non-empty identity contract as the other canonical IDs and focused construction/validation coverage. Because this correction changes the typed domain contract, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
-  "status": "pending",
+  "status": "in_progress",
   "review_revision": 7,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:d3467b2ddf1c818fcf3cf56d949f30ab72f9e86f8bfe7d85312d3fce7c0999fe",
+        "review_revision": 7,
+        "workload_class": "full-review-controller-core-skeleton-adversarial-v7-subdivided",
+        "stage_assessment": {
+          "single_pass_suitable": false,
+          "reasons": [
+            "Revision-7 Adversarial should complete a bounded multi-finding sweep rather than terminate after the first blocker, while keeping each execution unit small enough to avoid context degradation.",
+            "The governed skeleton spans several distinct failure surfaces that can be reviewed sequentially with durable handoffs under the existing SUBDIVIDED execution mechanism."
+          ],
+          "subpasses": [
+            {
+              "pass_id": "runtime-construction",
+              "scope": "Runtime type, construction, immutability, and representability invariants across exposed domain/workflow/result/persistence objects",
+              "isolation_required": false,
+              "reasons": ["Bounded cohesive surface; no isolated context is required beyond the declared separated execution boundary."]
+            },
+            {
+              "pass_id": "cross-object-authority",
+              "scope": "Cross-field and cross-object authority, identity coherence, and impossible-state invariants",
+              "isolation_required": false,
+              "reasons": ["Consumes prior findings while examining distinct authority relationships and contradictory valid-typed combinations."]
+            },
+            {
+              "pass_id": "frozen-contract-completeness",
+              "scope": "Frozen Issue #10/#11 Slice-1 contract completeness, required types, taxonomy, workflow definition, and persistence protocol representability",
+              "isolation_required": false,
+              "reasons": ["Checks omissions against the frozen contract after construction and authority invariants have been bounded separately."]
+            },
+            {
+              "pass_id": "persistence-retry-boundaries",
+              "scope": "Persistence-neutral atomicity, immutable evidence, stale-lineage, retry/idempotency, and backend-neutral boundary risks representable in this skeleton",
+              "isolation_required": false,
+              "reasons": ["Examines persistence/recovery obligations without implementing later controller operations or concrete backends."]
+            },
+            {
+              "pass_id": "integrated-adversarial-sweep",
+              "scope": "Integrated adversarial sweep for bypasses or blockers not captured by the preceding bounded scopes",
+              "isolation_required": false,
+              "reasons": ["Final synthesis sweep catches interactions between prior scopes while remaining a separate durable execution unit."]
+            }
+          ]
+        },
+        "fused_authorization": null,
+        "notes": "Revision-7 Adversarial uses the existing SUBDIVIDED mechanism for bounded multi-finding review. Blocking findings are carried through handoffs and do not award stage credit; Interdependency remains blocked until the full Adversarial plan completes and the aggregate stage result passes."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:d3467b2ddf1c818fcf3cf56d949f30ab72f9e86f8bfe7d85312d3fce7c0999fe",
+        "review_revision": 7,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
+        "workload_class": "full-review-controller-core-skeleton-adversarial-v7-subdivided",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "SUBDIVIDED",
+        "execution_plan": [
+          {"pass_id": "runtime-construction", "scope": "Runtime type, construction, immutability, and representability invariants across exposed domain/workflow/result/persistence objects", "context_mode": "SEPARATED"},
+          {"pass_id": "cross-object-authority", "scope": "Cross-field and cross-object authority, identity coherence, and impossible-state invariants", "context_mode": "SEPARATED"},
+          {"pass_id": "frozen-contract-completeness", "scope": "Frozen Issue #10/#11 Slice-1 contract completeness, required types, taxonomy, workflow definition, and persistence protocol representability", "context_mode": "SEPARATED"},
+          {"pass_id": "persistence-retry-boundaries", "scope": "Persistence-neutral atomicity, immutable evidence, stale-lineage, retry/idempotency, and backend-neutral boundary risks representable in this skeleton", "context_mode": "SEPARATED"},
+          {"pass_id": "integrated-adversarial-sweep", "scope": "Integrated adversarial sweep for bypasses or blockers not captured by the preceding bounded scopes", "context_mode": "SEPARATED"}
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "9e0094df74ec16316d3ccbce43d7722fd3c801410dc67ea030a49b11995b0435",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03"
+    }
+  },
   "execution_completions": {},
   "execution_occurrence_history": [
     {"review_revision":1,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a","execution_unit_id":"phase2-r1-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r1-adversarial-1"},"pass_evidence_sha256":"1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"},
