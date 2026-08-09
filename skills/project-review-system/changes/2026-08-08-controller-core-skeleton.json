@@ -27,7 +27,7 @@
     "pass-boundary-enforcement"
   ],
   "reason": "The skeleton establishes controller-owned state invariants, canonical stage ordering, identity types, machine-readable outcome/error semantics, and the persistence protocol consumed by later implementation. These decisions materially span adversarial failure/replay safety, inter-module authority and propagation, normalization of identities/status/error vocabulary, structural decomposition, and end-to-end lifecycle/recovery behavior. Implementation must therefore stop at commit 194339a7d27a5d14eead71e316101916992d9a45 and complete the full governed review before the in-memory backend or later layers are added.",
-  "status": "pending",
+  "status": "in_progress",
   "review_revision": 1,
   "execution_gates": {
     "Adversarial": {
@@ -88,7 +88,69 @@
       "gate_sha256": "b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a"
     }
   },
-  "execution_completions": {},
-  "execution_occurrence_history": [],
-  "results": {}
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a",
+      "target_state_id": "sha256:d780c2418d2be66418486d37b015cd43a4f542c26c6b079aab20d9a49f9d1830",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r1-adversarial-stage-main-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-phase2-r1-adversarial-1"
+          },
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "BLOCKING: StateSnapshot permits terminal COMPLETE or FAILED states with a non-null open_occurrence_id, even though Phase-1 completion/failure semantics require the active occurrence to be closed or otherwise resolved before terminal state. This allows an internally contradictory authoritative state to be represented and handed to persistence.",
+              "BLOCKING: StateSnapshot review_revision validation only checks review_revision < 0. Python bool values therefore pass (True behaves as 1, False as 0), and other non-int comparable values may pass, violating the frozen requirement for a strict nonnegative integer revision identity and creating identity/canonicalization ambiguity.",
+              "BLOCKING: PersistenceBackend splits authoritative state and immutable history across read() and read_immutable_history(). The frozen controller contract requires one coherent authoritative read containing the state plus the immutable evidence needed for integrity and exact-retry decisions. Separate reads can observe different persistence moments under concurrency or recovery, producing torn retry/integrity decisions.",
+              "BLOCKING: ErrorCode omits an explicit commit-outcome-unknown/integrity outcome even though the frozen implementation plan requires machine-readable handling of ambiguous persistence commit results and integrity failures. Collapsing those cases into persistence_unavailable/conflict would make crash-after-commit recovery and retry semantics unsafe or ambiguous.",
+              "NON-BLOCKING/DEFER: ProgramState.DRAFT remains publicly constructible through StateSnapshot. The frozen Phase-1 contract reserves draft as non-constructible in Phase-1 operations. Because the initialization/controller path has not yet been implemented, this must be explicitly prevented by that path or tightened in domain construction before conformance credit; it is not independently the primary blocker while the above state and persistence defects remain."
+            ],
+            "evidence": [
+              "src/project_review_system/domain.py",
+              "src/project_review_system/outcomes.py",
+              "src/project_review_system/persistence.py",
+              "tests/test_domain.py",
+              "Issue #10 frozen execution contract and draft clarification",
+              "Issue #11 Slice 1 module/domain/persistence contract",
+              "revision-1 target sha256:d780c2418d2be66418486d37b015cd43a4f542c26c6b079aab20d9a49f9d1830",
+              "revision-1 Adversarial gate sha256:b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a"
+            ],
+            "unresolved_conditions": [
+              "Do not advance to Interdependency. Correct the blocking domain-state, strict revision-typing, coherent-read, and persistence outcome taxonomy defects; record the behavioral corrections; regenerate the queue; increment review_revision and reopen Adversarial against the corrected governed target.",
+              "After correction, add focused regression coverage for terminal/open-occurrence contradiction, bool/non-int review revisions, coherent persistence read semantics, and ambiguous commit/integrity outcome taxonomy.",
+              "DRAFT non-constructibility must be mechanically enforced by the Phase-1 initialization/controller path or by domain validation before Phase-1 implementation is credited."
+            ],
+            "sha256": "d14a5a87c788d8c1b4ca4289c47373e0efbd9805c39f528db0f4d06b3045b83e"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "execution_occurrence_history": [
+    {
+      "review_revision": 1,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a",
+      "execution_unit_id": "phase2-r1-adversarial-stage-main-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-phase2-r1-adversarial-1"
+      },
+      "pass_evidence_sha256": "1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"
+    }
+  ],
+  "results": {
+    "Adversarial": "failed"
+  }
 }
