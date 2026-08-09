@@ -157,6 +157,36 @@
             ],
             "sha256": "2e4c497cb025a918b0bf70808f500d73f00f9d01ce5596a774442e1be4970ab7"
           }
+        },
+        {
+          "pass_id": "cross-object-authority",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r7-adversarial-cross-object-authority-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-phase2-r7-adversarial-cross-object-authority-1"
+          },
+          "inbound_handoff_sha256": "2e4c497cb025a918b0bf70808f500d73f00f9d01ce5596a774442e1be4970ab7",
+          "handoff": {
+            "consumer": "Adversarial:frozen-contract-completeness",
+            "findings": [
+              "BLOCKING: PersistenceBackend.create_if_absent accepts review_id separately from InitializationCommit.state.review_id, but InitializationCommit has no review_id binding invariant. Two individually valid typed values can therefore describe different reviews at the initialization persistence boundary. This is the initialization analogue of the cross-review TransitionCommit defect corrected in revision 6.",
+              "SUPPORTED: No additional contradictory well-typed combination in StateSnapshot, WorkflowDefinition, OperationResult, or TransitionCommit was found in this bounded cross-object/authority scope. TransitionCommit now binds review_id to next_state.review_id, terminal StateSnapshot variants exclude stage/open-occurrence state, and success/failure outcomes are mutually coherent."
+            ],
+            "evidence": [
+              "src/project_review_system/persistence.py",
+              "tests/test_persistence.py",
+              "Issue #11 persistence protocol create_if_absent(review_id, initialization_commit)",
+              "revision-7 target sha256:d3467b2ddf1c818fcf3cf56d949f30ab72f9e86f8bfe7d85312d3fce7c0999fe",
+              "revision-7 Adversarial gate sha256:00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03"
+            ],
+            "unresolved_conditions": [
+              "Carry this blocker through the remaining declared Adversarial subpasses; do not stop the stage investigation solely because it was found.",
+              "Before a corrective revision can pass Adversarial, ensure initialization persistence intent cannot bind a create request for one ReviewId to StateSnapshot authority for another review, with focused regression coverage."
+            ],
+            "sha256": "0a7fdce15a26c80437656350148d64a6d54bac405190fb4a8ca9039922e2885d"
+          }
         }
       ],
       "scratch_materialized": false,
@@ -171,7 +201,8 @@
     {"review_revision":4,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7","execution_unit_id":"phase2-r4-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r4-adversarial-1"},"pass_evidence_sha256":"b9dc721fcc57760e6a8c06faa866aa8a6a14d51687d717ccecc7383ffebb8ba6"},
     {"review_revision":5,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b","execution_unit_id":"phase2-r5-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r5-adversarial-1"},"pass_evidence_sha256":"964d9ec5e524dcc98b93a6d60bf02dbf323a63af9f3736b1c5dde859ae60f662"},
     {"review_revision":6,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77","execution_unit_id":"phase2-r6-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r6-adversarial-1"},"pass_evidence_sha256":"28534a4d62ee4087209f7f6d674bd7b62668e78dfeac4783659c91946f8e1dae"},
-    {"review_revision":7,"stage":"Adversarial","pass_id":"runtime-construction","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-runtime-construction-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-runtime-construction-1"},"pass_evidence_sha256":"107323329d101934447edbe1349e8503f11d83cfa772de3d9d5eb91e67d4af73"}
+    {"review_revision":7,"stage":"Adversarial","pass_id":"runtime-construction","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-runtime-construction-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-runtime-construction-1"},"pass_evidence_sha256":"107323329d101934447edbe1349e8503f11d83cfa772de3d9d5eb91e67d4af73"},
+    {"review_revision":7,"stage":"Adversarial","pass_id":"cross-object-authority","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-cross-object-authority-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-cross-object-authority-1"},"pass_evidence_sha256":"866b3433702eb4fa39f581946455b9730fac7f6b3247aba40ca75406c924266c"}
   ],
   "results": {}
 }
