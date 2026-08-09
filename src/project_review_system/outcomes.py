@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Mapping
+from typing import Any
 
 from .domain import LineageToken, ReviewId
 
@@ -57,6 +58,16 @@ class OperationResult:
     data: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        if not isinstance(self.ok, bool):
+            raise ValueError("ok must be a bool")
+        if not isinstance(self.outcome, (OutcomeCode, ErrorCode)):
+            raise ValueError("outcome must be an OutcomeCode or ErrorCode")
+        if self.review_id is not None and not isinstance(self.review_id, ReviewId):
+            raise ValueError("review_id must be a ReviewId or None")
+        if self.lineage_token is not None and not isinstance(self.lineage_token, LineageToken):
+            raise ValueError("lineage_token must be a LineageToken or None")
+        if not isinstance(self.data, Mapping):
+            raise ValueError("data must be a mapping")
         if self.ok and isinstance(self.outcome, ErrorCode):
             raise ValueError("successful result cannot carry an ErrorCode")
         if not self.ok and isinstance(self.outcome, OutcomeCode):

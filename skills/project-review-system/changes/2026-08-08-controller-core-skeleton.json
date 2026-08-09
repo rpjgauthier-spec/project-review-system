@@ -27,111 +27,11 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "Revision 2 Adversarial revalidation found that StateSnapshot still trusted Python annotations for authoritative field types, allowing raw strings or other wrong-typed values to bypass enum-based invariants and reach persistence. Revision 3 adds deterministic runtime validation for every authoritative StateSnapshot field type and focused regression coverage, including the raw program_state='active' plus missing-stage-cursor bypass. Because this correction changes the authoritative state construction boundary, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
-  "status": "in_progress",
-  "review_revision": 3,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "activity": "Adversarial",
-        "target_state_id": "sha256:32b405d4b3d00f41e7073c22ffd239544c6b6bd797a18a57f2c41af61649cce5",
-        "review_revision": 3,
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v3",
-        "stage_assessment": {
-          "single_pass_suitable": true,
-          "reasons": [
-            "This execution unit covers only the revision-3 Adversarial revalidation of the corrected controller-core skeleton; the other four semantic stages remain separate later execution units.",
-            "The corrected governed surface remains small and cohesive enough to retest failure, replay, authority-bypass, mutation, stale-state, representability, and recovery risks in one bounded Adversarial pass."
-          ],
-          "subpasses": []
-        },
-        "fused_authorization": null,
-        "notes": "Revision-3 full-program Adversarial revalidation under SEPARATED execution; no semantic stage credit is created by this gate."
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-separated-v1",
-        "subject_id": "unmeasured-reviewer-separated-default",
-        "validation_status": "DEFAULT_SEPARATED",
-        "benchmark_suite": "none-default-separated",
-        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
-        "fused_permissions": []
-      },
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "target_state_id": "sha256:32b405d4b3d00f41e7073c22ffd239544c6b6bd797a18a57f2c41af61649cce5",
-        "review_revision": 3,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v3",
-        "selected_mode": "SEPARATED",
-        "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
-        ],
-        "fused_permission_id": null,
-        "capability_profile_id": "default-separated-v1",
-        "capability_subject_id": "unmeasured-reviewer-separated-default",
-        "capability_validation_status": "DEFAULT_SEPARATED",
-        "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "b5440778bd32a704640e2db1262f5bb7bf9ef6bab42a3886d2b59cee423b725a",
-        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
-        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
-      },
-      "gate_sha256": "e8b16b88d66e0f356b6c0302fed67b2259f3f0b80f7d5b2a737dd746638526d9"
-    }
-  },
-  "execution_completions": {
-    "Adversarial": {
-      "gate_sha256": "e8b16b88d66e0f356b6c0302fed67b2259f3f0b80f7d5b2a737dd746638526d9",
-      "target_state_id": "sha256:32b405d4b3d00f41e7073c22ffd239544c6b6bd797a18a57f2c41af61649cce5",
-      "passes": [
-        {
-          "pass_id": "stage-main",
-          "context_mode": "SEPARATED",
-          "status": "complete",
-          "execution_unit_id": "phase2-r3-adversarial-stage-main-1",
-          "boundary": {
-            "kind": "declared-execution-unit",
-            "id": "assistant-message-phase2-r3-adversarial-1"
-          },
-          "inbound_handoff_sha256": null,
-          "handoff": {
-            "consumer": "Interdependency",
-            "findings": [
-              "BLOCKING: WorkflowDefinition still trusts Python annotations for its authoritative workflow_definition_id and stages fields. Raw strings are accepted as workflow_definition_id/stage values, and a mutable list can be supplied for stages despite the tuple[Stage, ...] contract. That lets malformed or subsequently mutated stage order cross the controller-owned workflow-definition boundary and bypass the intended typed/immutable semantics.",
-              "BLOCKING: OperationResult still trusts Python annotations for the public machine-readable result envelope. Non-boolean ok values and raw/unrecognized string outcomes can be constructed without rejection (for example ok=True with outcome='stale_lineage'), bypassing the success/error consistency checks and allowing results outside the closed OutcomeCode/ErrorCode taxonomy."
-            ],
-            "evidence": [
-              "src/project_review_system/workflow.py",
-              "tests/test_workflow.py",
-              "src/project_review_system/outcomes.py",
-              "tests/test_outcomes.py",
-              "Issue #11 Slice 1 typed workflow/domain/result boundary requirements",
-              "revision-3 target sha256:32b405d4b3d00f41e7073c22ffd239544c6b6bd797a18a57f2c41af61649cce5",
-              "revision-3 Adversarial gate sha256:e8b16b88d66e0f356b6c0302fed67b2259f3f0b80f7d5b2a737dd746638526d9"
-            ],
-            "unresolved_conditions": [
-              "Do not advance to Interdependency. Add deterministic runtime validation at the remaining typed contract boundaries exposed by this skeleton: WorkflowDefinition must require a WorkflowDefinitionId and an immutable tuple containing only Stage members; OperationResult must require a real bool for ok and an OutcomeCode or ErrorCode outcome, then preserve the existing success/error consistency rule.",
-              "Add focused regression coverage for raw workflow IDs, raw stage strings, mutable stage containers, non-bool ok values, and raw/unrecognized outcome strings; record the behavioral correction, increment review_revision, regenerate the queue, and reopen Adversarial against the corrected governed target."
-            ],
-            "sha256": "77597922795a4b278849a0648848117bc8c694542de4e801a376e8bbc19ddfd7"
-          }
-        }
-      ],
-      "scratch_materialized": false,
-      "scratch_cleanup_status": "not_applicable",
-      "retained_subpass_artifacts": []
-    }
-  },
+  "reason": "Revision 3 Adversarial revalidation found that WorkflowDefinition and OperationResult still trusted Python annotations at runtime, allowing malformed or mutable workflow definitions and result envelopes outside the closed machine-readable taxonomy. Revision 4 adds deterministic runtime validation for all declared fields on those exposed boundaries, rejects raw stage arguments at workflow traversal, and adds focused regression coverage. Because these corrections tighten controller-owned workflow and result contract boundaries, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
+  "status": "pending",
+  "review_revision": 4,
+  "execution_gates": {},
+  "execution_completions": {},
   "execution_occurrence_history": [
     {
       "review_revision": 1,
@@ -170,7 +70,5 @@
       "pass_evidence_sha256": "031485a6aac201e3103440de2b360f4e24fa71fcda76bd036e78fc059cf1962f"
     }
   ],
-  "results": {
-    "Adversarial": "failed"
-  }
+  "results": {}
 }

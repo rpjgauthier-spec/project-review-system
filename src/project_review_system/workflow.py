@@ -13,8 +13,14 @@ class WorkflowDefinition:
     stages: tuple[Stage, ...]
 
     def __post_init__(self) -> None:
+        if not isinstance(self.workflow_definition_id, WorkflowDefinitionId):
+            raise ValueError("workflow_definition_id must be a WorkflowDefinitionId")
+        if not isinstance(self.stages, tuple):
+            raise ValueError("workflow stages must be an immutable tuple")
         if not self.stages:
             raise ValueError("workflow must contain at least one stage")
+        if not all(isinstance(stage, Stage) for stage in self.stages):
+            raise ValueError("workflow stages must contain only Stage members")
         if len(set(self.stages)) != len(self.stages):
             raise ValueError("workflow stages must be unique")
 
@@ -23,6 +29,8 @@ class WorkflowDefinition:
         return self.stages[0]
 
     def next_stage(self, stage: Stage) -> Stage | None:
+        if not isinstance(stage, Stage):
+            raise ValueError("stage must be a Stage")
         try:
             index = self.stages.index(stage)
         except ValueError as exc:

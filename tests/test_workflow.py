@@ -31,6 +31,31 @@ class WorkflowTests(unittest.TestCase):
                 stages=(Stage.ADVERSARIAL, Stage.ADVERSARIAL),
             )
 
+    def test_workflow_definition_id_is_runtime_validated(self) -> None:
+        with self.assertRaises(ValueError):
+            WorkflowDefinition(
+                workflow_definition_id="workflow:raw",  # type: ignore[arg-type]
+                stages=(Stage.ADVERSARIAL,),
+            )
+
+    def test_workflow_stage_container_must_be_immutable_tuple(self) -> None:
+        with self.assertRaises(ValueError):
+            WorkflowDefinition(
+                workflow_definition_id=WorkflowDefinitionId("workflow:list"),
+                stages=[Stage.ADVERSARIAL],  # type: ignore[arg-type]
+            )
+
+    def test_workflow_stage_members_are_runtime_validated(self) -> None:
+        with self.assertRaises(ValueError):
+            WorkflowDefinition(
+                workflow_definition_id=WorkflowDefinitionId("workflow:raw-stage"),
+                stages=("Adversarial",),  # type: ignore[arg-type]
+            )
+
+    def test_next_stage_rejects_raw_string(self) -> None:
+        with self.assertRaises(ValueError):
+            PHASE1_WORKFLOW.next_stage("Normalization")  # type: ignore[arg-type]
+
 
 if __name__ == "__main__":
     unittest.main()
