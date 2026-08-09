@@ -1,5 +1,6 @@
 import inspect
 import unittest
+from dataclasses import replace
 
 from project_review_system.domain import (
     InitializationIntentId, InitializationRecord, LineageToken, ProgramState, ReviewId, SnapshotId,
@@ -74,6 +75,37 @@ class PersistenceContractTests(unittest.TestCase):
         self.assertEqual(commit.review_id, state.review_id)
         with self.assertRaises(ValueError):
             InitializationCommit(ReviewId("review:other"), state, InitializationIntentId("intent:1"))
+
+    def test_initialization_commit_binds_initialization_record_to_transaction(self):
+        state = self._state()
+        matching = self._initialization_record()
+        commit = InitializationCommit(
+            ReviewId("review:test"), state, InitializationIntentId("intent:1"),
+            immutable_events=(matching,),
+        )
+        self.assertEqual(commit.immutable_events, (matching,))
+
+        contradictory_records = {
+            "initialization_intent_id": replace(
+                matching, initialization_intent_id=InitializationIntentId("intent:other")
+            ),
+            "workflow_definition_id": replace(
+                matching, workflow_definition_id=WorkflowDefinitionId("workflow:other")
+            ),
+            "snapshot_id": replace(matching, snapshot_id=SnapshotId("snapshot:other")),
+            "initial_review_revision": replace(matching, initial_review_revision=1),
+            "initial_stage": replace(matching, initial_stage=Stage.INTERDEPENDENCY),
+            "resulting_lineage_token": replace(
+                matching, resulting_lineage_token=LineageToken("lineage:other")
+            ),
+        }
+        for field_name, record in contradictory_records.items():
+            with self.subTest(field_name=field_name):
+                with self.assertRaises(ValueError):
+                    InitializationCommit(
+                        ReviewId("review:test"), state, InitializationIntentId("intent:1"),
+                        immutable_events=(record,),
+                    )
 
     def test_transition_commit_binds_review(self):
         state = self._state()

@@ -60,6 +60,20 @@ class InitializationCommit:
         if self.review_id != self.state.review_id: raise ValueError("review_id must match state.review_id")
         if not isinstance(self.initialization_intent_id, InitializationIntentId): raise ValueError("initialization_intent_id must be an InitializationIntentId")
         _validate_immutable_items("immutable_events", self.immutable_events, self.review_id)
+        for item in self.immutable_events:
+            if not isinstance(item, InitializationRecord):
+                continue
+            bindings = (
+                (item.initialization_intent_id, self.initialization_intent_id, "initialization_intent_id"),
+                (item.workflow_definition_id, self.state.workflow_definition_id, "workflow_definition_id"),
+                (item.snapshot_id, self.state.snapshot_id, "snapshot_id"),
+                (item.initial_review_revision, self.state.review_revision, "initial_review_revision"),
+                (item.initial_stage, self.state.stage_cursor, "initial_stage"),
+                (item.resulting_lineage_token, self.state.lineage_token, "resulting_lineage_token"),
+            )
+            for actual, expected, field_name in bindings:
+                if actual != expected:
+                    raise ValueError(f"InitializationRecord.{field_name} must match initialization commit/state")
 
 
 @dataclass(frozen=True, slots=True)
