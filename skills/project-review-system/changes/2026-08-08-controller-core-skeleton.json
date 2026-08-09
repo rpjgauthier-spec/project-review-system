@@ -89,7 +89,45 @@
       "gate_sha256": "077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7"
     }
   },
-  "execution_completions": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7",
+      "target_state_id": "sha256:6906532e9afd6bee219ec3905402c38b8719af4a4b0bc9d2d39ce648ab389c26",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r4-adversarial-stage-main-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-phase2-r4-adversarial-1"
+          },
+          "inbound_handoff_sha256": null,
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "BLOCKING: The persistence DTO boundary still trusts Python annotations at runtime. AuthoritativeRecord, InitializationCommit, TransitionCommit, CreateResult, and TransitionResult accept wrong-typed values without deterministic rejection, including raw/non-StateSnapshot state values, raw IDs, non-bool created/committed flags, and mutable list containers for fields declared as immutable tuples. This lets malformed or mutable authority/evidence representations cross the backend-neutral persistence boundary despite the frozen typed/immutable protocol contract."
+            ],
+            "evidence": [
+              "src/project_review_system/persistence.py",
+              "tests/test_persistence.py",
+              "Issue #11 Slice 1 persistence protocol/DTO and immutable evidence requirements",
+              "revision-4 target sha256:6906532e9afd6bee219ec3905402c38b8719af4a4b0bc9d2d39ce648ab389c26",
+              "revision-4 Adversarial gate sha256:077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7"
+            ],
+            "unresolved_conditions": [
+              "Do not advance to Interdependency. Add deterministic runtime validation for every declared field on the exposed persistence DTOs: require StateSnapshot/typed identity instances where declared, real bool values for created/committed, and immutable tuple containers for immutable history/events/evidence. Add focused regression coverage for wrong-typed state/identity/boolean values and mutable tuple-field containers; record the correction, increment review_revision, regenerate the queue, and reopen Adversarial against the corrected governed target."
+            ],
+            "sha256": "dc3c3a814789251105a93f62c9b9e91f6a83337bdf282e5e761feef29baab51c"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
   "execution_occurrence_history": [
     {
       "review_revision": 1,
@@ -126,7 +164,21 @@
         "id": "assistant-message-phase2-r3-adversarial-1"
       },
       "pass_evidence_sha256": "031485a6aac201e3103440de2b360f4e24fa71fcda76bd036e78fc059cf1962f"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7",
+      "execution_unit_id": "phase2-r4-adversarial-stage-main-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-phase2-r4-adversarial-1"
+      },
+      "pass_evidence_sha256": "b9dc721fcc57760e6a8c06faa866aa8a6a14d51687d717ccecc7383ffebb8ba6"
     }
   ],
-  "results": {}
+  "results": {
+    "Adversarial": "failed"
+  }
 }
