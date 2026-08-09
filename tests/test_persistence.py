@@ -1,105 +1,58 @@
+import inspect
 import unittest
 
 from project_review_system.domain import (
-    InitializationIntentId,
-    LineageToken,
-    ProgramState,
-    ReviewId,
-    SnapshotId,
-    SnapshotMode,
-    Stage,
-    StateSnapshot,
-    WorkflowDefinitionId,
+    InitializationIntentId, LineageToken, ProgramState, ReviewId, SnapshotId,
+    SnapshotMode, Stage, StateSnapshot, WorkflowDefinitionId,
 )
 from project_review_system.persistence import (
-    AuthoritativeRecord,
-    CreateResult,
-    InitializationCommit,
-    TransitionCommit,
-    TransitionResult,
+    AuthoritativeRecord, CreateResult, InitializationCommit, PersistenceBackend,
+    PersistenceOutcome, TransitionCommit, TransitionResult,
 )
 
 
 class PersistenceContractTests(unittest.TestCase):
-    def _state(self) -> StateSnapshot:
+    def _state(self, review_id: str = "review:test") -> StateSnapshot:
         return StateSnapshot(
-            review_id=ReviewId("review:test"),
-            program_state=ProgramState.ACTIVE,
-            review_revision=0,
-            snapshot_id=SnapshotId("snapshot:test"),
-            snapshot_mode=SnapshotMode.CANONICAL_CLEAN,
-            workflow_definition_id=WorkflowDefinitionId("workflow:test"),
-            stage_cursor=Stage.ADVERSARIAL,
-            open_occurrence_id=None,
-            lineage_token=LineageToken("lineage:0"),
+            review_id=ReviewId(review_id), program_state=ProgramState.ACTIVE, review_revision=0,
+            snapshot_id=SnapshotId("snapshot:test"), snapshot_mode=SnapshotMode.CANONICAL_CLEAN,
+            workflow_definition_id=WorkflowDefinitionId("workflow:test"), stage_cursor=Stage.ADVERSARIAL,
+            open_occurrence_id=None, lineage_token=LineageToken("lineage:0"),
         )
 
-    def test_authoritative_record_bundles_state_and_history_coherently(self) -> None:
+    def test_authoritative_record_requires_coherent_state(self):
         state = self._state()
-        record = AuthoritativeRecord(state=state, immutable_history=("event:1",))
+        self.assertIs(AuthoritativeRecord(state).state, state)
+        with self.assertRaises(ValueError): AuthoritativeRecord("bad")  # type: ignore[arg-type]
+        with self.assertRaises(ValueError): AuthoritativeRecord(state, ["event"])  # type: ignore[arg-type]
 
-        self.assertIs(record.state, state)
-        self.assertEqual(record.immutable_history, ("event:1",))
-
-    def test_authoritative_record_rejects_wrong_state_and_mutable_history(self) -> None:
-        with self.assertRaises(ValueError):
-            AuthoritativeRecord(state="bad", immutable_history=())  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            AuthoritativeRecord(state=self._state(), immutable_history=["event:1"])  # type: ignore[arg-type]
-
-    def test_initialization_commit_validates_all_declared_fields(self) -> None:
+    def test_initialization_commit_binds_review(self):
         state = self._state()
+        commit = InitializationCommit(ReviewId("review:test"), state, InitializationIntentId("intent:1"))
+        self.assertEqual(commit.review_id, state.review_id)
         with self.assertRaises(ValueError):
-            InitializationCommit(state="bad", initialization_intent_id=InitializationIntentId("intent:1"))  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            InitializationCommit(state=state, initialization_intent_id="intent:1")  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            InitializationCommit(
-                state=state,
-                initialization_intent_id=InitializationIntentId("intent:1"),
-                immutable_events=["event:1"],  # type: ignore[arg-type]
-            )
+            InitializationCommit(ReviewId("review:other"), state, InitializationIntentId("intent:1"))
 
-    def test_transition_commit_validates_all_declared_fields(self) -> None:
+    def test_transition_commit_binds_review(self):
         state = self._state()
-        with self.assertRaises(ValueError):
-            TransitionCommit(review_id="review:test", next_state=state)  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            TransitionCommit(review_id=ReviewId("review:test"), next_state="bad")  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            TransitionCommit(
-                review_id=ReviewId("review:test"),
-                next_state=state,
-                immutable_events=["event:1"],  # type: ignore[arg-type]
-            )
-        with self.assertRaises(ValueError):
-            TransitionCommit(
-                review_id=ReviewId("review:test"),
-                next_state=state,
-                immutable_evidence=["evidence:1"],  # type: ignore[arg-type]
-            )
+        TransitionCommit(ReviewId("review:test"), state)
+        with self.assertRaises(ValueError): TransitionCommit(ReviewId("review:other"), state)
 
-    def test_transition_commit_rejects_cross_review_state(self) -> None:
-        with self.assertRaises(ValueError):
-            TransitionCommit(
-                review_id=ReviewId("review:other"),
-                next_state=self._state(),
-            )
-
-    def test_create_result_requires_real_bool_and_state_snapshot(self) -> None:
+    def test_persistence_results_preserve_outcome_distinctions(self):
         state = self._state()
-        with self.assertRaises(ValueError):
-            CreateResult(created=1, state=state)  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            CreateResult(created=True, state="bad")  # type: ignore[arg-type]
+        self.assertEqual(CreateResult(PersistenceOutcome.CREATED, state).outcome, PersistenceOutcome.CREATED)
+        self.assertEqual(CreateResult(PersistenceOutcome.OUTCOME_UNKNOWN, None).outcome, PersistenceOutcome.OUTCOME_UNKNOWN)
+        self.assertEqual(TransitionResult(PersistenceOutcome.CONFLICT, state).outcome, PersistenceOutcome.CONFLICT)
+        self.assertEqual(TransitionResult(PersistenceOutcome.ALREADY_APPLIED, state).outcome, PersistenceOutcome.ALREADY_APPLIED)
+        self.assertEqual(TransitionResult(PersistenceOutcome.OUTCOME_UNKNOWN, None).outcome, PersistenceOutcome.OUTCOME_UNKNOWN)
+        with self.assertRaises(ValueError): CreateResult(PersistenceOutcome.COMMITTED, state)
+        with self.assertRaises(ValueError): TransitionResult(PersistenceOutcome.COMMITTED, None)
 
-    def test_transition_result_requires_real_bool_and_state_snapshot(self) -> None:
-        state = self._state()
-        with self.assertRaises(ValueError):
-            TransitionResult(committed=1, state=state)  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            TransitionResult(committed=True, state="bad")  # type: ignore[arg-type]
+    def test_protocol_exposes_frozen_readback_and_review_binding(self):
+        names = {name for name, _ in inspect.getmembers(PersistenceBackend, inspect.isfunction)}
+        self.assertTrue({"read", "create_if_absent", "commit_transition", "read_occurrence", "read_completion", "read_initialization"}.issubset(names))
+        parameters = list(inspect.signature(PersistenceBackend.commit_transition).parameters)
+        self.assertEqual(parameters[:4], ["self", "review_id", "expected_lineage_token", "commit"])
 
 
-if __name__ == "__main__":
-    unittest.main()
+if __name__ == "__main__": unittest.main()

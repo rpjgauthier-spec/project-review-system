@@ -4,13 +4,27 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .domain import Stage, WorkflowDefinitionId
+from .domain import ProgramState, Stage, WorkflowDefinitionId
+
+
+@dataclass(frozen=True, slots=True)
+class TerminalRules:
+    successful_final_state: ProgramState
+    failed_final_state: ProgramState
+
+    def __post_init__(self) -> None:
+        if self.successful_final_state is not ProgramState.COMPLETE:
+            raise ValueError("successful_final_state must be ProgramState.COMPLETE")
+        if self.failed_final_state is not ProgramState.FAILED:
+            raise ValueError("failed_final_state must be ProgramState.FAILED")
 
 
 @dataclass(frozen=True, slots=True)
 class WorkflowDefinition:
     workflow_definition_id: WorkflowDefinitionId
     stages: tuple[Stage, ...]
+    initial_stage: Stage
+    terminal_rules: TerminalRules
 
     def __post_init__(self) -> None:
         if not isinstance(self.workflow_definition_id, WorkflowDefinitionId):
@@ -23,10 +37,14 @@ class WorkflowDefinition:
             raise ValueError("workflow stages must contain only Stage members")
         if len(set(self.stages)) != len(self.stages):
             raise ValueError("workflow stages must be unique")
+        if not isinstance(self.initial_stage, Stage) or self.initial_stage != self.stages[0]:
+            raise ValueError("initial_stage must equal the first workflow stage")
+        if not isinstance(self.terminal_rules, TerminalRules):
+            raise ValueError("terminal_rules must be TerminalRules")
 
     @property
     def first_stage(self) -> Stage:
-        return self.stages[0]
+        return self.initial_stage
 
     def next_stage(self, stage: Stage) -> Stage | None:
         if not isinstance(stage, Stage):
@@ -47,5 +65,10 @@ PHASE1_WORKFLOW = WorkflowDefinition(
         Stage.NORMALIZATION,
         Stage.STRUCTURAL_OPTIMIZATION,
         Stage.END_TO_END_VALIDATION,
+    ),
+    initial_stage=Stage.ADVERSARIAL,
+    terminal_rules=TerminalRules(
+        successful_final_state=ProgramState.COMPLETE,
+        failed_final_state=ProgramState.FAILED,
     ),
 )
