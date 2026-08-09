@@ -23,8 +23,22 @@ class PersistenceContractTests(unittest.TestCase):
     def test_authoritative_record_requires_coherent_state(self):
         state = self._state()
         self.assertIs(AuthoritativeRecord(state).state, state)
-        with self.assertRaises(ValueError): AuthoritativeRecord("bad")  # type: ignore[arg-type]
-        with self.assertRaises(ValueError): AuthoritativeRecord(state, ["event"])  # type: ignore[arg-type]
+        with self.assertRaises(ValueError): AuthoritativeRecord("bad")
+        with self.assertRaises(ValueError): AuthoritativeRecord(state, ["event"])
+
+    def test_history_and_evidence_reject_mutable_members(self):
+        state = self._state()
+        mutable_value = bytearray(b"mutable")
+        with self.assertRaises(ValueError): AuthoritativeRecord(state, (mutable_value,))
+        with self.assertRaises(ValueError):
+            InitializationCommit(
+                ReviewId("review:test"), state, InitializationIntentId("intent:1"),
+                immutable_events=(mutable_value,),
+            )
+        with self.assertRaises(ValueError):
+            TransitionCommit(ReviewId("review:test"), state, immutable_evidence=(mutable_value,))
+        record = AuthoritativeRecord(state, ("audit:event",))
+        self.assertEqual(record.immutable_history, ("audit:event",))
 
     def test_initialization_commit_binds_review(self):
         state = self._state()

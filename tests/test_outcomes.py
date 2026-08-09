@@ -1,8 +1,11 @@
 import unittest
 
-from project_review_system.domain import LineageToken, ReviewId, Stage
+from project_review_system.domain import (
+    GateId, LineageToken, OccurrenceId, ReviewId, Stage, _controller_derived_id,
+)
 from project_review_system.outcomes import (
-    ErrorCode, OperationResult, OutcomeCode, RepairData, StatusData,
+    BeginPassData, ErrorCode, InitializationData, OperationResult, OutcomeCode,
+    RepairData, StatusData,
 )
 
 
@@ -20,13 +23,39 @@ class OutcomeTests(unittest.TestCase):
         with self.assertRaises(ValueError): OperationResult(ok=True, outcome="status")  # type: ignore[arg-type]
 
     def test_data_requires_typed_payload(self):
-        with self.assertRaises(ValueError): OperationResult(ok=True, outcome=OutcomeCode.STATUS, data={"status": "active"})  # type: ignore[arg-type]
+        with self.assertRaises(ValueError):
+            OperationResult(ok=True, outcome=OutcomeCode.STATUS, data={"status": "active"})  # type: ignore[arg-type]
         result = OperationResult(
             ok=True, outcome=OutcomeCode.STATUS, review_id=ReviewId("review:test"),
             lineage_token=LineageToken("lineage:test"),
             data=StatusData(review_id=ReviewId("review:test"), next_stage=Stage.ADVERSARIAL),
         )
         self.assertEqual(result.data.next_stage, Stage.ADVERSARIAL)
+
+    def test_success_outcome_requires_compatible_payload_type(self):
+        with self.assertRaises(ValueError):
+            OperationResult(
+                ok=True, outcome=OutcomeCode.STATUS,
+                data=RepairData(changed=False),
+            )
+        begin = BeginPassData(
+            _controller_derived_id(OccurrenceId, "occ:1"),
+            _controller_derived_id(GateId, "gate:1"),
+        )
+        result = OperationResult(ok=True, outcome=OutcomeCode.PASS_OPENED, data=begin)
+        self.assertIs(result.data, begin)
+
+    def test_result_and_payload_review_identity_must_match(self):
+        with self.assertRaises(ValueError):
+            OperationResult(
+                ok=True, outcome=OutcomeCode.STATUS, review_id=ReviewId("review:A"),
+                data=StatusData(review_id=ReviewId("review:B"), next_stage=Stage.ADVERSARIAL),
+            )
+        with self.assertRaises(ValueError):
+            OperationResult(
+                ok=True, outcome=OutcomeCode.INITIALIZED, review_id=ReviewId("review:A"),
+                data=InitializationData(review_id=ReviewId("review:B")),
+            )
 
     def test_error_field_matches_failure_outcome(self):
         with self.assertRaises(ValueError):

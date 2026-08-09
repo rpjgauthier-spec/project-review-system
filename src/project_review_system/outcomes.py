@@ -54,6 +54,7 @@ class InitializationData:
     def __post_init__(self) -> None:
         if not isinstance(self.review_id, ReviewId): raise ValueError("review_id must be a ReviewId")
 
+
 @dataclass(frozen=True, slots=True)
 class StatusData:
     review_id: ReviewId
@@ -61,6 +62,7 @@ class StatusData:
     def __post_init__(self) -> None:
         if not isinstance(self.review_id, ReviewId): raise ValueError("review_id must be a ReviewId")
         if self.next_stage is not None and not isinstance(self.next_stage, Stage): raise ValueError("next_stage must be a Stage or None")
+
 
 @dataclass(frozen=True, slots=True)
 class BeginPassData:
@@ -70,6 +72,7 @@ class BeginPassData:
         if not isinstance(self.occurrence_id, OccurrenceId): raise ValueError("occurrence_id must be an OccurrenceId")
         if not isinstance(self.gate_id, GateId): raise ValueError("gate_id must be a GateId")
 
+
 @dataclass(frozen=True, slots=True)
 class CompletePassData:
     occurrence_id: OccurrenceId
@@ -77,6 +80,7 @@ class CompletePassData:
     def __post_init__(self) -> None:
         if not isinstance(self.occurrence_id, OccurrenceId): raise ValueError("occurrence_id must be an OccurrenceId")
         if self.next_stage is not None and not isinstance(self.next_stage, Stage): raise ValueError("next_stage must be a Stage or None")
+
 
 @dataclass(frozen=True, slots=True)
 class RepairData:
@@ -87,6 +91,19 @@ class RepairData:
 
 OperationData = InitializationData | StatusData | BeginPassData | CompletePassData | RepairData
 T = TypeVar("T", bound=OperationData)
+
+
+_SUCCESS_PAYLOAD_TYPES = {
+    OutcomeCode.INITIALIZED: InitializationData,
+    OutcomeCode.ALREADY_INITIALIZED: InitializationData,
+    OutcomeCode.STATUS: StatusData,
+    OutcomeCode.PASS_OPENED: BeginPassData,
+    OutcomeCode.PASS_ALREADY_OPEN: BeginPassData,
+    OutcomeCode.PASS_COMPLETED: CompletePassData,
+    OutcomeCode.PASS_ALREADY_COMPLETED: CompletePassData,
+    OutcomeCode.PROJECTION_REBUILT: RepairData,
+    OutcomeCode.NO_REPAIR_NEEDED: RepairData,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,8 +122,16 @@ class OperationResult(Generic[T]):
         if self.lineage_token is not None and not isinstance(self.lineage_token, LineageToken): raise ValueError("lineage_token must be a LineageToken or None")
         if self.data is not None and not isinstance(self.data, (InitializationData, StatusData, BeginPassData, CompletePassData, RepairData)): raise ValueError("data must be a typed operation payload or None")
         if self.error is not None and not isinstance(self.error, ErrorCode): raise ValueError("error must be an ErrorCode or None")
+
         if self.ok:
             if isinstance(self.outcome, ErrorCode) or self.error is not None: raise ValueError("successful result cannot carry an ErrorCode")
+            expected_payload = _SUCCESS_PAYLOAD_TYPES[self.outcome]
+            if self.data is not None and not isinstance(self.data, expected_payload):
+                raise ValueError(f"{self.outcome.value} requires {expected_payload.__name__} when data is present")
         else:
             if isinstance(self.outcome, OutcomeCode): raise ValueError("failed result cannot carry an OutcomeCode")
             if self.error is not None and self.error is not self.outcome: raise ValueError("error must match failure outcome")
+
+        payload_review_id = getattr(self.data, "review_id", None)
+        if self.review_id is not None and payload_review_id is not None and self.review_id != payload_review_id:
+            raise ValueError("result review_id must match payload review_id")
