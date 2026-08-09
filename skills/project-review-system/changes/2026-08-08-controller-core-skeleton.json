@@ -29,7 +29,65 @@
   "reason": "The skeleton establishes controller-owned state invariants, canonical stage ordering, identity types, machine-readable outcome/error semantics, and the persistence protocol consumed by later implementation. These decisions materially span adversarial failure/replay safety, inter-module authority and propagation, normalization of identities/status/error vocabulary, structural decomposition, and end-to-end lifecycle/recovery behavior. Implementation must therefore stop at commit 194339a7d27a5d14eead71e316101916992d9a45 and complete the full governed review before the in-memory backend or later layers are added.",
   "status": "pending",
   "review_revision": 1,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:d780c2418d2be66418486d37b015cd43a4f542c26c6b079aab20d9a49f9d1830",
+        "review_revision": 1,
+        "workload_class": "full-review-controller-core-skeleton-adversarial-v1",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "This execution unit covers only the Adversarial stage of the frozen controller-core skeleton; the other four semantic stages remain separate later execution units.",
+            "The governed implementation surface is small and cohesive enough to test failure, replay, authority-bypass, mutation, stale-state, and representability risks in one bounded Adversarial pass."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "Revision-1 full-program Adversarial stage under SEPARATED execution; no semantic stage credit is created by this gate."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:d780c2418d2be66418486d37b015cd43a4f542c26c6b079aab20d9a49f9d1830",
+        "review_revision": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
+        "workload_class": "full-review-controller-core-skeleton-adversarial-v1",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "8d54bb4c4c0adcb0c39f2b669a181f1a35efb28b2f576cf87d4a0b39580d3b9d",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a"
+    }
+  },
   "execution_completions": {},
   "execution_occurrence_history": [],
   "results": {}
