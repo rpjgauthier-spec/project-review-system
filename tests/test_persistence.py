@@ -79,6 +79,13 @@ class PersistenceContractTests(unittest.TestCase):
                 immutable_evidence=["evidence:1"],  # type: ignore[arg-type]
             )
 
+    def test_transition_commit_rejects_cross_review_state(self) -> None:
+        with self.assertRaises(ValueError):
+            TransitionCommit(
+                review_id=ReviewId("review:other"),
+                next_state=self._state(),
+            )
+
     def test_create_result_requires_real_bool_and_state_snapshot(self) -> None:
         state = self._state()
         with self.assertRaises(ValueError):

@@ -27,101 +27,11 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "Revision 4 Adversarial revalidation found that the persistence DTO boundary still trusted Python annotations at runtime, allowing malformed state/identity values, non-boolean commit flags, and mutable containers where immutable evidence tuples were declared. Revision 5 adds deterministic runtime validation for every declared field on AuthoritativeRecord, InitializationCommit, TransitionCommit, CreateResult, and TransitionResult, with focused regression coverage. Because these corrections tighten the backend-neutral authority/evidence boundary, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
-  "status": "in_progress",
-  "review_revision": 5,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "activity": "Adversarial",
-        "target_state_id": "sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
-        "review_revision": 5,
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v5",
-        "stage_assessment": {
-          "single_pass_suitable": true,
-          "reasons": [
-            "This execution unit covers only the revision-5 Adversarial revalidation of the corrected controller-core skeleton; the other four semantic stages remain separate later execution units.",
-            "The corrected governed surface remains small and cohesive enough to retest failure, replay, authority-bypass, mutation, stale-state, representability, and recovery risks in one bounded Adversarial pass."
-          ],
-          "subpasses": []
-        },
-        "fused_authorization": null,
-        "notes": "Revision-5 full-program Adversarial revalidation under SEPARATED execution; no semantic stage credit is created by this gate."
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-separated-v1",
-        "subject_id": "unmeasured-reviewer-separated-default",
-        "validation_status": "DEFAULT_SEPARATED",
-        "benchmark_suite": "none-default-separated",
-        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
-        "fused_permissions": []
-      },
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "target_state_id": "sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
-        "review_revision": 5,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v5",
-        "selected_mode": "SEPARATED",
-        "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}
-        ],
-        "fused_permission_id": null,
-        "capability_profile_id": "default-separated-v1",
-        "capability_subject_id": "unmeasured-reviewer-separated-default",
-        "capability_validation_status": "DEFAULT_SEPARATED",
-        "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "7002340b0bab5237132dd536de5ee9bec1231aeda9a72dab2c2344294a38b52b",
-        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
-        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
-      },
-      "gate_sha256": "32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b"
-    }
-  },
-  "execution_completions": {
-    "Adversarial": {
-      "gate_sha256": "32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b",
-      "target_state_id": "sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
-      "passes": [
-        {
-          "pass_id": "stage-main",
-          "context_mode": "SEPARATED",
-          "status": "complete",
-          "execution_unit_id": "phase2-r5-adversarial-stage-main-1",
-          "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-phase2-r5-adversarial-1"},
-          "inbound_handoff_sha256": null,
-          "handoff": {
-            "consumer": "Interdependency",
-            "findings": [
-              "BLOCKING: TransitionCommit permits review_id to disagree with next_state.review_id. Both fields are individually well typed, but the DTO can still represent a cross-review authoritative transition. Because the persistence protocol accepts a controller-supplied TransitionCommit as the exact atomic transition intent, this contradictory binding can cross the backend-neutral authority boundary unless every backend independently rediscovers and rejects it, which would move controller-owned workflow identity validation into storage."
-            ],
-            "evidence": [
-              "src/project_review_system/persistence.py",
-              "tests/test_persistence.py",
-              "Issue #10 atomic transition and exact review/state binding requirements",
-              "Issue #11 Slice 1 controller-owned TransitionCommit/persistence boundary",
-              "revision-5 target sha256:e3d253fbd85ac21936c5a3534adfcf326738a4e78dd527d8fb5594f667db4f0d",
-              "revision-5 Adversarial gate sha256:32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b"
-            ],
-            "unresolved_conditions": [
-              "Do not advance to Interdependency. Enforce the cross-field invariant that TransitionCommit.review_id exactly equals TransitionCommit.next_state.review_id, add a focused regression test for a mismatched but individually valid ReviewId/StateSnapshot pair, record the correction, increment review_revision, regenerate the queue, and reopen Adversarial against the corrected governed target."
-            ],
-            "sha256": "fe23b28fb014497fdbd727de92d82cc9038ec6dbe7954a55b44db7e319faaa26"
-          }
-        }
-      ],
-      "scratch_materialized": false,
-      "scratch_cleanup_status": "not_applicable",
-      "retained_subpass_artifacts": []
-    }
-  },
+  "reason": "Revision 5 Adversarial revalidation found that TransitionCommit could bind a valid review_id to a valid next_state owned by a different review, allowing a contradictory cross-review transition intent to reach the backend-neutral persistence boundary. Revision 6 adds the minimal cross-field invariant requiring TransitionCommit.review_id to exactly equal TransitionCommit.next_state.review_id, with focused regression coverage. Because this correction tightens authoritative review/state binding, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
+  "status": "pending",
+  "review_revision": 6,
+  "execution_gates": {},
+  "execution_completions": {},
   "execution_occurrence_history": [
     {"review_revision":1,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a","execution_unit_id":"phase2-r1-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r1-adversarial-1"},"pass_evidence_sha256":"1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"},
     {"review_revision":2,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"db67632ce5f3bf44150d4e5ea08efe504fee84b682898f838ec1b4ac0c5ae9b0","execution_unit_id":"phase2-r2-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r2-adversarial-1"},"pass_evidence_sha256":"afead0690fae6df51ef699b3d23e6a547815e62f0f65d2a45dcb2b2d0c68e6d8"},
@@ -129,5 +39,5 @@
     {"review_revision":4,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"077ba5eaa8ef4cb27575f6a10706f8c82836c7c1ee3e88c633f245cbc09215f7","execution_unit_id":"phase2-r4-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r4-adversarial-1"},"pass_evidence_sha256":"b9dc721fcc57760e6a8c06faa866aa8a6a14d51687d717ccecc7383ffebb8ba6"},
     {"review_revision":5,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b","execution_unit_id":"phase2-r5-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r5-adversarial-1"},"pass_evidence_sha256":"964d9ec5e524dcc98b93a6d60bf02dbf323a63af9f3736b1c5dde859ae60f662"}
   ],
-  "results": {"Adversarial": "failed"}
+  "results": {}
 }

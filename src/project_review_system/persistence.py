@@ -51,6 +51,8 @@ class TransitionCommit:
             raise ValueError("review_id must be a ReviewId")
         if not isinstance(self.next_state, StateSnapshot):
             raise ValueError("next_state must be a StateSnapshot")
+        if self.review_id != self.next_state.review_id:
+            raise ValueError("review_id must match next_state.review_id")
         if not isinstance(self.immutable_events, tuple):
             raise ValueError("immutable_events must be an immutable tuple")
         if not isinstance(self.immutable_evidence, tuple):
