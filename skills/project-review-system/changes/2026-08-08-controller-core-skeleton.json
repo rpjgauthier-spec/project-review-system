@@ -222,6 +222,38 @@
             ],
             "sha256": "5aa5ead66505f49ec4c7570b058f337a6476c4c62e4f94d10dc936b15cb5011e"
           }
+        },
+        {
+          "pass_id": "persistence-retry-boundaries",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r7-adversarial-persistence-retry-boundaries-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-phase2-r7-adversarial-persistence-retry-boundaries-1"
+          },
+          "inbound_handoff_sha256": "5aa5ead66505f49ec4c7570b058f337a6476c4c62e4f94d10dc936b15cb5011e",
+          "handoff": {
+            "consumer": "Adversarial:integrated-adversarial-sweep",
+            "findings": [
+              "BLOCKING: The persistence result DTOs cannot represent the frozen backend-neutral commit outcome distinctions needed for concurrency and recovery. CreateResult(created: bool, state) and TransitionResult(committed: bool, state) collapse stale compare-before-write conflict, exact durable retry/replay recognition, persistence failure, and commit-outcome-unknown into an undifferentiated boolean/state shape unless a backend leaks implementation-specific exception semantics.",
+              "BLOCKING/CARRIED: The missing immutable occurrence/completion/initialization readback methods identified by frozen-contract-completeness also prevent exact-retry and integrity decisions from being expressed through the backend-neutral protocol; this pass confirms that omission is operationally significant for retry/recovery, not only a signature mismatch.",
+              "SUPPORTED: The protocol does at least bind transition commits to an expected lineage token and returns coherent state objects, so compare-before-write and coherent-read concepts are present at the interface level; the blocker is loss of required outcome/evidence distinctions, not absence of lineage entirely."
+            ],
+            "evidence": [
+              "Issue #10 frozen persistence/atomicity contract and crash/idempotency semantics",
+              "Issue #11 Slice 1 persistence protocol and stable error/outcome requirements",
+              "src/project_review_system/persistence.py",
+              "src/project_review_system/outcomes.py",
+              "revision-7 target sha256:d3467b2ddf1c818fcf3cf56d949f30ab72f9e86f8bfe7d85312d3fce7c0999fe",
+              "revision-7 Adversarial gate sha256:00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03"
+            ],
+            "unresolved_conditions": [
+              "Carry all previously discovered blockers plus this persistence-result/retry blocker into the final integrated-adversarial-sweep; do not begin correction until that final declared subpass is durably complete.",
+              "Before a corrective revision can pass Adversarial, the persistence-neutral contract must expose enough typed result/evidence information for the controller to distinguish committed success, exact durable retry, stale/conflicting compare-before-write rejection, persistence unavailability, and commit outcome uncertainty without backend-specific guessing."
+            ],
+            "sha256": "e16f7f03b855e9c6bd630492b24ce51f214afc141bb885f63edb5f1a67de6432"
+          }
         }
       ],
       "scratch_materialized": false,
@@ -238,7 +270,8 @@
     {"review_revision":6,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77","execution_unit_id":"phase2-r6-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r6-adversarial-1"},"pass_evidence_sha256":"28534a4d62ee4087209f7f6d674bd7b62668e78dfeac4783659c91946f8e1dae"},
     {"review_revision":7,"stage":"Adversarial","pass_id":"runtime-construction","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-runtime-construction-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-runtime-construction-1"},"pass_evidence_sha256":"107323329d101934447edbe1349e8503f11d83cfa772de3d9d5eb91e67d4af73"},
     {"review_revision":7,"stage":"Adversarial","pass_id":"cross-object-authority","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-cross-object-authority-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-cross-object-authority-1"},"pass_evidence_sha256":"866b3433702eb4fa39f581946455b9730fac7f6b3247aba40ca75406c924266c"},
-    {"review_revision":7,"stage":"Adversarial","pass_id":"frozen-contract-completeness","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-frozen-contract-completeness-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-frozen-contract-completeness-1"},"pass_evidence_sha256":"f72c39f428fb854cc044309ac0c2490a51ed22f438f367b0aceeb65bcfff9c92"}
+    {"review_revision":7,"stage":"Adversarial","pass_id":"frozen-contract-completeness","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-frozen-contract-completeness-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-frozen-contract-completeness-1"},"pass_evidence_sha256":"f72c39f428fb854cc044309ac0c2490a51ed22f438f367b0aceeb65bcfff9c92"},
+    {"review_revision":7,"stage":"Adversarial","pass_id":"persistence-retry-boundaries","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-persistence-retry-boundaries-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-persistence-retry-boundaries-1"},"pass_evidence_sha256":"bca654e34a1ba629eeb146db0c473a8e61c00db58f09dad66f4c8aaf1901d0ce"}
   ],
   "results": {}
 }
