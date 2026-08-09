@@ -187,6 +187,41 @@
             ],
             "sha256": "0a7fdce15a26c80437656350148d64a6d54bac405190fb4a8ca9039922e2885d"
           }
+        },
+        {
+          "pass_id": "frozen-contract-completeness",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "phase2-r7-adversarial-frozen-contract-completeness-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-phase2-r7-adversarial-frozen-contract-completeness-1"
+          },
+          "inbound_handoff_sha256": "0a7fdce15a26c80437656350148d64a6d54bac405190fb4a8ca9039922e2885d",
+          "handoff": {
+            "consumer": "Adversarial:persistence-retry-boundaries",
+            "findings": [
+              "BLOCKING: The frozen Issue #11 Slice-1 minimum domain model is incomplete. The current skeleton defines StateSnapshot but omits PassOccurrence, SemanticResult, CompletionEvidence, and InitializationRecord, so occurrence binding, bounded reviewer content, immutable completion evidence, and bootstrap evidence are not representable as the required typed immutable domain structures.",
+              "BLOCKING: The typed-identity contract lacks an explicit string serialization/deserialization boundary and does not distinguish ordinary caller construction from controller-derived identities. The current ID dataclasses expose only a public value constructor, including OccurrenceId, GateId, SemanticResultId, and AuditEventId, so the frozen ownership/serialization boundary is not encoded.",
+              "BLOCKING: WorkflowDefinition does not represent the complete frozen workflow-definition contract. It stores workflow_definition_id and stages and derives first_stage/next_stage, but has no terminal_rules representation, leaving terminal workflow semantics outside the canonical definition object required by Slice 1.",
+              "BLOCKING: PersistenceBackend does not expose the complete frozen persistence protocol. The current protocol omits read_occurrence, read_completion, and read_initialization, and commit_transition omits the explicit review_id argument required by the frozen interface. Without those readbacks the later controller cannot perform the specified integrity/exact-retry decisions through the backend-neutral contract.",
+              "SUPPORTED/DEFERRED: begin_pass, complete_pass, concrete MemoryBackend behavior, canonical identity derivation helpers, controller orchestration, and the conformance harness are not counted as blockers in this first code-bearing boundary because Issue #11 explicitly makes the initial commit narrower than full Issue #11 implementation."
+            ],
+            "evidence": [
+              "Issue #11 Slice 1 comment 5229287324 sections 3, 4, 6, 10, and 17",
+              "src/project_review_system/domain.py",
+              "src/project_review_system/workflow.py",
+              "src/project_review_system/persistence.py",
+              "src/project_review_system/outcomes.py",
+              "revision-7 target sha256:d3467b2ddf1c818fcf3cf56d949f30ab72f9e86f8bfe7d85312d3fce7c0999fe",
+              "revision-7 Adversarial gate sha256:00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03"
+            ],
+            "unresolved_conditions": [
+              "Carry all blockers from cross-object-authority and frozen-contract-completeness through the remaining declared Adversarial subpasses; do not begin correction until the complete stage sweep is recorded.",
+              "Before a corrective revision can pass Adversarial, implement the missing first-code-bearing Slice-1 domain/protocol contracts without pulling in explicitly deferred controller/backend functionality."
+            ],
+            "sha256": "5aa5ead66505f49ec4c7570b058f337a6476c4c62e4f94d10dc936b15cb5011e"
+          }
         }
       ],
       "scratch_materialized": false,
@@ -202,7 +237,8 @@
     {"review_revision":5,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b","execution_unit_id":"phase2-r5-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r5-adversarial-1"},"pass_evidence_sha256":"964d9ec5e524dcc98b93a6d60bf02dbf323a63af9f3736b1c5dde859ae60f662"},
     {"review_revision":6,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77","execution_unit_id":"phase2-r6-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r6-adversarial-1"},"pass_evidence_sha256":"28534a4d62ee4087209f7f6d674bd7b62668e78dfeac4783659c91946f8e1dae"},
     {"review_revision":7,"stage":"Adversarial","pass_id":"runtime-construction","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-runtime-construction-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-runtime-construction-1"},"pass_evidence_sha256":"107323329d101934447edbe1349e8503f11d83cfa772de3d9d5eb91e67d4af73"},
-    {"review_revision":7,"stage":"Adversarial","pass_id":"cross-object-authority","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-cross-object-authority-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-cross-object-authority-1"},"pass_evidence_sha256":"866b3433702eb4fa39f581946455b9730fac7f6b3247aba40ca75406c924266c"}
+    {"review_revision":7,"stage":"Adversarial","pass_id":"cross-object-authority","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-cross-object-authority-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-cross-object-authority-1"},"pass_evidence_sha256":"866b3433702eb4fa39f581946455b9730fac7f6b3247aba40ca75406c924266c"},
+    {"review_revision":7,"stage":"Adversarial","pass_id":"frozen-contract-completeness","gate_sha256":"00834e9b69db9c37853b24ea89df509300a6b2966aba3f972b600d4622135f03","execution_unit_id":"phase2-r7-adversarial-frozen-contract-completeness-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r7-adversarial-frozen-contract-completeness-1"},"pass_evidence_sha256":"f72c39f428fb854cc044309ac0c2490a51ed22f438f367b0aceeb65bcfff9c92"}
   ],
   "results": {}
 }
