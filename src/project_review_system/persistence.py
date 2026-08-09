@@ -22,13 +22,19 @@ from .domain import (
 
 ImmutableHistoryItem = str | AuditEventId | PassOccurrence | SemanticResult | CompletionEvidence | InitializationRecord
 _IMMUTABLE_HISTORY_TYPES = (str, AuditEventId, PassOccurrence, SemanticResult, CompletionEvidence, InitializationRecord)
+_REVIEW_BOUND_HISTORY_TYPES = (PassOccurrence, InitializationRecord)
 
 
-def _validate_immutable_items(name: str, value: object) -> None:
+def _validate_immutable_items(name: str, value: object, review_id: ReviewId) -> None:
     if not isinstance(value, tuple):
         raise ValueError(f"{name} must be an immutable tuple")
     if not all(isinstance(item, _IMMUTABLE_HISTORY_TYPES) for item in value):
         raise ValueError(f"{name} must contain only immutable typed history/evidence values")
+    if any(
+        isinstance(item, _REVIEW_BOUND_HISTORY_TYPES) and item.review_id != review_id
+        for item in value
+    ):
+        raise ValueError(f"{name} review-bearing items must match the authoritative review_id")
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,7 +44,7 @@ class AuthoritativeRecord:
 
     def __post_init__(self) -> None:
         if not isinstance(self.state, StateSnapshot): raise ValueError("state must be a StateSnapshot")
-        _validate_immutable_items("immutable_history", self.immutable_history)
+        _validate_immutable_items("immutable_history", self.immutable_history, self.state.review_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +59,7 @@ class InitializationCommit:
         if not isinstance(self.state, StateSnapshot): raise ValueError("state must be a StateSnapshot")
         if self.review_id != self.state.review_id: raise ValueError("review_id must match state.review_id")
         if not isinstance(self.initialization_intent_id, InitializationIntentId): raise ValueError("initialization_intent_id must be an InitializationIntentId")
-        _validate_immutable_items("immutable_events", self.immutable_events)
+        _validate_immutable_items("immutable_events", self.immutable_events, self.review_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,8 +73,8 @@ class TransitionCommit:
         if not isinstance(self.review_id, ReviewId): raise ValueError("review_id must be a ReviewId")
         if not isinstance(self.next_state, StateSnapshot): raise ValueError("next_state must be a StateSnapshot")
         if self.review_id != self.next_state.review_id: raise ValueError("review_id must match next_state.review_id")
-        _validate_immutable_items("immutable_events", self.immutable_events)
-        _validate_immutable_items("immutable_evidence", self.immutable_evidence)
+        _validate_immutable_items("immutable_events", self.immutable_events, self.review_id)
+        _validate_immutable_items("immutable_evidence", self.immutable_evidence, self.review_id)
 
 
 class PersistenceOutcome(str, Enum):

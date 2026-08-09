@@ -2,7 +2,7 @@ import inspect
 import unittest
 
 from project_review_system.domain import (
-    InitializationIntentId, LineageToken, ProgramState, ReviewId, SnapshotId,
+    InitializationIntentId, InitializationRecord, LineageToken, ProgramState, ReviewId, SnapshotId,
     SnapshotMode, Stage, StateSnapshot, WorkflowDefinitionId,
 )
 from project_review_system.persistence import (
@@ -18,6 +18,17 @@ class PersistenceContractTests(unittest.TestCase):
             snapshot_id=SnapshotId("snapshot:test"), snapshot_mode=SnapshotMode.CANONICAL_CLEAN,
             workflow_definition_id=WorkflowDefinitionId("workflow:test"), stage_cursor=Stage.ADVERSARIAL,
             open_occurrence_id=None, lineage_token=LineageToken("lineage:0"),
+        )
+
+    def _initialization_record(self, review_id: str = "review:test") -> InitializationRecord:
+        return InitializationRecord(
+            review_id=ReviewId(review_id),
+            initialization_intent_id=InitializationIntentId("intent:1"),
+            workflow_definition_id=WorkflowDefinitionId("workflow:test"),
+            snapshot_id=SnapshotId("snapshot:test"),
+            initial_review_revision=0,
+            initial_stage=Stage.ADVERSARIAL,
+            resulting_lineage_token=LineageToken("lineage:0"),
         )
 
     def test_authoritative_record_requires_coherent_state(self):
@@ -39,6 +50,23 @@ class PersistenceContractTests(unittest.TestCase):
             TransitionCommit(ReviewId("review:test"), state, immutable_evidence=(mutable_value,))
         record = AuthoritativeRecord(state, ("audit:event",))
         self.assertEqual(record.immutable_history, ("audit:event",))
+
+    def test_history_and_evidence_bind_review_identity(self):
+        state = self._state()
+        matching = self._initialization_record()
+        foreign = self._initialization_record("review:other")
+        self.assertEqual(AuthoritativeRecord(state, (matching,)).immutable_history, (matching,))
+        with self.assertRaises(ValueError):
+            AuthoritativeRecord(state, (foreign,))
+        with self.assertRaises(ValueError):
+            InitializationCommit(
+                ReviewId("review:test"), state, InitializationIntentId("intent:1"),
+                immutable_events=(foreign,),
+            )
+        with self.assertRaises(ValueError):
+            TransitionCommit(
+                ReviewId("review:test"), state, immutable_evidence=(foreign,),
+            )
 
     def test_initialization_commit_binds_review(self):
         state = self._state()
