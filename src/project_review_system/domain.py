@@ -111,8 +111,24 @@ class StateSnapshot:
     lineage_token: LineageToken
 
     def __post_init__(self) -> None:
+        if not isinstance(self.review_id, ReviewId):
+            raise ValueError("review_id must be a ReviewId")
+        if not isinstance(self.program_state, ProgramState):
+            raise ValueError("program_state must be a ProgramState")
         if isinstance(self.review_revision, bool) or not isinstance(self.review_revision, int) or self.review_revision < 0:
             raise ValueError("review_revision must be a non-negative integer")
+        if not isinstance(self.snapshot_id, SnapshotId):
+            raise ValueError("snapshot_id must be a SnapshotId")
+        if not isinstance(self.snapshot_mode, SnapshotMode):
+            raise ValueError("snapshot_mode must be a SnapshotMode")
+        if not isinstance(self.workflow_definition_id, WorkflowDefinitionId):
+            raise ValueError("workflow_definition_id must be a WorkflowDefinitionId")
+        if self.stage_cursor is not None and not isinstance(self.stage_cursor, Stage):
+            raise ValueError("stage_cursor must be a Stage or None")
+        if self.open_occurrence_id is not None and not isinstance(self.open_occurrence_id, OccurrenceId):
+            raise ValueError("open_occurrence_id must be an OccurrenceId or None")
+        if not isinstance(self.lineage_token, LineageToken):
+            raise ValueError("lineage_token must be a LineageToken")
         if self.program_state is ProgramState.DRAFT:
             raise ValueError("draft state is reserved and non-constructible in Phase 1")
         if self.program_state is ProgramState.ACTIVE and self.stage_cursor is None:

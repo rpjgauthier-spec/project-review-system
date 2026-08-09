@@ -69,6 +69,39 @@ class DomainTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._snapshot(program_state=ProgramState.DRAFT, stage_cursor=None)
 
+    def test_raw_program_state_cannot_bypass_active_invariant(self) -> None:
+        with self.assertRaises(ValueError):
+            self._snapshot(program_state="active", stage_cursor=None)  # type: ignore[arg-type]
+
+    def test_authoritative_field_types_are_runtime_validated(self) -> None:
+        base = {
+            "review_id": ReviewId("review:test"),
+            "program_state": ProgramState.ACTIVE,
+            "review_revision": 0,
+            "snapshot_id": SnapshotId("snapshot:test"),
+            "snapshot_mode": SnapshotMode.CANONICAL_CLEAN,
+            "workflow_definition_id": WorkflowDefinitionId("workflow:test"),
+            "stage_cursor": Stage.ADVERSARIAL,
+            "open_occurrence_id": None,
+            "lineage_token": LineageToken("lineage:0"),
+        }
+        invalid_values = {
+            "review_id": "review:test",
+            "program_state": "active",
+            "snapshot_id": "snapshot:test",
+            "snapshot_mode": "canonical-clean",
+            "workflow_definition_id": "workflow:test",
+            "stage_cursor": "Adversarial",
+            "open_occurrence_id": "occurrence:test",
+            "lineage_token": "lineage:0",
+        }
+        for field_name, invalid_value in invalid_values.items():
+            with self.subTest(field_name=field_name):
+                candidate = dict(base)
+                candidate[field_name] = invalid_value
+                with self.assertRaises(ValueError):
+                    StateSnapshot(**candidate)  # type: ignore[arg-type]
+
 
 if __name__ == "__main__":
     unittest.main()
