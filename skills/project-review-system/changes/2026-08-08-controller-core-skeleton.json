@@ -28,5 +28,9 @@
   ],
   "reason": "The skeleton establishes controller-owned state invariants, canonical stage ordering, identity types, machine-readable outcome/error semantics, and the persistence protocol consumed by later implementation. These decisions materially span adversarial failure/replay safety, inter-module authority and propagation, normalization of identities/status/error vocabulary, structural decomposition, and end-to-end lifecycle/recovery behavior. Implementation must therefore stop at commit 194339a7d27a5d14eead71e316101916992d9a45 and complete the full governed review before the in-memory backend or later layers are added.",
   "status": "pending",
+  "review_revision": 1,
+  "execution_gates": {},
+  "execution_completions": {},
+  "execution_occurrence_history": [],
   "results": {}
 }
