@@ -7,9 +7,15 @@ compare-before-write, immutable evidence retention, and coherent reads.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol, Sequence, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from .domain import InitializationIntentId, LineageToken, ReviewId, StateSnapshot
+
+
+@dataclass(frozen=True, slots=True)
+class AuthoritativeRecord:
+    state: StateSnapshot
+    immutable_history: tuple[object, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,8 +47,8 @@ class TransitionResult:
 
 @runtime_checkable
 class PersistenceBackend(Protocol):
-    def read(self, review_id: ReviewId) -> StateSnapshot | None:
-        """Return one coherent authoritative state, or None when absent."""
+    def read(self, review_id: ReviewId) -> AuthoritativeRecord | None:
+        """Return one coherent authoritative state plus immutable history, or None."""
         ...
 
     def create_if_absent(
@@ -59,8 +65,4 @@ class PersistenceBackend(Protocol):
         commit: TransitionCommit,
     ) -> TransitionResult:
         """Atomically compare lineage and commit one controller-supplied transition."""
-        ...
-
-    def read_immutable_history(self, review_id: ReviewId) -> Sequence[object]:
-        """Return immutable durable events/evidence for retry and integrity checks."""
         ...

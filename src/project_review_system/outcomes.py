@@ -44,6 +44,8 @@ class ErrorCode(str, Enum):
     WORKFLOW_DEFINITION_MISMATCH = "workflow_definition_mismatch"
     PERSISTENCE_CONFLICT = "persistence_conflict"
     PERSISTENCE_UNAVAILABLE = "persistence_unavailable"
+    COMMIT_OUTCOME_UNKNOWN = "commit_outcome_unknown"
+    INTEGRITY_ERROR = "integrity_error"
 
 
 @dataclass(frozen=True, slots=True)

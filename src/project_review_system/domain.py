@@ -111,9 +111,14 @@ class StateSnapshot:
     lineage_token: LineageToken
 
     def __post_init__(self) -> None:
-        if self.review_revision < 0:
-            raise ValueError("review_revision must be non-negative")
+        if isinstance(self.review_revision, bool) or not isinstance(self.review_revision, int) or self.review_revision < 0:
+            raise ValueError("review_revision must be a non-negative integer")
+        if self.program_state is ProgramState.DRAFT:
+            raise ValueError("draft state is reserved and non-constructible in Phase 1")
         if self.program_state is ProgramState.ACTIVE and self.stage_cursor is None:
             raise ValueError("active review requires a stage_cursor")
-        if self.program_state in {ProgramState.COMPLETE, ProgramState.FAILED} and self.stage_cursor is not None:
-            raise ValueError("terminal review must not have a stage_cursor")
+        if self.program_state in {ProgramState.COMPLETE, ProgramState.FAILED}:
+            if self.stage_cursor is not None:
+                raise ValueError("terminal review must not have a stage_cursor")
+            if self.open_occurrence_id is not None:
+                raise ValueError("terminal review must not have an open occurrence")
