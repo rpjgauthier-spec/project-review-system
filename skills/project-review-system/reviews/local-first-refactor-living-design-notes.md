@@ -118,6 +118,44 @@ For Git-backed operation, user-facing governed semantic-pass responses should su
 
 This is observability and chronology evidence, not a replacement for execution-unit identity, boundary identity, gate identity, handoff chaining, target-state binding, or deterministic history checks.
 
+### Bounded multi-finding semantic passes
+
+Observed failure mode during controller-core dogfooding: Adversarial review repeatedly stopped after the first blocker, causing a sequence of correction revisions in which the next independently discoverable blocker appeared only after the prior one was fixed. This preserved fail-fast semantics but created unnecessary revision churn and repeated review setup.
+
+The redesign should distinguish **stage failure** from **investigation termination**.
+
+Preferred behavior:
+
+- a semantic stage may be subdivided into bounded, predeclared review subpasses when one monolithic pass would either overload reviewer context or encourage first-defect termination;
+- each subpass should have a narrow declared scope and may record all findings discoverable within that scope rather than stopping after its first blocker;
+- a blocking finding in an earlier subpass does not by itself cancel later subpasses in the same already-authorized stage plan;
+- findings and unresolved conditions are handed forward durably between subpasses using the normal execution-unit, boundary, handoff, target-state, and chronology controls;
+- later semantic stages remain blocked unless the enclosing stage ultimately receives passing credit;
+- the enclosing stage receives PASS/FAIL only after the required subpass plan is complete, so the aggregate result can contain the full blocker set discovered by the bounded sweep;
+- correction/reopening rules remain unchanged after aggregate failure.
+
+This should reuse the ordinary subdivided execution mechanism rather than introduce a second "multi-problem review" authority. Existing safeguards such as declared pass order, unique execution identities, exact handoff consumption, durable pass chronology, and full-plan completion before stage credit should remain mandatory.
+
+Context pressure is a governing constraint. Subdivision should be adaptive: use several small review areas instead of asking one reviewer context to retain the whole stage when doing so risks context degradation. Individual subpasses may require stronger isolation where semantics justify it, while ordinary bounded subpasses can remain separated.
+
+A practical Adversarial decomposition for a small controller/domain slice might include scopes such as:
+
+- runtime/type and construction invariants;
+- cross-field and cross-object authority invariants;
+- frozen-contract completeness and representability;
+- persistence, retry, and immutable-evidence boundaries;
+- final integrated adversarial sweep.
+
+The exact decomposition should be selected from the governed target, not hard-coded globally.
+
+Open questions for redesign:
+
+- When should a blocker terminate only its current subpass versus the entire stage investigation?
+- What conditions make continued investigation invalid or unsafe, such as unreadable/corrupt authoritative input?
+- Should the controller require an explicit aggregate stage-result artifact after the final subpass, or derive the aggregate result from the completed subpass handoffs?
+- How should subpass sizing adapt to model context limits without letting context-window heuristics become semantic authority?
+- What minimum evidence should prove that a multi-finding sweep was complete enough to justify correction of several blockers in one revision?
+
 ## Cross-stage de-anchoring / solution-space exploration
 
 A major review-method gap was discovered after an external AI immediately identified simplifications that the dogfooded review did not surface.
