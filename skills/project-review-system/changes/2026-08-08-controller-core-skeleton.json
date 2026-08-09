@@ -1,0 +1,32 @@
+{
+  "id": "2026-08-08-controller-core-skeleton",
+  "summary": "Record the first executable controller skeleton as a cross-cutting behavioral implementation change requiring full five-stage review before further implementation proceeds.",
+  "changed_files": [
+    "pyproject.toml",
+    "src/project_review_system/__init__.py",
+    "src/project_review_system/domain.py",
+    "src/project_review_system/outcomes.py",
+    "src/project_review_system/persistence.py",
+    "src/project_review_system/workflow.py",
+    "tests/test_domain.py",
+    "tests/test_outcomes.py",
+    "tests/test_workflow.py",
+    "skills/project-review-system/changes/2026-08-08-controller-core-skeleton.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": [
+    "authority-or-propagation",
+    "status-or-schema",
+    "simplification-or-structure"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "adaptive-execution",
+    "execution-gate-enforcement",
+    "pass-boundary-enforcement"
+  ],
+  "reason": "The skeleton establishes controller-owned state invariants, canonical stage ordering, identity types, machine-readable outcome/error semantics, and the persistence protocol consumed by later implementation. These decisions materially span adversarial failure/replay safety, inter-module authority and propagation, normalization of identities/status/error vocabulary, structural decomposition, and end-to-end lifecycle/recovery behavior. Implementation must therefore stop at commit 194339a7d27a5d14eead71e316101916992d9a45 and complete the full governed review before the in-memory backend or later layers are added.",
+  "status": "pending",
+  "results": {}
+}
