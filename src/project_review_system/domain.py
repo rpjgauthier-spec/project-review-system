@@ -63,6 +63,14 @@ class SemanticResultId(_NonEmptyId):
 
 
 @dataclass(frozen=True, slots=True)
+class AuditEventId(_NonEmptyId):
+    value: str
+
+    def __post_init__(self) -> None:
+        self._validate()
+
+
+@dataclass(frozen=True, slots=True)
 class LineageToken(_NonEmptyId):
     value: str
 

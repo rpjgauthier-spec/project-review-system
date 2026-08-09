@@ -1,6 +1,7 @@
 import unittest
 
 from project_review_system.domain import (
+    AuditEventId,
     LineageToken,
     OccurrenceId,
     ProgramState,
@@ -37,6 +38,13 @@ class DomainTests(unittest.TestCase):
     def test_id_rejects_blank_value(self) -> None:
         with self.assertRaises(ValueError):
             ReviewId("   ")
+
+    def test_audit_event_id_is_opaque_nonempty_identity(self) -> None:
+        self.assertEqual(AuditEventId("audit:event:1").value, "audit:event:1")
+        with self.assertRaises(ValueError):
+            AuditEventId("   ")
+        with self.assertRaises(ValueError):
+            AuditEventId(1)  # type: ignore[arg-type]
 
     def test_active_state_requires_stage_cursor(self) -> None:
         with self.assertRaises(ValueError):

@@ -27,107 +27,11 @@
     "execution-gate-enforcement",
     "pass-boundary-enforcement"
   ],
-  "reason": "Revision 5 Adversarial revalidation found that TransitionCommit could bind a valid review_id to a valid next_state owned by a different review, allowing a contradictory cross-review transition intent to reach the backend-neutral persistence boundary. Revision 6 adds the minimal cross-field invariant requiring TransitionCommit.review_id to exactly equal TransitionCommit.next_state.review_id, with focused regression coverage. Because this correction tightens authoritative review/state binding, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
-  "status": "in_progress",
-  "review_revision": 6,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "activity": "Adversarial",
-        "target_state_id": "sha256:0873226e663f9bb70ed6ed7c68f6615b5fd71917534b9ef961b17a9fbb1efa5f",
-        "review_revision": 6,
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v6",
-        "stage_assessment": {
-          "single_pass_suitable": true,
-          "reasons": [
-            "This execution unit covers only the revision-6 Adversarial revalidation of the corrected controller-core skeleton; the other four semantic stages remain separate later execution units.",
-            "The corrected governed surface remains small and cohesive enough to retest failure, replay, authority-bypass, mutation, stale-state, representability, and recovery risks in one bounded Adversarial pass."
-          ],
-          "subpasses": []
-        },
-        "fused_authorization": null,
-        "notes": "Revision-6 full-program Adversarial revalidation under SEPARATED execution; no semantic stage credit is created by this gate."
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-separated-v1",
-        "subject_id": "unmeasured-reviewer-separated-default",
-        "validation_status": "DEFAULT_SEPARATED",
-        "benchmark_suite": "none-default-separated",
-        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
-        "fused_permissions": []
-      },
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "target_state_id": "sha256:0873226e663f9bb70ed6ed7c68f6615b5fd71917534b9ef961b17a9fbb1efa5f",
-        "review_revision": 6,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-phase2-controller-review",
-        "workload_class": "full-review-controller-core-skeleton-adversarial-v6",
-        "selected_mode": "SEPARATED",
-        "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
-        ],
-        "fused_permission_id": null,
-        "capability_profile_id": "default-separated-v1",
-        "capability_subject_id": "unmeasured-reviewer-separated-default",
-        "capability_validation_status": "DEFAULT_SEPARATED",
-        "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "a5cfe5887d36ff6507fa1ef3adc8df02231dff049f6cad4f615ffe98320de2bc",
-        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
-        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
-      },
-      "gate_sha256": "7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77"
-    }
-  },
-  "execution_completions": {
-    "Adversarial": {
-      "gate_sha256": "7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77",
-      "target_state_id": "sha256:0873226e663f9bb70ed6ed7c68f6615b5fd71917534b9ef961b17a9fbb1efa5f",
-      "passes": [
-        {
-          "pass_id": "stage-main",
-          "context_mode": "SEPARATED",
-          "status": "complete",
-          "execution_unit_id": "phase2-r6-adversarial-stage-main-1",
-          "boundary": {
-            "kind": "declared-execution-unit",
-            "id": "assistant-message-phase2-r6-adversarial-1"
-          },
-          "inbound_handoff_sha256": null,
-          "handoff": {
-            "consumer": "Interdependency",
-            "findings": [
-              "BLOCKING: The frozen Slice-1 typed identity set is incomplete. Issue #11 explicitly requires AuditEventId alongside ReviewId, WorkflowDefinitionId, SnapshotId, InitializationIntentId, LineageToken, OccurrenceId, GateId, and SemanticResultId, but src/project_review_system/domain.py omits AuditEventId. Audit-event identity therefore cannot cross the controller/domain/persistence boundary as the required opaque immutable typed value and would have to fall back to an untyped value or be invented later."
-            ],
-            "evidence": [
-              "src/project_review_system/domain.py",
-              "tests/test_domain.py",
-              "Issue #11 Slice 1 typed identity requirements (AuditEventId)",
-              "revision-6 target sha256:0873226e663f9bb70ed6ed7c68f6615b5fd71917534b9ef961b17a9fbb1efa5f",
-              "revision-6 Adversarial gate sha256:7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77"
-            ],
-            "unresolved_conditions": [
-              "Do not advance to Interdependency. Add AuditEventId as the same immutable non-empty opaque value type used for the other canonical identities, add focused construction/validation coverage, record the correction, increment review_revision, regenerate the queue, and reopen Adversarial against the corrected governed target."
-            ],
-            "sha256": "3f3ae4d217f7bf7a3e646051da5a09fe08643a078cdc3c6bf6d8cb28f19e4603"
-          }
-        }
-      ],
-      "scratch_materialized": false,
-      "scratch_cleanup_status": "not_applicable",
-      "retained_subpass_artifacts": []
-    }
-  },
+  "reason": "Revision 6 Adversarial revalidation found that the frozen Slice-1 typed identity set omitted AuditEventId, leaving controller-produced audit-event identity without the required opaque immutable typed boundary. Revision 7 adds AuditEventId using the same validated non-empty identity contract as the other canonical IDs and focused construction/validation coverage. Because this correction changes the typed domain contract, the review reopens at Adversarial and the full five-stage program remains required before implementation may continue beyond the skeleton.",
+  "status": "pending",
+  "review_revision": 7,
+  "execution_gates": {},
+  "execution_completions": {},
   "execution_occurrence_history": [
     {"review_revision":1,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"b9c7f08d48a7665d37f57608578ac96721fb70ba16354dcd26d23f5478b6e74a","execution_unit_id":"phase2-r1-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r1-adversarial-1"},"pass_evidence_sha256":"1863f442890f99926e3a50c55556ab3113616d332e0f820167fd1010cfa78b01"},
     {"review_revision":2,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"db67632ce5f3bf44150d4e5ea08efe504fee84b682898f838ec1b4ac0c5ae9b0","execution_unit_id":"phase2-r2-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r2-adversarial-1"},"pass_evidence_sha256":"afead0690fae6df51ef699b3d23e6a547815e62f0f65d2a45dcb2b2d0c68e6d8"},
@@ -136,7 +40,5 @@
     {"review_revision":5,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"32648967b56929043d7b73f32b5ac9e224b49dbf705b08fbbe6f56136a31da2b","execution_unit_id":"phase2-r5-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r5-adversarial-1"},"pass_evidence_sha256":"964d9ec5e524dcc98b93a6d60bf02dbf323a63af9f3736b1c5dde859ae60f662"},
     {"review_revision":6,"stage":"Adversarial","pass_id":"stage-main","gate_sha256":"7e9acf50f10d0ebb516ae50f9204731c4e288eaad4d89e85d29748d4b46a6f77","execution_unit_id":"phase2-r6-adversarial-stage-main-1","boundary":{"kind":"declared-execution-unit","id":"assistant-message-phase2-r6-adversarial-1"},"pass_evidence_sha256":"28534a4d62ee4087209f7f6d674bd7b62668e78dfeac4783659c91946f8e1dae"}
   ],
-  "results": {
-    "Adversarial": "failed"
-  }
+  "results": {}
 }
