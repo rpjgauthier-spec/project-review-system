@@ -21,6 +21,7 @@ SELECTOR_PATH = ROOT / "scripts" / "select_execution_policy.py"
 REGULAR_FILE_MODES = {"100644", "100755"}
 OBJECT_ID_LENGTHS = {40, 64}
 WINDOWS_DRIVE_PREFIX = re.compile(r"^[A-Za-z]:")
+UNSUPPORTED_CONTENT_ATTRIBUTES = ("filter", "ident", "working-tree-encoding")
 
 
 def _load_selector():
@@ -73,6 +74,13 @@ def _valid_object_id(value: str) -> bool:
     )
 
 
+def _sanitized_git_environment() -> dict[str, str]:
+    """Remove caller-controlled Git routing overrides and disable replace refs."""
+    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith("GIT_")}
+    environment["GIT_NO_REPLACE_OBJECTS"] = "1"
+    return environment
+
+
 def _run_git(repository_root: Path, args: list[str], purpose: str) -> str:
     try:
         completed = subprocess.run(
@@ -81,6 +89,7 @@ def _run_git(repository_root: Path, args: list[str], purpose: str) -> str:
             check=True,
             capture_output=True,
             text=True,
+            env=_sanitized_git_environment(),
         )
     except (OSError, subprocess.CalledProcessError) as exc:
         raise RuntimeError(f"cannot {purpose}: {exc}") from exc
@@ -148,37 +157,42 @@ def _parse_index_entry(repository_root: Path, normalized_path: str) -> tuple[str
     return mode, object_id
 
 
-def _filter_attribute(repository_root: Path, normalized_path: str) -> str:
+def _content_transform_attributes(repository_root: Path, normalized_path: str) -> dict[str, str]:
     output = _run_git(
         repository_root,
-        ["check-attr", "-z", "filter", "--", normalized_path],
-        f"read Git filter attribute for {normalized_path!r}",
+        ["check-attr", "-z", *UNSUPPORTED_CONTENT_ATTRIBUTES, "--", normalized_path],
+        f"read Git content-transform attributes for {normalized_path!r}",
     )
     parts = output.split("\0")
-    if len(parts) < 4 or parts[0] != normalized_path or parts[1] != "filter":
-        raise RuntimeError(f"Git returned malformed filter attribute data for {normalized_path!r}")
-    return parts[2]
+    if parts and parts[-1] == "":
+        parts.pop()
+    expected_count = len(UNSUPPORTED_CONTENT_ATTRIBUTES) * 3
+    if len(parts) != expected_count:
+        raise RuntimeError(f"Git returned malformed attribute data for {normalized_path!r}")
+    attributes: dict[str, str] = {}
+    for index in range(0, len(parts), 3):
+        returned_path, attribute, value = parts[index:index + 3]
+        if returned_path != normalized_path or attribute not in UNSUPPORTED_CONTENT_ATTRIBUTES:
+            raise RuntimeError(f"Git returned malformed attribute data for {normalized_path!r}")
+        attributes[attribute] = value
+    if set(attributes) != set(UNSUPPORTED_CONTENT_ATTRIBUTES):
+        raise RuntimeError(f"Git omitted content-transform attribute data for {normalized_path!r}")
+    return attributes
 
 
-def _core_filemode(repository_root: Path) -> bool:
-    try:
-        completed = subprocess.run(
-            ["git", "config", "--bool", "--get", "core.filemode"],
-            cwd=repository_root,
-            check=False,
-            capture_output=True,
-            text=True,
+def _reject_unsupported_content_transforms(repository_root: Path, normalized_path: str) -> None:
+    attributes = _content_transform_attributes(repository_root, normalized_path)
+    active = {
+        name: value
+        for name, value in attributes.items()
+        if value not in {"unspecified", "unset"}
+    }
+    if active:
+        rendered = ", ".join(f"{name}={value}" for name, value in sorted(active.items()))
+        raise ValueError(
+            f"governed artifact uses unsupported Git content transformation(s) and cannot receive review credit: "
+            f"{normalized_path} ({rendered})"
         )
-    except OSError as exc:
-        raise RuntimeError(f"cannot read Git core.filemode: {exc}") from exc
-    if completed.returncode == 1:
-        return True
-    if completed.returncode != 0:
-        raise RuntimeError("cannot read Git core.filemode")
-    value = completed.stdout.strip().lower()
-    if value not in {"true", "false"}:
-        raise RuntimeError("Git returned invalid core.filemode value")
-    return value == "true"
 
 
 def _reject_symlink_components(repository_root: Path, normalized_path: str) -> Path:
@@ -196,7 +210,7 @@ def _reject_symlink_components(repository_root: Path, normalized_path: str) -> P
 
 
 def git_worktree_blob_id(repository_root: Path, normalized_path: str) -> str:
-    """Hash current file content using Git's path-aware built-in conversions."""
+    """Hash current regular-file content using only supported Git path conversions."""
     blob_id = _run_git(
         repository_root,
         ["hash-object", f"--path={normalized_path}", "--", normalized_path],
@@ -262,37 +276,35 @@ def repository_artifact_state_from_git_entries(
 
 def repository_artifact_state_sha256(repository_relative_paths: Iterable[str], repository_root: Path = REPOSITORY_ROOT) -> str:
     root = _verified_repository_root(repository_root)
-    filemode_matters = _core_filemode(root)
     states: dict[str, tuple[str, str] | None] = {}
     for raw_path in repository_relative_paths:
         normalized = normalize_repository_path(raw_path)
         candidate = _reject_symlink_components(root, normalized)
         head_entry = _parse_head_entry(root, normalized)
+        index_entry = _parse_index_entry(root, normalized)
 
         if head_entry is None:
+            if index_entry is not None:
+                raise ValueError(f"governed artifact index state does not match HEAD: {normalized}")
             if os.path.lexists(candidate):
                 raise ValueError(f"untracked governed artifact cannot receive review credit: {normalized}")
             states[normalized] = None
             continue
 
+        if index_entry != head_entry:
+            raise ValueError(f"governed artifact index state does not match HEAD: {normalized}")
         if not candidate.exists() or not candidate.is_file():
             raise ValueError(f"committed governed artifact is missing from the worktree: {normalized}")
 
-        index_entry = _parse_index_entry(root, normalized)
-        if index_entry != head_entry:
-            raise ValueError(f"governed artifact index state does not match HEAD: {normalized}")
-
-        filter_value = _filter_attribute(root, normalized)
-        if filter_value not in {"unspecified", "unset"}:
-            raise ValueError(f"governed artifact uses an external Git clean filter and cannot receive review credit: {normalized}")
+        _reject_unsupported_content_transforms(root, normalized)
 
         mode, committed_blob_id = head_entry
         current_blob_id = git_worktree_blob_id(root, normalized)
         if current_blob_id != committed_blob_id:
             raise ValueError(f"governed artifact worktree content does not match committed Git content: {normalized}")
 
-        if filemode_matters:
-            actual_executable = bool(candidate.stat().st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
+        if os.name != "nt":
+            actual_executable = bool(candidate.stat().st_mode & stat.S_IXUSR)
             expected_executable = mode == "100755"
             if actual_executable != expected_executable:
                 raise ValueError(f"governed artifact worktree mode does not match committed Git mode: {normalized}")
