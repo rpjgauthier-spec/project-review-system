@@ -23,12 +23,22 @@ A full Normalization pass is complete only when:
 - every handoff section has been considered;
 - every material repeated concept or representation family has been identified;
 - equivalent concepts have been compared across all occurrences;
+- materially meaning-changing contexts have been included in the comparison where they can alter interpretation;
 - apparently different concepts have been checked before merging;
 - justified distinctions have been recorded rather than flattened;
+- the bounded representation/context inventory is explicitly closed under the shared coverage rule from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`;
 - the complete blocker/high candidate set has been collected;
 - every candidate has passed through the Ownership Test before any handoff correction is proposed.
 
 Do not stop at the first inconsistency.
+
+## Normalization coverage closure
+
+For each material representation family, inventory all occurrences and derive only the contexts that can materially change meaning for the current target. Typical examples include current versus historical, known versus unknown/not-established, success versus blocker, or pre-action versus post-action use when those distinctions are present.
+
+Compare equivalent and apparently different terms across those applicable contexts. A term family is not closed merely because adjacent prose is consistent if a materially distinct chronology or terminal context changes its interpretation.
+
+Do not create a permanent glossary or universal context taxonomy. Close only target-derived contexts with material consumers.
 
 ## Governing purpose
 
@@ -154,7 +164,8 @@ Prefer deletion, alignment, or reference over new taxonomy.
 
 ```text
 Model Before Review
-    -> derive representation families
+    -> derive bounded representation families and material contexts
+    -> close representation × meaning-changing-context comparisons
     -> full Normalization sweep
     -> complete blocker/high candidate set
     -> Ownership Test
