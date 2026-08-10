@@ -83,9 +83,11 @@ A blocked recovery is not successful completion.
 
 ## Expected recovery report
 
-Report only material recovery facts:
+Report each applicable material recovery fact truthfully. When a valid terminal path ends before a fact can be established or produced, report it as `not established` or `not applicable` rather than infer or fabricate it.
 
-- governing repository/ref and authoritative review state used, or which of them could not be established;
+Material recovery facts include:
+
+- governing repository/ref and authoritative review state used;
 - failure reproduced or current replacement disposition;
 - governed next action taken;
 - material changes and validation performed;
