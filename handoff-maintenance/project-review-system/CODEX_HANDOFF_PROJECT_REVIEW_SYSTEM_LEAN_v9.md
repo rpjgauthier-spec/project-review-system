@@ -85,7 +85,7 @@ A blocked recovery is not successful completion.
 
 Report only material recovery facts:
 
-- governing repository/ref and authoritative review state used;
+- governing repository/ref and authoritative review state used, or which of them could not be established;
 - failure reproduced or current replacement disposition;
 - governed next action taken;
 - material changes and validation performed;
