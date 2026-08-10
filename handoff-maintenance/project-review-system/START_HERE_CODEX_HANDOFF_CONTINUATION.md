@@ -38,21 +38,29 @@ The corrected Lean v9 completed a fresh full modeled Adversarial review with no 
 
 The first full modeled Interdependency review found two handoff-owned HIGH dependency defects that survived Ownership Testing and Structural Optimization:
 
-1. source-scope authority was consulted only after governed recovery scope had effectively been established, creating a circular dependency around whether frozen Slice 1 still applied;
+1. source-scope authority was consulted only after governed recovery scope had effectively been established;
 2. the historical-validity distinction consumed the authority applicable at the disputed occurrence without identifying a producer for that historical authority.
 
-Both survivors have now been applied to Lean v9 with minimal representation:
+Those two survivors were corrected minimally. A second full modeled Interdependency review then found one remaining handoff-owned HIGH dependency defect: Lean asked Codex to determine Slice-1 applicability from “current source authority” without first establishing which source-scope authority was current.
 
-- current source authority is consulted before finalizing governed recovery scope when determining whether the frozen controller-core Slice 1 boundary still applies;
-- disputed historical authority is established from durable repository chronology/provenance under current governance, with a truthful limitation reported if it cannot be established.
+That survivor has now been applied minimally. Lean v9 now requires this chain:
 
-No new authority-selection, succession, migration, revalidation, or state machinery was added.
+```text
+existing repository authority
+    -> identify current source-scope authority
+    -> determine whether frozen Slice 1 still applies
+    -> finalize governed recovery scope
+```
 
-The complete five-stage maintenance model set now exists. The deferred `cull the herd` pattern remains a maintenance-method candidate only and is not production PRS authority.
+If Slice 1 remains controlling, Issue #11 and clarification/comment `5229287324` are read as controlling source material. No source-authority election, succession, migration, revalidation, or state machinery was added.
+
+The historical-authority provenance correction remains in place: disputed historical authority is established from durable repository chronology/provenance under current governance, with a truthful limitation reported if it cannot be established.
+
+The complete five-stage maintenance model set exists. The deferred `cull the herd` pattern remains a maintenance-method candidate only and is not production PRS authority.
 
 ## Exact next action
 
-Perform a fresh **full modeled Interdependency review of corrected Lean v9**.
+Perform another fresh **full modeled Interdependency review of corrected Lean v9** as a convergence hunt.
 
 Mandatory method:
 
