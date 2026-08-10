@@ -24,6 +24,7 @@ A full End-to-end validation pass is complete only when:
 - every mandatory journey family below has been traced from entry to terminal condition;
 - authority, identity, authorization, evidence, and scope bindings have been checked at every material transition;
 - interruption/re-entry behavior has been considered where a journey can span executions;
+- every terminal class has been tested against its output/report obligations and the facts guaranteed to exist on that path;
 - completion and blocker reporting have been traced to their consumers;
 - the complete blocker/high candidate set has been collected;
 - every blocker/high candidate has been Ownership-Tested.
@@ -52,6 +53,14 @@ During Model Before Review, derive the current target-specific journey graph usi
 - terminal success state;
 - terminal blocker state;
 - required material report output.
+
+For each distinct terminal class, also identify:
+
+1. facts guaranteed to have been established;
+2. facts that may legitimately remain unknown or not applicable;
+3. required report/output obligations;
+4. whether each required output consumes only guaranteed facts or explicitly permits truthful `not established` / `not applicable` results;
+5. what the next consumer must be able to distinguish.
 
 Do not treat this derived graph as new authority.
 
@@ -136,7 +145,20 @@ Across every journey, test that:
 - required semantic execution boundaries are respected through PRS rather than reimplemented here;
 - unrelated user work and durable history remain preserved;
 - success and blocker outcomes produce enough material reporting for the next consumer;
+- terminal report obligations never require fabrication of facts that the path can legitimately fail to establish;
 - the handoff terminates at recovery completion/blocker instead of expanding scope.
+
+## Terminal-contract completeness
+
+For every success, blocker, and execution-boundary terminal state, explicitly verify:
+
+- which report/output facts are guaranteed;
+- which facts may be unknown or not applicable;
+- whether each required field has valid preconditions on that path;
+- whether truthful `not established` / `not applicable` reporting is permitted where needed;
+- whether the next consumer can distinguish unknown, absent, not applicable, blocked, and successfully established facts without inference.
+
+A journey does not pass merely because it reaches a correct terminal state. Its terminal contract must also be satisfiable truthfully on that path.
 
 ## Integrated failure classes
 
@@ -152,18 +174,19 @@ Look specifically for:
 8. a historical/current distinction that collapses during later steps;
 9. a pointer treated as proof or a report treated as authority;
 10. an end state that leaves the next consumer unable to determine what happened or what boundary comes next;
-11. a route that requires duplicated PRS machinery in the handoff to function;
-12. a route that continues beyond bounded recovery after success.
+11. a terminal report obligation that requires a fact not guaranteed to exist on that terminal path;
+12. a route that requires duplicated PRS machinery in the handoff to function;
+13. a route that continues beyond bounded recovery after success.
 
 ## Finding standards
 
 ### Blocker
 
-Use when an integrated journey can cause unauthorized action, invented governance, wrong-context recovery, false review credit, corrupted/falsified durable history, invalid semantic execution, unrecoverable interruption, scope escape, or inability to reach a truthful terminal state.
+Use when an integrated journey can cause unauthorized action, invented governance, wrong-context recovery, false review credit, corrupted/falsified durable history, invalid semantic execution, unrecoverable interruption, scope escape, fabricated terminal reporting, or inability to reach a truthful terminal state.
 
 ### High
 
-Use when an integrated journey materially raises the probability of stale-state acceptance, broken propagation, wrong downstream validation, ambiguous recovery completion, lost re-entry context, or misleading reporting.
+Use when an integrated journey materially raises the probability of stale-state acceptance, broken propagation, wrong downstream validation, ambiguous recovery completion, lost re-entry context, unsatisfiable report obligations, or misleading reporting.
 
 Do not inflate cosmetic sequencing preferences into blocker/high findings when the integrated behavior remains correct.
 
@@ -191,6 +214,6 @@ Prefer the smallest correction that restores the journey without duplicating the
 
 ## Convergence
 
-The End-to-end maintenance stage converges when every mandatory applicable journey has been traced and no blocker/high handoff correction survives both Ownership Testing and Structural Optimization.
+The End-to-end maintenance stage converges when every mandatory applicable journey and terminal contract has been traced and no blocker/high handoff correction survives both Ownership Testing and Structural Optimization.
 
 A remaining production-PRS or repository/governance blocker does not justify additional handoff machinery merely to produce a clean handoff result.
