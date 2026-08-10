@@ -17,7 +17,65 @@
   "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 corrected that by hashing actual governed files through Git's path-aware clean/EOL filters, but Adversarial review found that git hash-object follows filesystem symlinks while Git stores symlink blobs as link-target text. That could make a governed symlink receive a non-Git-canonical identity. The bounded revision-2 correction fails closed on governed symlink paths, preserves deterministic ABSENT state and repository-containment checks, binds dirty and untracked regular files to their actual Git-canonical content, fails closed when Git identity cannot be established, and does not rewrite historical review evidence.",
   "status": "in_progress",
   "review_revision": 2,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r2",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
+        "review_revision": 2,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "The revision-2 correction remains bounded to artifact-state identity calculation and direct regression coverage.",
+            "This pass will inspect the complete bounded threat surface before any further correction: path normalization/containment, regular-file type handling, Git filter behavior, dirty and untracked content, absent paths, Git failure modes, stale credit, and replay or representability gaps."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; this pass must complete the full bounded Adversarial review before any correction is applied."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
+        "review_revision": 2,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r2",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "7d1ddf364c47b18a3ef9d5e093a2f51e762bdfd56e039c4758f7fe5cc1c3c3a0",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2"
+    }
+  },
   "execution_completions": {},
   "results": {}
 }
