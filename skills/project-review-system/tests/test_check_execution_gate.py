@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import subprocess
 import tempfile
 import unittest
@@ -181,6 +182,16 @@ class ExecutionGateTests(unittest.TestCase):
             target.write_text("two\n", encoding="utf-8")
             second = checker.repository_artifact_state_sha256(["a.txt"], root)
             self.assertNotEqual(first, second)
+
+    @unittest.skipIf(os.name == "nt", "symlink creation is not reliably available in Windows test environments")
+    def test_symlink_artifact_path_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            (root / "target.txt").write_text("one\n", encoding="utf-8")
+            (root / "link.txt").symlink_to("target.txt")
+            with self.assertRaisesRegex(ValueError, "must not be a symlink"):
+                checker.repository_artifact_state_sha256(["link.txt"], root)
 
     def test_absent_artifact_identity_is_deterministic(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
