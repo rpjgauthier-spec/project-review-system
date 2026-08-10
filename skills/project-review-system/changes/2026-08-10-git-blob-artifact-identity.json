@@ -6,15 +6,11 @@
     "skills/project-review-system/tests/test_check_execution_gate.py",
     "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json"
   ],
-  "change_classes": [
-    "tracker-or-completion"
-  ],
+  "change_classes": ["tracker-or-completion"],
   "claimed_earliest_stage": "Adversarial",
   "additional_stages": [],
-  "additional_evaluations": [
-    "execution-gate-enforcement"
-  ],
-  "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 switched to path-aware Git hashing but Adversarial review found a symlink identity defect. Revision 2 then completed the full bounded Adversarial review and found additional blocking defects: local/non-versioned attributes can alter path-aware hashing for the same committed blob; Git tree mode was omitted; tracked-but-missing worktree paths were conflated with committed absence; path normalization was not fully host-independent; and dirty/untracked target snapshots were not durably reconstructable. The correction now derives creditable target state from clean committed Git regular-file tree entries, includes Git mode plus object identity, canonicalizes repository paths, rejects dirty/staged/untracked/incomplete/symlink state, rejects external clean-filter paths before hashing, and represents ABSENT only for paths absent from both committed tree and worktree. The revision-2 completed pass was recorded with a structurally invalid handoff consumer; that immutable occurrence is preserved only as reservation evidence and receives no semantic credit. Revision 3 reopens from Adversarial with fresh execution identities.",
+  "additional_evaluations": ["execution-gate-enforcement"],
+  "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 switched to path-aware Git hashing but Adversarial review found a symlink identity defect. Revision 2 completed the full bounded Adversarial review and drove the clean committed-tree/mode-aware correction. Revision 3 completed another full bounded Adversarial pass and found four additional blocking edge cases: a staged new file whose worktree copy is removed can masquerade as committed ABSENT; ident and working-tree-encoding transformations can make materially different worktree bytes clean back to the committed blob; inherited GIT_* environment overrides and replace refs can redirect which repository/index/tree the checker observes; and core.filemode=false can suppress detection of a real POSIX owner-executable mismatch. Revision 3 receives no semantic credit. These findings are covered by the existing stale-state, intermediate-state, and durable-identity attack classes, so the Adversarial procedure itself does not change.",
   "status": "in_progress",
   "review_revision": 3,
   "execution_gates": {
@@ -57,13 +53,7 @@
         "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
         "selected_mode": "SEPARATED",
         "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
-        ],
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}],
         "fused_permission_id": null,
         "capability_profile_id": "default-separated-v1",
         "capability_subject_id": "unmeasured-reviewer-separated-default",
@@ -76,8 +66,50 @@
       "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25"
     }
   },
-  "execution_completions": {},
-  "results": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+      "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
+          "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "BLOCKING — a path absent from HEAD but present as a staged new index entry can be deleted from the worktree and currently be accepted as committed ABSENT because the HEAD-absent branch does not inspect the index.",
+              "BLOCKING — ident and working-tree-encoding are path-aware Git content transformations not rejected by the current checker; materially different worktree bytes can clean back to the committed blob and receive the same target identity.",
+              "BLOCKING — Git subprocesses inherit ambient GIT_* environment variables and replacement refs; GIT_INDEX_FILE, GIT_DIR/GIT_WORK_TREE, namespace/object-directory variables, or replace refs can redirect which Git state the checker observes.",
+              "BLOCKING — core.filemode=false suppresses actual POSIX executable-bit validation even though committed mode is part of target identity and owner-executable state changes runtime behavior.",
+              "NON-BLOCKING ALIGNMENT — the POSIX mode comparison should use the owner execute bit rather than any execute bit because Git's regular-file mode distinction is 100644 versus 100755 and group/other-only execute changes are not represented as Git mode changes."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "revision-3 target sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+              "revision-3 gate sha256:1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+              "isolated Git fixture: ident expansion produced different worktree bytes while hash-object --path cleaned back to the committed blob",
+              "isolated Git fixture: git replace changed ls-tree HEAD interpretation unless replacement objects were disabled",
+              "isolated Git fixture: owner executable bit is the Git-relevant regular-file mode distinction"
+            ],
+            "unresolved_conditions": [
+              "Adversarial revision 3 failed; do not advance to Interdependency despite the canonical handoff consumer label.",
+              "Apply all blocking corrections together, increment review_revision once, and rerun the complete Adversarial pass on the corrected snapshot.",
+              "Mapped later stages and execution-gate-enforcement evaluation remain pending."
+            ],
+            "sha256": "49c50ff022cf3fc803193fbb7df55da9d4f86209b7299270f32a952981485dea"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {"Adversarial": "failed"},
   "execution_occurrence_history": [
     {
       "review_revision": 2,
@@ -85,11 +117,17 @@
       "pass_id": "stage-main",
       "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
       "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
-      "boundary": {
-        "kind": "declared-execution-unit",
-        "id": "assistant-message-pr14-r2-adversarial-full-1"
-      },
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r2-adversarial-full-1"},
       "pass_evidence_sha256": "d98b61ccbd7577921b74fd74288b3678c70a3e76cf7d1d1b4310445fe9f04b79"
+    },
+    {
+      "review_revision": 3,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+      "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
+      "pass_evidence_sha256": "c110abe258242a8033a2ea7faa65bfd95824026fcadd9664668ec3d40197bd06"
     }
   ]
 }
