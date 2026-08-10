@@ -131,26 +131,24 @@ The persistent Codex goal should:
 - stop once the reviewed design has converged and an implementation-ready specification is durably recorded;
 - not cross into implementation of the new local deterministic engine.
 
-## Pending Goal-prompt finalization
+## Goal-prompt finalization
 
-The persistent `/goal` execution contract is **not yet finalized for use**.
+The persistent `/goal` execution contract has now completed its adversarial review and cull-the-herd / survive-or-die reduction. The user has retained the resulting culled prompt as the deployment prompt to give Codex.
 
-The most recent full Goal prompt was adversarially reviewed after the stop-before-implementation boundary was added. That review found three material prompt risks that still require the requested cull-the-herd / survive-or-die pass before the prompt should be treated as final:
+Do not redo prompt finalization merely because a fresh maintenance chat begins. Treat the user-retained culled Goal prompt as the current deployment prompt unless the user supplies a newer version or execution exposes a prompt-owned defect.
 
-1. the descriptive work checklist could accidentally become a second authority instead of remaining subordinate/disposable relative to current repository/PRS state;
-2. the requested implementation-ready specification could drift into implementation-by-proxy (production code, executable pseudocode, concrete implementation bodies, migration scripts, or file-by-file coding instructions);
-3. progress pressure needs an explicit fail-closed priority when continued advancement conflicts with uncertainty about authority, review credit, or semantic-boundary validity.
+The final prompt's required terminal boundary remains:
 
-The next maintenance-chat task is therefore:
+**Finish the current governed controller-core recovery, finish the remaining local-first PRS design review through convergence, durably record an implementation-ready specification, and STOP BEFORE implementing the new deterministic local PRS engine.**
 
-**Perform the cull-the-herd / survive-or-die review of the adversarially reviewed full persistent Goal prompt, produce the final reduced Goal prompt, and only then hand that prompt to Codex.**
+Implementation is intentionally reserved for the separate implementation step after the reviewed specification is frozen. Codex should later receive that finished implementation for governed validation and real-world dogfooding rather than spending this Goal run on implementation/debug cycles.
 
-Do not reopen Lean v9 semantic review merely to finalize this deployment prompt; this is Goal-prompt/deployment bookkeeping unless the resulting prompt change exposes a new Lean handoff-owned defect.
+No additional Lean v9 semantic review is required merely because the Goal prompt was finalized; this is deployment bookkeeping unless a new handoff-owned defect is exposed.
 
 ## Fresh maintenance-chat prompt
 
-> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md` and every file it marks mandatory. Continue from the exact next action. Do not reopen handoff semantic review unless the handoff changed or a new handoff-owned defect was exposed.
+> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md`. The persistent Codex Goal prompt has already completed adversarial review and cull-the-herd / survive-or-die reduction; do not redo that work. Re-establish current durable repository/PRS state and continue only if new handoff maintenance is actually required. Otherwise use the finalized user-retained Goal prompt to continue Codex toward the recorded stop-before-implementation boundary.
 
 ## Update rule
 
-Update this manifest whenever the current handoff version, maintenance method/model, review stage, convergence state, deployment result, or exact next action changes.
+Update this manifest whenever the current handoff version, maintenance method/model, review stage, convergence state, deployment result, Goal-prompt status, or exact next action changes.
