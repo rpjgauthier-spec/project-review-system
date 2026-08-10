@@ -22,9 +22,18 @@ A full Adversarial pass is complete only when:
 - every applicable review dimension has been tested;
 - every material authority/identity/state dependency exposed by the current target has been challenged;
 - every declared failure family has been considered;
+- a bounded target-derived inventory of material attack classes and materially relevant cross-dimension combinations has been explicitly closed under the shared coverage rule from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`;
 - the complete blocker/high candidate set has been collected.
 
 Do not stop at the first blocker. After the sweep, run the mandatory Ownership Test from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md` before proposing handoff corrections.
+
+## Adversarial coverage closure
+
+Derive only the material attack combinations exposed by the current target. Do not test a universal Cartesian product.
+
+For each authority, authorization, identity, chronology, staleness, failure, trust, preservation, scope, validation, or completion relationship that can change behavior, identify the materially distinct states or combinations that must be attacked. Include presence, absence, ambiguity, conflict, stale binding, or terminal/action use only when the target makes them relevant.
+
+A full pass cannot be claimed by checking dimensions only in isolation when a material defect can exist only in their combination.
 
 ## Governing purpose
 
@@ -151,7 +160,8 @@ Correct only what retains distinct value.
 
 ```text
 Model Before Review
-    -> derive current target model
+    -> derive current target model and bounded attack inventory
+    -> close material attack classes/combinations
     -> full Adversarial sweep
     -> complete blocker/high candidate set
     -> Ownership Test
