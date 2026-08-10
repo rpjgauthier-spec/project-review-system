@@ -14,7 +14,7 @@
   "additional_evaluations": [
     "execution-gate-enforcement"
   ],
-  "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 corrected that by hashing actual governed files through Git's path-aware clean/EOL filters, but Adversarial review found that git hash-object follows filesystem symlinks while Git stores symlink blobs as link-target text. That could make a governed symlink receive a non-Git-canonical identity. The bounded revision-2 correction fails closed on governed symlink paths, preserves deterministic ABSENT state and repository-containment checks, binds dirty and untracked regular files to their actual Git-canonical content, fails closed when Git identity cannot be established, and does not rewrite historical review evidence.",
+  "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 corrected that by hashing actual governed files through Git's path-aware clean/EOL filters, but Adversarial review found that git hash-object follows filesystem symlinks while Git stores symlink blobs as link-target text. Revision 2 then completed the full bounded Adversarial review and found additional blocking state-binding defects: local/non-versioned attributes can alter path-aware hashing for the same committed blob; Git tree mode is omitted; tracked-but-missing worktree paths are conflated with committed absence; path normalization is not fully host-independent; and creditable dirty/untracked snapshots are not durably reconstructable. Revision 2 receives no semantic credit. The next bounded correction will bind present governed artifacts to clean committed Git tree entries, include file mode, reject dirty/untracked/incomplete checkout state, preserve deterministic committed absence, and canonicalize repository paths before revision 3 reopens Adversarial.",
   "status": "in_progress",
   "review_revision": 2,
   "execution_gates": {
@@ -76,6 +76,66 @@
       "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2"
     }
   },
-  "execution_completions": {},
-  "results": {}
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
+      "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr14-r2-adversarial-full-1"
+          },
+          "handoff": {
+            "consumer": "artifact-identity correction revision 3",
+            "findings": [
+              "BLOCKING — local/non-versioned Git attributes can change git hash-object --path output for the same committed blob, so target identity remains checkout-local rather than committed-state stable; a configured clean filter can also be invoked during identity calculation.",
+              "BLOCKING — artifact state records blob IDs but omits Git tree mode, so an executable-bit change can leave the target state unchanged.",
+              "BLOCKING — a governed path present in HEAD but missing from the worktree is currently represented as ABSENT, conflating committed absence with sparse/incomplete/dirty checkout state.",
+              "BLOCKING — repository path normalization is not fully canonical or host-independent; internal aliases and Windows drive-qualified forms can resolve differently across platforms.",
+              "BLOCKING DESIGN CONSEQUENCE — allowing dirty or untracked governed files to become creditable target snapshots makes review evidence potentially unreconstructable and complicates stable committed-state identity. The bounded corrective direction is to require clean committed regular-file entries for present governed paths and represent ABSENT only when both committed tree and worktree are absent."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "revision-2 target sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
+              "revision-2 gate sha256:2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
+              "isolated Git fixture: .git/info/attributes plus a local clean filter changed hash-object --path output while HEAD blob stayed unchanged",
+              "isolated Git fixture: chmod-only change is reported by Git while blob ID remains unchanged"
+            ],
+            "unresolved_conditions": [
+              "Apply the full bounded correction set together, then increment review_revision once and rerun the complete Adversarial stage against the corrected snapshot.",
+              "Later mapped stages and execution-gate-enforcement evaluation remain pending."
+            ],
+            "sha256": "d585527481c866357d0e49dd4b7a15805c6b6c49e26740576d4ac57a0b23af02"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {
+    "Adversarial": "failed"
+  },
+  "execution_occurrence_history": [
+    {
+      "review_revision": 2,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
+      "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr14-r2-adversarial-full-1"
+      },
+      "pass_evidence_sha256": "d98b61ccbd7577921b74fd74288b3678c70a3e76cf7d1d1b4310445fe9f04b79"
+    }
+  ]
 }
