@@ -33,7 +33,7 @@ Before finalizing governed recovery scope, identify the current source-scope aut
 
 Do not broaden scope from historical summaries when controlling source authority cannot be established.
 
-## Recovery target
+## Historical recovery problem
 
 Earlier recovery identified a `pass-boundary-enforcement` failure involving:
 
