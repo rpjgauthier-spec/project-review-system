@@ -31,6 +31,13 @@ Before finalizing governed recovery scope, identify the current source-scope aut
 - Issue #11 — `Implementation Phase 2: executable controller core and conformance harness`
 - clarification/comment ID `5229287324`
 
+For upstream design context, verify the current repository location/applicability before use. The current known navigation source is branch `review-local-first-refactor-roadmap`, containing:
+
+- `skills/project-review-system/reviews/local-first-refactor-roadmap.md`
+- `skills/project-review-system/reviews/local-first-refactor-living-design-notes.md`
+
+The roadmap is reviewed design context and the living notes are explicitly non-authoritative refinements; neither overrides current repository or PRS authority.
+
 Do not broaden scope from historical summaries when controlling source authority cannot be established.
 
 ## Historical recovery problem
