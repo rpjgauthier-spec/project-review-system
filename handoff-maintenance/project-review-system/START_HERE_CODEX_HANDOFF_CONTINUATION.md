@@ -36,7 +36,7 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-**Lean v9 is converged and ready for use as the Codex recovery handoff.**
+**Lean v9 is converged and has been successfully used as the Codex recovery handoff.**
 
 The maintenance method and all five stage maps were strengthened with bounded target-derived coverage closure. Lean v9 was then re-evaluated through separated semantic stages.
 
@@ -81,33 +81,60 @@ End-to-end result:
 
 Therefore the current Lean v9 handoff has converged under all five strengthened stage maps.
 
+## Deployment result
+
+The handoff was exercised in Codex against the actual repository state.
+
+Codex correctly:
+
+- verified the local checkout and remote refs without discarding dirty/diverged local work;
+- recovered current repository/PRS/source-scope authority;
+- reproduced the durable revision-12 `pass-boundary-enforcement` defect without rewriting historical evidence;
+- reopened governed recovery at revision 13;
+- durably completed revision-13 Adversarial and Interdependency as separate semantic execution boundaries;
+- verified that no additional backward-impact, delta-review, or reopening obligation remained before the ordinary forward chain resumed.
+
+Current known governed recovery state from that exercised handoff:
+
+- revision 13 remains `in_progress`;
+- Adversarial: current and durably complete;
+- Interdependency: current and durably complete;
+- next permitted semantic activity: Normalization, subject to re-establishing current repository/PRS state at execution time.
+
+The successful deployment means no additional handoff semantic review is required unless the handoff itself changes or execution exposes a new handoff-owned defect.
+
 ## Exact next action
 
-**Deploy the handoff in a fresh Codex recovery run.**
+Continue the governed work from durable repository state using Codex Goal-mode continuations rather than creating a new handoff-maintenance revision.
 
-Give Codex the current Lean handoff as its recovery/navigation task and let it recover the actual current repository/PRS state. Do not preselect the implementation action beyond what Lean and current repository authority permit.
+The intended work horizon is:
 
-Codex should:
+1. finish the remaining governed controller-core recovery under current PRS authority;
+2. finish the remaining reviewed local-first PRS architecture/design work, including any required corrections, reopenings, or revalidation;
+3. produce and durably record an implementation-ready specification for the local deterministic PRS system;
+4. **STOP BEFORE IMPLEMENTATION.**
 
-1. read `handoff-maintenance/project-review-system/CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md`;
-2. recover repository identity, applicable repository authority, current PRS controls/state, and source-scope authority from durable repository evidence;
-3. use the roadmap/living-design-note pointers only as applicable upstream design context, never as replacement authority;
-4. continue only the governed controller-core recovery permitted by current PRS state and host/user authorization;
-5. stop at the next valid governed state, required fresh semantic execution boundary, or real blocker;
-6. report only facts actually established on the reached path.
+The new local deterministic PRS engine is intentionally outside the Codex goal at this stage. Codex must not implement the engine, persistence backend, migration/cutover code, production commands, implementation skeleton, or implementation-driven test/debug cycle. A separate implementation step will build the reviewed deterministic program and later return it to the repository for governed validation and real-world dogfooding.
 
-Do not perform additional handoff semantic review unless the handoff itself is changed or execution exposes a new handoff-owned defect.
+At every continuation, current repository and PRS authority outrank this navigation manifest. Do not force the historical stage sequence if current durable state has changed.
 
-Do not modify production PRS merely because maintenance methodology suggests an improvement; production method evolution remains a separate task.
+## Persistent Codex Goal boundary
 
-## Codex launch prompt
+The persistent Codex goal should:
 
-> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md` and execute that recovery handoff against the repository's actual current state. Follow current repository and Project Review System authority, continue only the bounded governed recovery, and stop exactly where the handoff requires.
+- derive each next activity from current durable repository/PRS state;
+- preserve required semantic execution boundaries rather than simulating them inside one execution;
+- make required pre-semantic state durable before semantic work and make semantic completion durable before downstream credit;
+- preserve historical evidence and follow reopening/revalidation when corrections invalidate prior credit;
+- continue deterministic/non-semantic work automatically when current PRS permits it;
+- finish the controller-core recovery and remaining local-first design review;
+- stop once the reviewed design has converged and an implementation-ready specification is durably recorded;
+- not cross into implementation of the new local deterministic engine.
 
 ## Fresh maintenance-chat prompt
 
-> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md` and every file it marks mandatory. Continue from the exact next action.
+> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md` and every file it marks mandatory. Continue from the exact next action. Do not reopen handoff semantic review unless the handoff changed or a new handoff-owned defect was exposed.
 
 ## Update rule
 
-Update this manifest whenever the current handoff version, maintenance method/model, review stage, convergence state, or exact next action changes.
+Update this manifest whenever the current handoff version, maintenance method/model, review stage, convergence state, deployment result, or exact next action changes.
