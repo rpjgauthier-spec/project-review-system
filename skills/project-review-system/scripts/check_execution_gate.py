@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -50,6 +51,45 @@ def git_blob_sha1(data: bytes) -> str:
     return hashlib.sha1(header + data).hexdigest()
 
 
+def _verified_repository_root(repository_root: Path) -> Path:
+    root = repository_root.resolve()
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError(f"cannot verify Git repository root {root}: {exc}") from exc
+    reported = completed.stdout.strip()
+    if not reported:
+        raise RuntimeError(f"Git did not report a repository root for {root}")
+    actual_root = Path(reported).resolve()
+    if actual_root != root:
+        raise RuntimeError(f"artifact-state repository root {root} is not the Git toplevel {actual_root}")
+    return root
+
+
+def git_worktree_blob_sha1(repository_root: Path, normalized_path: str) -> str:
+    """Hash current file content using Git's path-aware clean/EOL filters."""
+    try:
+        completed = subprocess.run(
+            ["git", "hash-object", f"--path={normalized_path}", "--", normalized_path],
+            cwd=repository_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise RuntimeError(f"cannot derive Git blob identity for {normalized_path!r}: {exc}") from exc
+    blob_id = completed.stdout.strip().lower()
+    if len(blob_id) != 40 or any(c not in "0123456789abcdef" for c in blob_id):
+        raise RuntimeError(f"Git returned an invalid blob id for {normalized_path!r}")
+    return blob_id
+
+
 def repository_artifact_state_from_blob_ids(path_to_blob_id: dict[str, str | None]) -> str:
     digest = hashlib.sha256()
     normalized_items: list[tuple[str, str | None]] = []
@@ -73,7 +113,7 @@ def repository_artifact_state_from_blob_ids(path_to_blob_id: dict[str, str | Non
 
 
 def repository_artifact_state_sha256(repository_relative_paths: Iterable[str], repository_root: Path = REPOSITORY_ROOT) -> str:
-    root = repository_root.resolve()
+    root = _verified_repository_root(repository_root)
     states: dict[str, str | None] = {}
     for raw_path in repository_relative_paths:
         normalized = normalize_repository_path(raw_path)
@@ -85,7 +125,7 @@ def repository_artifact_state_sha256(repository_relative_paths: Iterable[str], r
         if target.exists():
             if not target.is_file():
                 raise ValueError(f"artifact-state path is not a file: {normalized}")
-            states[normalized] = git_blob_sha1(target.read_bytes())
+            states[normalized] = git_worktree_blob_sha1(root, normalized)
         else:
             states[normalized] = None
     return repository_artifact_state_from_blob_ids(states)
