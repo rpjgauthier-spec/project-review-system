@@ -35,41 +35,9 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-Adversarial, Interdependency, Normalization, Structural Optimization, and End-to-end validation have converged on current Lean v9 under the current maintenance models.
+Adversarial, Interdependency, Normalization, Structural Optimization, and End-to-end validation have converged on current Lean v9 under the pre-audit maintenance maps.
 
-A full Stage Model Completeness Audit was performed across all five stage models, Model Before Review, and their cross-stage boundaries. It found seven HIGH maintenance-method candidates centered on false exhaustiveness: broad instructions such as testing every material dimension, relationship, family, or element did not always require a bounded target-derived coverage witness before a pass could claim completion.
-
-The complete seven-candidate batch has now been Ownership-Tested and subjected to Structural Optimization / survive-or-die as one set. No stage model was edited during that culling pass.
-
-### Cull result
-
-All seven candidates are maintenance-method-owned, but they do **not** justify seven independent mechanisms.
-
-The smallest surviving correction architecture is:
-
-1. **Shared coverage-closure invariant — SURVIVE INTACT.** Every semantic stage must derive the minimum useful finite/bounded target-specific coverage inventory before claiming a full sweep, then explicitly close every material inventory unit or justified material combination. A prose assertion that “all dimensions were considered” is not sufficient when a bounded witness can be derived.
-
-2. **Adversarial combinatorial gap — MERGE into shared closure with a stage-specific specialization.** Adversarial must derive the material attack classes/combinations exposed by the target rather than checking dimensions only in isolation. No separate tracker or permanent matrix is required.
-
-3. **Interdependency reachability/precondition gap — MERGE into shared closure with a stage-specific specialization.** Interdependency closure must test material producer-state variants against consumer reachability and downstream obligations. The existing node tuple remains; no second dependency model is needed.
-
-4. **Normalization context-matrix gap — MERGE into shared closure with a stage-specific specialization.** Representation-family closure must include materially meaning-changing contexts such as current/historical and success/blocker/unknown when present. No glossary or permanent context taxonomy is justified.
-
-5. **Structural Optimization rare-consumer/removal gap — MERGE into shared closure with a stage-specific specialization.** Removal/compression closure must test all target-derived material consumer/terminal classes, including blocker, interruption, re-entry, and reporting consumers when applicable. No separate removal checklist is justified.
-
-6. **End-to-end journey-terminal cross-product gap — MERGE into shared closure with a stage-specific specialization.** End-to-end must close all materially reachable journey × terminal/interruption combinations. This extends the existing journey and terminal-contract model; it does not justify another workflow representation.
-
-7. **Cross-stage ownership-gap risk — SURVIVE BUT COMPRESS.** After the target-specific failure/defect classes are derived, the maintenance method needs one compact cross-stage closure check that every material class has at least one explicit owning detection lens. Overlap is allowed; ownerless classes are not. This belongs at the shared method/guide layer, not duplicated in every stage model.
-
-### What died
-
-- five independent new completeness mechanisms;
-- permanent per-stage trackers;
-- a universal Cartesian-product requirement across every possible state/dimension combination;
-- new taxonomies where only target-derived material classes are needed;
-- duplicated closure machinery inside every map.
-
-The cull therefore reduces seven findings to **two shared method requirements** plus minimal stage-specific definitions of closure:
+A full Stage Model Completeness Audit found seven HIGH maintenance-method candidates centered on false exhaustiveness. The seven-candidate batch was Ownership-Tested and culled into two shared requirements plus minimal stage-specific closure definitions:
 
 ```text
 shared target-derived coverage witness + explicit closure
@@ -79,20 +47,47 @@ stage-specific definition of what material units/combinations must close
 shared cross-stage owner check for uncovered defect classes
 ```
 
-This is the surviving method-correction set.
+The first bounded correction pass has now been applied to `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`.
+
+### Shared method strengthening now durable
+
+Model Before Review now requires every semantic stage to:
+
+1. derive the minimum useful finite/bounded target-specific coverage inventory before review;
+2. include only materially justified combinations rather than universal Cartesian products;
+3. close every active inventory unit/material combination or explicitly exclude it as non-material;
+4. add newly exposed material classes to the active inventory rather than silently treating the initial inventory as exhaustive;
+5. retain a compact coverage witness only for the review execution unless another durable consumer exists;
+6. avoid claiming a full sweep from prose assertion alone when a bounded witness can be produced.
+
+It also now contains the compressed cross-stage detection-owner check: when the multi-stage sequence is treated as complete, every material defect/failure class exposed by Model Before Review must have at least one explicit owning detection lens. Overlap is allowed; ownerless material classes are maintenance-method gaps.
+
+Shared-method commit:
+
+`8b00d5ef7b7c1190c029bd754e54d4ad2660c1b8`
+
+No Lean edit and no new semantic Lean review occurred in that correction pass.
 
 ## Exact next action
 
-Apply the surviving method corrections in bounded correction passes, without modifying Lean in the same pass.
+Apply the second bounded method-correction pass: **minimally specialize the five stage models under the shared coverage-closure invariant**.
 
-Recommended correction order:
+Required specializations:
 
-1. strengthen `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md` with the shared target-derived coverage-witness/closure invariant and the compact cross-stage owner check;
-2. minimally specialize each of the five stage models so its completion rule states what target-derived units/combinations must close under that shared invariant;
-3. update the maintenance guide/manifest only as needed to register the strengthened method;
-4. after method corrections are durable, re-run the affected semantic reviews on Lean under the strengthened maps.
+1. **Adversarial** — closure must derive and exhaust materially relevant attack classes/combinations exposed by the target; isolated dimension checkoffs are insufficient when a material combination changes the failure mode.
+2. **Interdependency** — closure must test material producer-state variants (present/missing/stale/conflicting/changed as applicable) against consumer reachability and downstream obligations.
+3. **Normalization** — closure must compare each material representation family across occurrences plus meaning-changing contexts exposed by the target, especially chronology and success/blocker/unknown contexts when material.
+4. **Structural Optimization** — closure for deletion/compression/merge/delegation candidates must test all target-derived material consumer/terminal classes, including blocker/interruption/re-entry/report consumers when applicable.
+5. **End-to-end** — closure must trace all materially reachable journey × terminal/interruption combinations, building on the existing terminal-contract completeness rule.
 
-Do not create permanent matrices or trackers merely to prove completeness. Derived bounded inventories may exist only during the review execution unless they have a separate durable consumer.
+Constraints:
+
+- modify only the five maintenance stage-model files plus the continuation/guide bookkeeping needed to register the correction;
+- do not edit Lean v9 in the same pass;
+- do not create permanent matrices, trackers, or new stage taxonomies;
+- do not run the strengthened semantic reviews on Lean in the same correction pass.
+
+After all five maps are durably strengthened, update the maintenance guide/manifest if needed and begin fresh Lean re-evaluation under the strengthened maps in separate semantic passes.
 
 ## Fresh-chat prompt
 
