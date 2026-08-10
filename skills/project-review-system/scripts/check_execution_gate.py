@@ -7,6 +7,10 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import os
+import posixpath
+import re
+import stat
 import subprocess
 from pathlib import Path
 from typing import Any, Iterable
@@ -14,6 +18,9 @@ from typing import Any, Iterable
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_ROOT = ROOT.parents[1]
 SELECTOR_PATH = ROOT / "scripts" / "select_execution_policy.py"
+REGULAR_FILE_MODES = {"100644", "100755"}
+OBJECT_ID_LENGTHS = {40, 64}
+WINDOWS_DRIVE_PREFIX = re.compile(r"^[A-Za-z]:")
 
 
 def _load_selector():
@@ -38,10 +45,17 @@ def load_json(path: Path) -> dict[str, Any]:
 def normalize_repository_path(raw_path: str) -> str:
     if not isinstance(raw_path, str) or not raw_path.strip():
         raise ValueError("artifact-state paths must be nonempty strings")
+    if "\x00" in raw_path:
+        raise ValueError("artifact-state paths must not contain NUL bytes")
     normalized = raw_path.replace("\\", "/")
     while normalized.startswith("./"):
         normalized = normalized[2:]
-    if not normalized or normalized.startswith("/") or normalized == ".." or normalized.startswith("../") or "/../" in normalized:
+    if not normalized or normalized.startswith("/") or WINDOWS_DRIVE_PREFIX.match(normalized):
+        raise ValueError(f"invalid repository-relative artifact path: {raw_path!r}")
+    if any(part == ".." for part in normalized.split("/")):
+        raise ValueError(f"invalid repository-relative artifact path: {raw_path!r}")
+    normalized = posixpath.normpath(normalized)
+    if normalized in {"", ".", ".."} or normalized.startswith("../"):
         raise ValueError(f"invalid repository-relative artifact path: {raw_path!r}")
     return normalized
 
@@ -51,19 +65,31 @@ def git_blob_sha1(data: bytes) -> str:
     return hashlib.sha1(header + data).hexdigest()
 
 
-def _verified_repository_root(repository_root: Path) -> Path:
-    root = repository_root.resolve()
+def _valid_object_id(value: str) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) in OBJECT_ID_LENGTHS
+        and all(c in "0123456789abcdef" for c in value.lower())
+    )
+
+
+def _run_git(repository_root: Path, args: list[str], purpose: str) -> str:
     try:
         completed = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
-            cwd=root,
+            ["git", *args],
+            cwd=repository_root,
             check=True,
             capture_output=True,
             text=True,
         )
     except (OSError, subprocess.CalledProcessError) as exc:
-        raise RuntimeError(f"cannot verify Git repository root {root}: {exc}") from exc
-    reported = completed.stdout.strip()
+        raise RuntimeError(f"cannot {purpose}: {exc}") from exc
+    return completed.stdout
+
+
+def _verified_repository_root(repository_root: Path) -> Path:
+    root = repository_root.resolve()
+    reported = _run_git(root, ["rev-parse", "--show-toplevel"], f"verify Git repository root {root}").strip()
     if not reported:
         raise RuntimeError(f"Git did not report a repository root for {root}")
     actual_root = Path(reported).resolve()
@@ -72,31 +98,123 @@ def _verified_repository_root(repository_root: Path) -> Path:
     return root
 
 
-def git_worktree_blob_sha1(repository_root: Path, normalized_path: str) -> str:
-    """Hash current file content using Git's path-aware clean/EOL filters."""
+def _parse_head_entry(repository_root: Path, normalized_path: str) -> tuple[str, str] | None:
+    output = _run_git(
+        repository_root,
+        ["ls-tree", "-z", "HEAD", "--", f":(literal){normalized_path}"],
+        f"read committed Git entry for {normalized_path!r}",
+    )
+    entries = [entry for entry in output.split("\0") if entry]
+    if not entries:
+        return None
+    if len(entries) != 1 or "\t" not in entries[0]:
+        raise RuntimeError(f"Git returned ambiguous committed entry data for {normalized_path!r}")
+    metadata, returned_path = entries[0].split("\t", 1)
+    if returned_path != normalized_path:
+        raise RuntimeError(f"Git returned noncanonical committed path for {normalized_path!r}")
+    parts = metadata.split()
+    if len(parts) != 3:
+        raise RuntimeError(f"Git returned malformed committed entry data for {normalized_path!r}")
+    mode, object_type, object_id = parts
+    object_id = object_id.lower()
+    if object_type != "blob" or mode not in REGULAR_FILE_MODES:
+        raise ValueError(f"artifact-state path is not a supported regular Git file: {normalized_path}")
+    if not _valid_object_id(object_id):
+        raise RuntimeError(f"Git returned an invalid object id for {normalized_path!r}")
+    return mode, object_id
+
+
+def _parse_index_entry(repository_root: Path, normalized_path: str) -> tuple[str, str] | None:
+    output = _run_git(
+        repository_root,
+        ["ls-files", "--stage", "-z", "--", f":(literal){normalized_path}"],
+        f"read Git index entry for {normalized_path!r}",
+    )
+    entries = [entry for entry in output.split("\0") if entry]
+    if not entries:
+        return None
+    if len(entries) != 1 or "\t" not in entries[0]:
+        raise ValueError(f"artifact-state path has conflicted or ambiguous index state: {normalized_path}")
+    metadata, returned_path = entries[0].split("\t", 1)
+    if returned_path != normalized_path:
+        raise RuntimeError(f"Git returned noncanonical index path for {normalized_path!r}")
+    parts = metadata.split()
+    if len(parts) != 3:
+        raise RuntimeError(f"Git returned malformed index data for {normalized_path!r}")
+    mode, object_id, stage_number = parts
+    object_id = object_id.lower()
+    if stage_number != "0" or mode not in REGULAR_FILE_MODES or not _valid_object_id(object_id):
+        raise ValueError(f"artifact-state path has unsupported index state: {normalized_path}")
+    return mode, object_id
+
+
+def _filter_attribute(repository_root: Path, normalized_path: str) -> str:
+    output = _run_git(
+        repository_root,
+        ["check-attr", "-z", "filter", "--", normalized_path],
+        f"read Git filter attribute for {normalized_path!r}",
+    )
+    parts = output.split("\0")
+    if len(parts) < 4 or parts[0] != normalized_path or parts[1] != "filter":
+        raise RuntimeError(f"Git returned malformed filter attribute data for {normalized_path!r}")
+    return parts[2]
+
+
+def _core_filemode(repository_root: Path) -> bool:
     try:
         completed = subprocess.run(
-            ["git", "hash-object", f"--path={normalized_path}", "--", normalized_path],
+            ["git", "config", "--bool", "--get", "core.filemode"],
             cwd=repository_root,
-            check=True,
+            check=False,
             capture_output=True,
             text=True,
         )
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise RuntimeError(f"cannot derive Git blob identity for {normalized_path!r}: {exc}") from exc
-    blob_id = completed.stdout.strip().lower()
-    if len(blob_id) != 40 or any(c not in "0123456789abcdef" for c in blob_id):
+    except OSError as exc:
+        raise RuntimeError(f"cannot read Git core.filemode: {exc}") from exc
+    if completed.returncode == 1:
+        return True
+    if completed.returncode != 0:
+        raise RuntimeError("cannot read Git core.filemode")
+    value = completed.stdout.strip().lower()
+    if value not in {"true", "false"}:
+        raise RuntimeError("Git returned invalid core.filemode value")
+    return value == "true"
+
+
+def _reject_symlink_components(repository_root: Path, normalized_path: str) -> Path:
+    candidate = repository_root
+    for part in normalized_path.split("/"):
+        candidate = candidate / part
+        if candidate.is_symlink():
+            raise ValueError(f"artifact-state path must not traverse a symlink: {normalized_path}")
+    target = candidate.resolve()
+    try:
+        target.relative_to(repository_root)
+    except ValueError as exc:
+        raise ValueError(f"artifact path escapes repository root: {normalized_path!r}") from exc
+    return candidate
+
+
+def git_worktree_blob_id(repository_root: Path, normalized_path: str) -> str:
+    """Hash current file content using Git's path-aware built-in conversions."""
+    blob_id = _run_git(
+        repository_root,
+        ["hash-object", f"--path={normalized_path}", "--", normalized_path],
+        f"derive Git blob identity for {normalized_path!r}",
+    ).strip().lower()
+    if not _valid_object_id(blob_id):
         raise RuntimeError(f"Git returned an invalid blob id for {normalized_path!r}")
     return blob_id
 
 
 def repository_artifact_state_from_blob_ids(path_to_blob_id: dict[str, str | None]) -> str:
+    """Legacy blob-only state helper retained for historical fixtures and callers."""
     digest = hashlib.sha256()
     normalized_items: list[tuple[str, str | None]] = []
     for raw_path, blob_id in path_to_blob_id.items():
         normalized = normalize_repository_path(raw_path)
         if blob_id is not None:
-            if not isinstance(blob_id, str) or len(blob_id) != 40 or any(c not in "0123456789abcdef" for c in blob_id.lower()):
+            if not _valid_object_id(blob_id):
                 raise ValueError(f"invalid Git blob id for {normalized}")
             blob_id = blob_id.lower()
         normalized_items.append((normalized, blob_id))
@@ -112,26 +230,75 @@ def repository_artifact_state_from_blob_ids(path_to_blob_id: dict[str, str | Non
     return digest.hexdigest()
 
 
+def repository_artifact_state_from_git_entries(
+    path_to_entry: dict[str, tuple[str, str] | None],
+) -> str:
+    digest = hashlib.sha256()
+    normalized_items: list[tuple[str, tuple[str, str] | None]] = []
+    for raw_path, entry in path_to_entry.items():
+        normalized = normalize_repository_path(raw_path)
+        if entry is not None:
+            if not isinstance(entry, tuple) or len(entry) != 2:
+                raise ValueError(f"invalid Git entry for {normalized}")
+            mode, object_id = entry
+            if mode not in REGULAR_FILE_MODES or not _valid_object_id(object_id):
+                raise ValueError(f"invalid Git entry for {normalized}")
+            entry = (mode, object_id.lower())
+        normalized_items.append((normalized, entry))
+    for normalized, entry in sorted(normalized_items):
+        digest.update(normalized.encode("utf-8"))
+        digest.update(b"\0")
+        if entry is None:
+            digest.update(b"ABSENT\0")
+        else:
+            mode, object_id = entry
+            digest.update(b"MODE\0")
+            digest.update(mode.encode("ascii"))
+            digest.update(b"\0BLOB\0")
+            digest.update(object_id.encode("ascii"))
+            digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def repository_artifact_state_sha256(repository_relative_paths: Iterable[str], repository_root: Path = REPOSITORY_ROOT) -> str:
     root = _verified_repository_root(repository_root)
-    states: dict[str, str | None] = {}
+    filemode_matters = _core_filemode(root)
+    states: dict[str, tuple[str, str] | None] = {}
     for raw_path in repository_relative_paths:
         normalized = normalize_repository_path(raw_path)
-        candidate = root / normalized
-        if candidate.is_symlink():
-            raise ValueError(f"artifact-state path must not be a symlink: {normalized}")
-        target = candidate.resolve()
-        try:
-            target.relative_to(root)
-        except ValueError as exc:
-            raise ValueError(f"artifact path escapes repository root: {normalized!r}") from exc
-        if target.exists():
-            if not target.is_file():
-                raise ValueError(f"artifact-state path is not a file: {normalized}")
-            states[normalized] = git_worktree_blob_sha1(root, normalized)
-        else:
+        candidate = _reject_symlink_components(root, normalized)
+        head_entry = _parse_head_entry(root, normalized)
+
+        if head_entry is None:
+            if os.path.lexists(candidate):
+                raise ValueError(f"untracked governed artifact cannot receive review credit: {normalized}")
             states[normalized] = None
-    return repository_artifact_state_from_blob_ids(states)
+            continue
+
+        if not candidate.exists() or not candidate.is_file():
+            raise ValueError(f"committed governed artifact is missing from the worktree: {normalized}")
+
+        index_entry = _parse_index_entry(root, normalized)
+        if index_entry != head_entry:
+            raise ValueError(f"governed artifact index state does not match HEAD: {normalized}")
+
+        filter_value = _filter_attribute(root, normalized)
+        if filter_value not in {"unspecified", "unset"}:
+            raise ValueError(f"governed artifact uses an external Git clean filter and cannot receive review credit: {normalized}")
+
+        mode, committed_blob_id = head_entry
+        current_blob_id = git_worktree_blob_id(root, normalized)
+        if current_blob_id != committed_blob_id:
+            raise ValueError(f"governed artifact worktree content does not match committed Git content: {normalized}")
+
+        if filemode_matters:
+            actual_executable = bool(candidate.stat().st_mode & (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH))
+            expected_executable = mode == "100755"
+            if actual_executable != expected_executable:
+                raise ValueError(f"governed artifact worktree mode does not match committed Git mode: {normalized}")
+
+        states[normalized] = head_entry
+    return repository_artifact_state_from_git_entries(states)
 
 
 def validate_execution_gate(
