@@ -35,42 +35,53 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-Adversarial, Interdependency, Normalization, Structural Optimization, and End-to-end validation have converged on current Lean v9, including required backward-impact delta checks.
+Adversarial, Interdependency, Normalization, Structural Optimization, and End-to-end validation have converged on current Lean v9 under the current maintenance models.
 
-The first End-to-end pass initially appeared to converge, but a skeptical re-hunt exposed a terminal-reporting defect: blocked journeys can terminate before some report facts are established or produced.
+A full Stage Model Completeness Audit has now been performed across all five stage models, Model Before Review, and their cross-stage boundaries. No stage model was edited during that audit.
 
-That miss exposed a methodological blind spot in the End-to-end model. The model was strengthened with **terminal-contract completeness**: for every success, blocker, and semantic-boundary terminal state, identify facts guaranteed to exist, facts that may remain unknown or not applicable, report obligations and their preconditions, and whether the next consumer can distinguish `not established` / `not applicable` from omission or fabrication.
+The audit found a shared false-exhaustiveness mechanism: several models require the reviewer to test "every material" dimension, relationship, family, or element, but do not always require a bounded target-derived inventory that proves what the complete set is before declaring it exhausted. This permits a competent reviewer to satisfy the prose checklist while unknowingly omitting a non-obvious class.
 
-Lean v9 now states:
+The complete blocker/high maintenance-method candidate set is:
 
-> Report each applicable material recovery fact truthfully. When a valid terminal path ends before a fact can be established or produced, report it as `not established` or `not applicable` rather than infer or fabricate it.
+1. **Shared coverage-closure gap — HIGH.** Model Before Review and stage completion rules lack a general bounded coverage witness. A full review can be asserted without first enumerating the target-derived units/classes that constitute the declared sweep and proving each was closed. Candidate strengthening: require the minimum useful target-derived coverage inventory/matrix appropriate to the stage, with explicit closure before a full-pass claim.
 
-A fresh full End-to-end convergence hunt under the strengthened model re-traced every mandatory journey and terminal class. No blocker/high handoff correction survived Ownership Testing and Structural Optimization. Sparse terminal paths—including authority ambiguity, authorization blockers, fresh semantic-boundary stops, and interruption after partial progress—can now satisfy the report contract without fabricating unavailable facts.
+2. **Adversarial combinatorial gap — HIGH.** Authority, authorization, identity, chronology, staleness, failure, trust, preservation, and scope are listed as dimensions, but the model does not force materially relevant combinations such as present/absent/ambiguous/conflicting authority crossed with action/evidence/terminal use. Candidate strengthening: derive finite attack classes from the target and require coverage of material cross-dimension combinations rather than isolated dimension checkoffs.
 
-The five-stage Lean review sequence is therefore settled under the current maintenance models.
+3. **Interdependency reachability/precondition gap — HIGH.** The node tuple is strong, but the model does not explicitly require each consumer to be tested for reachability under producer present, missing, stale, conflicting, or changed states, nor require obligation preconditions to close for terminal/output consumers. Candidate strengthening: for each material node/edge, test producer-state variants against consumer reachability and downstream obligations.
 
-A separate `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md` exists because the End-to-end miss demonstrated that a stage model can appear exhaustive while broad dimensions still hide mechanically untested subcases. This meta-audit reviews the five maintenance stage models and their cross-stage boundaries; it is maintenance-only and is not production PRS authority.
+4. **Normalization context-matrix gap — HIGH.** The model derives representation families and all occurrences, but does not force comparison across materially distinct chronology/path/terminal contexts. A harmless synonym or term can become behaviorally different only on one failure path. Candidate strengthening: compare each material representation family across occurrences plus the contexts that can change meaning, especially current/historical and success/blocker/unknown states.
+
+5. **Structural Optimization rare-consumer/removal gap — HIGH.** Removal safety asks whether capability is lost, but does not explicitly require testing deletion/compression against success, blocker, interruption, re-entry, and reporting consumers. A rule can appear redundant on the happy path while being the only protection on a rare terminal path. Candidate strengthening: test each material removal/compression candidate against all target-derived consumer/terminal classes before verdict.
+
+6. **End-to-end journey-terminal cross-product gap — HIGH.** Terminal-contract completeness is now strong, but the model still permits journey families and terminal classes to be enumerated separately without explicitly proving all materially reachable journey × terminal combinations and interruption points were traced. Candidate strengthening: require a bounded reachability matrix crossing applicable journey families with materially distinct terminal/interruption classes.
+
+7. **Cross-stage ownership-gap risk — HIGH.** A defect can hide between stages when each assumes another stage owns the class. Candidate strengthening: after stage-specific inventories are derived, require a compact cross-stage coverage check that every material defect/failure class exposed by Model Before Review has at least one explicit owning detection lens; overlap is acceptable, ownerless classes are not.
+
+All seven candidates are maintenance-method-owned. They do not imply production PRS changes and do not justify Lean edits by themselves.
+
+The common root candidate is the shared coverage-closure gap; several stage-specific candidates may compress into that general mechanism plus small stage-specific decompositions. They must now be Ownership-Tested and subjected to Structural Optimization / survive-or-die before any map is strengthened.
 
 ## Exact next action
 
-Perform the full **Stage Model Completeness Audit** defined by `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md`.
+Perform **Ownership Test + Structural Optimization / survive-or-die on the complete seven-candidate Stage Model Completeness Audit set**.
 
 Mandatory method:
 
-1. Read the audit scroll plus all five stage models, `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`, and `CODEX_HANDOFF_MAINTENANCE_GUIDE.md`.
-2. Audit all five stage models before proposing any method correction; do not stop at the first gap.
-3. For each stage, test coverage decomposition, state/path completeness, obligation-precondition closure, producer-consumer symmetry, negative-space coverage, completion-proof quality, and false-exhaustiveness pressure.
-4. Test cross-stage boundary gaps separately.
-5. Collect the complete blocker/high maintenance-method candidate set.
-6. Ownership-Test every candidate.
-7. Subject maintenance-owned candidates to Structural Optimization / survive-or-die.
-8. Report the complete surviving correction set without editing stage models in the same semantic audit pass.
+1. Treat the seven candidates as one collected batch; do not edit any model yet.
+2. Test whether the shared coverage-closure candidate can subsume any stage-specific candidate without losing a distinct failure class.
+3. For each candidate determine:
+   - distinct requirement/invariant;
+   - concrete review consumer;
+   - maintenance-method ownership;
+   - failure reduction;
+   - mergeability with the shared closure mechanism;
+   - added execution/maintenance burden;
+   - removal safety.
+4. Classify each as SURVIVE INTACT, SURVIVE BUT COMPRESS, MERGE, DELEGATE, DELETE, or REPORT EXTERNAL GAP.
+5. Preserve only the smallest correction set that makes omissions mechanically harder rather than merely making the scrolls longer.
+6. Do not edit stage models in the same culling pass.
 
-The core question is:
-
-> What would make us believe we left no stone unturned while still leaving one unturned?
-
-After the complete audit and cull, apply surviving method corrections only in later bounded correction passes, then re-run affected review scopes as required.
+After the cull, apply surviving method corrections in later bounded correction passes, then re-run affected review scopes on Lean as required.
 
 ## Fresh-chat prompt
 
