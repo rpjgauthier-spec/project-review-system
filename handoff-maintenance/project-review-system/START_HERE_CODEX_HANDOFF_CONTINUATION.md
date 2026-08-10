@@ -36,55 +36,58 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-The five-stage Lean review sequence previously converged under the pre-audit maps. A later Stage Model Completeness Audit found a false-exhaustiveness weakness in the maintenance method: broad instructions to test every material dimension, relationship, family, or element did not always require a bounded target-derived coverage witness proving what had actually been exhausted.
+The maintenance method and all five stage maps have been strengthened with bounded target-derived coverage closure.
 
-The seven HIGH audit candidates were culled into one shared coverage-closure invariant, minimal stage-specific closure definitions, and one compact cross-stage detection-owner check.
+Fresh Lean v9 re-evaluation under those maps completed these separated stages on handoff blob `0d5a3b926d78c7512322b477ea1b7babfa51773a`:
 
-### Shared method strengthening
+- Adversarial: converged, zero blocker/high handoff-owned survivors.
+- Interdependency: converged, zero blocker/high handoff-owned survivors.
+- Normalization: converged, zero blocker/high handoff-owned survivors.
+- Structural Optimization: converged, zero blocker/high handoff-owned survivors.
 
-`CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md` now requires:
+End-to-end had not yet begun.
 
-- a minimum finite/bounded target-derived coverage inventory before a full review claim;
-- only materially justified combinations rather than universal Cartesian products;
-- explicit closure or justified exclusion of every active inventory unit/material combination;
-- newly exposed material classes to be added to the active inventory;
-- a compact review-execution coverage witness rather than permanent tracking machinery;
-- a cross-stage check that every material defect/failure class has at least one explicit owning detection lens.
+A user-raised discoverability check then found that the local-first roadmap and living design notes were not deterministically reachable from Lean alone. Repository inspection established their current known navigation location on branch `review-local-first-refactor-roadmap`:
 
-Shared-method commit:
+- `skills/project-review-system/reviews/local-first-refactor-roadmap.md`
+- `skills/project-review-system/reviews/local-first-refactor-living-design-notes.md`
 
-`8b00d5ef7b7c1190c029bd754e54d4ad2660c1b8`
+Issue #11 consumes the frozen Issue #10 execution contract but does not itself name those two files. The roadmap states that it is a reviewed/disposable design artifact; the living notes explicitly state that they are non-authoritative refinements and do not override the reviewed roadmap/current validated PRS.
 
-### Strengthened stage maps now durable
+Lean was therefore minimally corrected to add these two navigation pointers while explicitly requiring current repository location/applicability to be verified before use and preserving their non-authoritative relationship to repository/PRS authority.
 
-All five maps have now been minimally specialized under the shared closure invariant:
+Lean pointer-correction commit:
 
-- **Adversarial** — derives and closes materially relevant attack classes/cross-dimension combinations rather than isolated dimension checkoffs only. Commit: `55481e006b8ff4b8de1da2195c7cc813329f1c24`.
-- **Interdependency** — closes target-derived producer-state variants against consumer reachability, prerequisites, downstream obligations, and fallback behavior. Commit: `d27656cbad6389944be0301fc90bf2ba3cdc8553`.
-- **Normalization** — closes each material representation family across occurrences and materially meaning-changing chronology/state/terminal contexts. Commit: `701847c555a154974b26722b89d0e3b6082d2cfa`.
-- **Structural Optimization** — closes deletion/compression decisions against all target-derived material consumers and terminal/re-entry contexts, not only the happy path. Commit: `03fdbb0a0cbc9f570654dc7bb59f7145bd0aacc9`.
-- **End-to-end** — closes all materially reachable journey × terminal/interruption combinations in addition to terminal-contract completeness. Commit: `fbd3cab25b131122d63f435a1149b55facef7e46`.
+`5b6fa7839534508c6dca97e72e8350d37751b000`
 
-No Lean edit and no semantic Lean review occurred while strengthening these maps.
+Current Lean blob after correction:
+
+`db4e5295b91b5566bbba108d11d0b46300074a55`
+
+No semantic re-review was fused into the pointer-correction pass.
+
+Because this correction changes Lean's navigation/authority surface after Adversarial, Interdependency, Normalization, and Structural Optimization had converged, those prior results require bounded backward-impact/delta revalidation before End-to-end begins.
 
 ## Exact next action
 
-Begin fresh Lean v9 re-evaluation under the strengthened maps in separated semantic passes.
+Perform a **delta Adversarial review only** of the roadmap/living-notes pointer correction on current Lean v9.
 
-Start with a fresh **full modeled Adversarial review** using the strengthened Model Before Review and strengthened Adversarial map.
+Delta scope:
+
+- branch/path pointer staleness and identity binding;
+- roadmap/living-notes authority characterization;
+- whether navigation context can be mistaken for source-scope or PRS authority;
+- whether the pointer could broaden recovery scope improperly;
+- trust/chronology implications of reading artifacts from a non-current branch.
 
 Mandatory boundary:
 
-1. derive the bounded target-specific Adversarial coverage witness;
-2. complete and close the full Adversarial sweep;
-3. collect the complete blocker/high candidate set;
-4. Ownership-Test every candidate;
-5. subject handoff-owned candidates to Structural Optimization / survive-or-die;
-6. report the complete result;
-7. **do not edit Lean in the same semantic pass**;
-8. **do not begin Interdependency in the same pass**.
+1. derive and close the bounded Adversarial delta inventory;
+2. collect and Ownership-Test any blocker/high candidates;
+3. do not edit Lean in the same semantic pass;
+4. do not begin Interdependency in the same pass.
 
-After any surviving correction is separately applied and Adversarial converges, continue through Interdependency, Normalization, Structural Optimization, and End-to-end as separate execution boundaries, including backward-impact/delta reviews when a later correction can invalidate an earlier converged lens.
+If Adversarial delta converges, continue with separate delta Interdependency, Normalization, and Structural Optimization passes as materially required. Only after the correction is revalidated through affected earlier lenses should full strengthened End-to-end validation begin.
 
 Do not modify production PRS during this handoff re-evaluation. Production method evolution remains a separate later task.
 
