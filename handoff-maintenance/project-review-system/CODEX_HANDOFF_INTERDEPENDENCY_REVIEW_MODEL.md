@@ -24,10 +24,20 @@ A full Interdependency pass is complete only when:
 - every material producer/consumer relationship has been tested;
 - every authority-to-action and evidence-to-conclusion edge has been tested;
 - every material handoff, propagation duty, fallback, and completion dependency has been tested;
+- each material producer/consumer edge has been closed across the target-derived producer states that can change consumer reachability or downstream obligations;
 - circular, duplicated, missing, stale, and ownerless dependencies have been challenged;
+- the bounded dependency inventory is explicitly closed under the shared coverage rule from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`;
 - the complete blocker/high candidate set has been collected before reporting.
 
 Do not stop at the first broken edge.
+
+## Interdependency coverage closure
+
+Use the existing node/edge model as the coverage witness. For each material producer/consumer edge, derive only producer-state variants that can change behavior for the current target, such as present/current, missing, stale, conflicting, or changed.
+
+For each applicable variant, verify whether the consumer is reachable, whether its prerequisites remain valid, what downstream obligation is triggered, and whether failure reaches the correct fallback or blocker.
+
+Do not create a universal state matrix. Close only the target-derived producer states and consumer paths with material consequences.
 
 ## Governing purpose
 
@@ -189,7 +199,8 @@ Prefer deletion, delegation, or one clear edge over new permanent structure.
 
 ```text
 Model Before Review
-    -> derive current dependency graph
+    -> derive current dependency graph and bounded producer-state inventory
+    -> close producer-state × consumer-reachability obligations
     -> full Interdependency sweep
     -> complete blocker/high candidate set
     -> Ownership Test
