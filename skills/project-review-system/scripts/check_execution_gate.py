@@ -117,7 +117,10 @@ def repository_artifact_state_sha256(repository_relative_paths: Iterable[str], r
     states: dict[str, str | None] = {}
     for raw_path in repository_relative_paths:
         normalized = normalize_repository_path(raw_path)
-        target = (root / normalized).resolve()
+        candidate = root / normalized
+        if candidate.is_symlink():
+            raise ValueError(f"artifact-state path must not be a symlink: {normalized}")
+        target = candidate.resolve()
         try:
             target.relative_to(root)
         except ValueError as exc:
