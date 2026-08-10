@@ -34,54 +34,34 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-The corrected Lean v9 completed a full modeled Adversarial cycle with no surviving blocker/high handoff correction. A delta Adversarial review of the later Interdependency survivors also found no blocker/high handoff correction, so the Adversarial conclusion remains preserved.
+Adversarial, Interdependency, Normalization, and Structural Optimization have converged on current Lean v9, including required backward-impact delta checks.
 
-The Interdependency cycle converged after three successive hunts. Its accepted corrections now provide these minimal recovery-specific edges:
+The first End-to-end pass initially appeared to converge, but a skeptical re-hunt exposed a terminal-reporting defect: blocked journeys can terminate before an authoritative review state is established while the report contract asked for that state. The candidate survived Ownership Testing and Structural Optimization, and Lean v9 was minimally corrected to permit reporting which governing repository/ref or authoritative review state could not be established.
 
-```text
-existing repository authority
-    -> identify current source-scope authority
-    -> determine whether frozen Slice 1 still applies
-    -> finalize governed recovery scope
-```
+That miss revealed a methodological blind spot: the End-to-end model traced journeys to terminal states but did not deterministically test whether each terminal state's output/report obligations were satisfiable from facts guaranteed to exist on that path.
 
-and:
+The End-to-end model has therefore been strengthened with **terminal-contract completeness**. Every terminal class must now identify guaranteed facts, facts that may remain unknown/not applicable, report obligations, their preconditions, and whether the next consumer can distinguish unknown/not-established/not-applicable from omission or fabrication.
 
-```text
-durable repository chronology/provenance
-    -> establish authority applicable to disputed historical occurrence
-    -> assess historical validity
-    -> separately assess current-credit acceptability
-```
+A fresh End-to-end re-run under that strengthened model found a broader remaining HIGH candidate: the report contract still lists other facts that may legitimately not exist on an early blocked path, including failure/current-disposition, governed action taken, validation performed, and commits. The local authority-field correction therefore may be insufficient; a general truthful terminal-reporting rule may be the smaller and more complete representation.
 
-The final source-scope producer correction was retroactively subjected to explicit Structural Optimization / survive-or-die and survived. No source-authority election, succession, migration, revalidation, or state machinery was added.
-
-The first full modeled Normalization review found one handoff-owned HIGH candidate: `target` was overloaded between the current PRS review-state identity (`current revision/target`) and the heading describing the historical pass-boundary problem (`Recovery target`). After Ownership Testing and explicit Structural Optimization, only a one-line rename survived.
-
-That correction has been applied: `## Recovery target` is now `## Historical recovery problem`. No glossary, new taxonomy, or other normalization machinery was added.
-
-The complete five-stage maintenance model set exists. The deferred `cull the herd` pattern remains a maintenance-method candidate only and is not production PRS authority.
+No additional Lean correction has been applied for this broader candidate yet.
 
 ## Exact next action
 
-Perform a fresh **full modeled Normalization review of corrected Lean v9** as a convergence hunt.
+Perform **Ownership Test + Structural Optimization / survive-or-die** on the broader End-to-end terminal-reporting candidate only.
 
-Mandatory method:
+Candidate to test:
 
-1. Run Model Before Review for corrected Lean v9 and derive the current concept/representation families.
-2. Read and use `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`.
-3. Sweep the entire document; do not stop at the first inconsistency.
-4. Collect the complete blocker/high candidate set.
-5. Ownership-Test every candidate.
-6. Subject handoff-owned candidates to Structural Optimization / survive-or-die.
-7. Report separately:
-   - handoff-owned survivors;
-   - production-PRS-owned findings;
-   - repository/governance-owned blockers;
-   - discarded cosmetic/redundant candidates.
-8. Do not edit Lean v9 in the same semantic pass.
+> The Expected recovery report should generally require each applicable material item to be reported truthfully, explicitly allowing `not established` / `not applicable` when a valid terminal path can end before that fact exists, rather than solving the problem field-by-field.
 
-If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Normalization maintenance cycle has converged. Before moving to Structural Optimization, perform any required delta review of the Normalization survivor(s) against earlier converged stages if the change materially affects those lenses.
+If it survives:
+
+1. perform Model Before Change;
+2. replace the local reporting workaround with the smallest general terminal-report rule that covers all report fields without adding a schema or new state machinery;
+3. commit only that correction;
+4. run a fresh full End-to-end validation under the strengthened model in a separate semantic pass.
+
+Do not perform another Lean edit before this candidate is explicitly weighed.
 
 ## Fresh-chat prompt
 
