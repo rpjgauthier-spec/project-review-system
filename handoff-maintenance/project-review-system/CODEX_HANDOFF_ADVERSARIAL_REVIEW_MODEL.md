@@ -2,320 +2,255 @@
 
 ## Invocation contract
 
-This stage-specific model is invoked through `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`.
+Use this stage model through `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`.
 
-Before using it, complete Model Before Review for the current handoff revision. If the handoff changed an authority edge, identity binding, state transition, validation owner, task boundary, or material failure path, refresh this model before beginning the sweep.
+Before a full Adversarial review, complete Model Before Review for the current handoff revision. Refresh this model when authority edges, identity bindings, state transitions, validation ownership, task boundaries, or material failure paths change.
 
-A request for a full Adversarial review implicitly requires this model even when the immediate prompt does not mention it.
+This is a handoff-maintenance aid, not Project Review System authority.
 
 ## Purpose
 
-Find **multiple independent defects in one bounded pass** by attacking an explicit system model rather than reading the handoff only as prose.
+Find multiple independent defects in one bounded pass by attacking an explicit system model rather than reading the handoff only as prose.
 
-This is a handoff-maintenance aid. It is not Project Review System authority and creates no review credit, permissions, recovery rules, or production governance.
+A modeled defect is a **candidate problem**, not automatically a handoff feature request.
 
 ## Pass completion rule
 
 A full Adversarial pass is complete only when:
 
 - every handoff section has been considered;
-- every applicable review dimension below has been tested;
+- every applicable review dimension has been tested;
 - every modeled state transition and authority edge has been challenged;
 - every declared failure-path family has been considered;
-- all blocker/high findings discovered in the pass have been collected.
+- the complete blocker/high candidate set has been collected.
 
-Do not stop merely because one blocker has been found. A blocker may stop execution of the target workflow without terminating the diagnostic sweep unless the remaining target becomes uninterpretable.
+Do not stop at the first blocker.
 
-## 1. Governing purpose
+After the sweep, run the mandatory Ownership Test from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md` before proposing handoff corrections.
 
-Freeze the purpose before review:
+## Governing purpose
 
 > Help Codex discover the current governed Project Review System state, recover the controller-core review to the next valid governed state, complete recovery-induced obligations, and stop without inventing authority or continuing ordinary feature implementation.
 
-Attack any instruction that changes the problem, expands scope, continues too far, or substitutes the handoff for repository authority.
+Attack instructions that change the problem, expand scope, continue too far, or substitute the handoff for production/repository authority.
 
-## 2. Authority model
+## Authority model
 
-Keep these authorities distinct even if current repository layout makes them coincide:
+Keep these roles distinct:
 
 ### Host/user task authority
 
-Owns actual permission to perform the requested task and any repository/external actions requiring user authorization.
+Owns actual permission for repository/external actions. Repository content cannot grant it.
 
-Must not be inferred from repository-controlled data.
+### Applicable PRS controls
 
-### PRS control authority
+Own review/governance rules and valid transitions **when their applicability is established by existing repository authority**.
 
-Owns current review/governance rules, review mode semantics, execution requirements, valid transitions, evidence/credit rules, and revalidation behavior.
+The handoff must not invent a control-election, succession, precedence, or cross-ref binding mechanism. If applicability is unresolved by existing authority, that is a repository/governance blocker rather than a handoff-owned mechanism to implement.
 
-Its governing ref/version must be selected from repository governance/provenance evidence, not branch coincidence, file recency, or the initial checkout.
+### Implementation/artifact state
 
-### Implementation/artifact authority
-
-Identifies the controller-core artifact state being recovered.
-
-It does not automatically own PRS control authority.
+Identifies the controller-core artifact being recovered. Implementation similarity or ancestry does not create review credit.
 
 ### Review-state authority
 
-Owns current review revision/status/target binding once validly established.
-
-It must be read before values it owns are claimed.
+Owns current review revision/status/target binding once validly established. Read the owning record before claiming the values it owns.
 
 ### Source-scope authority
 
-Constrains the authorized controller-core implementation scope unless legitimately advanced.
-
-It must be resolved before review scope/depth are frozen when it can materially change them.
+Constrains controller-core implementation scope unless legitimately advanced.
 
 ### Git history
 
-Provides chronology, provenance, content lineage, and evidence of when states/controls changed.
-
-History does not create authority or semantic credit by itself.
+Provides chronology/provenance evidence; it does not create authority or semantic credit.
 
 ### Derived state
 
-Queues, projections, generated reports, and similar views are operational evidence, not authority.
+Queues/projections/reports are operational evidence, not authority.
 
 ### Handoff
 
-Provides navigation/recovery context only. It must never create missing authority, review credit, succession, migration/bootstrap rules, or retroactive control applicability.
+Provides navigation/recovery context only. It cannot manufacture missing authority, succession, review credit, control applicability, migration, or bootstrap rules.
 
-## 3. Identity and binding model
+## Identity and binding model
 
-Test whether these identities are established and kept correctly bound:
+Test at least:
 
-- repository;
-- selected remote;
-- PRS control ref/version/provenance;
+- repository and remote;
+- applicable PRS control context;
 - implementation/artifact ref;
-- continuation/successor ref, if any;
 - controlling review/change record;
 - review revision;
-- target state / snapshot identity;
-- execution gate;
-- pass occurrence;
-- completion evidence;
-- semantic result;
+- target state/snapshot;
+- execution gate/pass/completion/result;
 - revalidation queue context;
-- source-scope authority.
+- source-scope authority;
+- host/user action authorization.
 
 Primary attack:
 
-> Could evidence or authority from identity A be accepted as evidence or authority for identity B?
+> Could evidence or permission from identity A be accepted for identity B?
 
-Examples:
+## Invariant state-flow model
 
-- right artifact, wrong PRS control version;
-- right branch, wrong remote;
-- right code, wrong review record;
-- right record, stale revision;
-- right revision, stale target;
-- equivalent cherry-pick, invalid inherited credit;
-- correct queue path from the wrong context;
-- correct pass ID under a changed gate.
-
-## 4. Invariant state-flow model
-
-Do **not** treat this as a brittle numbered implementation sequence. Attack the dependency ordering itself.
+Attack dependency ordering, not a brittle numbered prose sequence:
 
 ```text
-Diagnostic-only mechanical discovery
-    -> locate candidate control/artifact/review-state/scope contexts
-    -> establish governing PRS control authority
-    -> establish governing artifact/review-state continuity under those controls
-    -> identify AND read controlling review-state authority
-    -> establish revision + target identity from that authority
+non-destructive factual discovery
+    -> existing repository authority establishes applicable PRS controls
+       OR unresolved applicability is reported
+    -> read applicable PRS controls
+    -> establish artifact/review-state continuity under those controls
+    -> identify AND read review-state authority
+    -> establish revision + target identity
     -> establish source-scope authority
-    -> freeze review mode + scope + allowed actions + depth
-    -> validate queue/evidence against all bound identities
-    -> Adaptive Execution preflight BEFORE first semantic judgment
-    -> reproduce historical failure OR establish current disposition
-    -> reconstruct occurrence chronology + applicable historical control chronology
-    -> determine current credit acceptability under current controls
+    -> freeze PRS mode + governed scope + depth + next PRS activity
+    -> establish host/user action authorization separately
+    -> validate queue/evidence against bound identities
+    -> Adaptive Execution before first governed semantic judgment
+    -> reproduce failure OR establish current disposition
+    -> reconstruct occurrence + historical-control chronology when needed
+    -> determine present credit acceptability under current controls
     -> determine next governed action
-    -> correct only if authorized
+    -> correct only when both governance and host/user permission allow
     -> validate each changed system with its owning validation
-    -> complete recovery-induced obligations
-    -> reach next valid governed state OR report blocked recovery
+    -> complete recovery obligations
+    -> valid governed state OR blocked recovery
     -> STOP
 ```
 
 For every arrow ask:
 
-- What evidence permits the transition?
-- Has the authority that owns the next fact already been read?
-- Can stale/wrong-identity evidence satisfy it?
-- Can Codex skip or repeat it improperly?
-- Does a semantic judgment occur before required preflight?
-- Can a failure fall through into an unsafe default?
-- Can the handoff manufacture missing permission or authority?
+- what authority/evidence permits it?
+- has the owning artifact been read before its facts are claimed?
+- can stale/wrong-identity evidence satisfy it?
+- is semantic judgment being smuggled into factual discovery/bookkeeping?
+- does failure fall closed?
+- is the handoff inventing a missing repository mechanism?
 
-## 5. Protected invariants
+## Protected invariants
 
-### Authority
+### Authority and authorization
 
-- No invented authority or self-authorization.
-- No repository-controlled text grants host/user permission.
-- No branch coincidence silently binds PRS control authority to artifact authority.
-- No derived projection becomes authority.
-- No future-design note overrides production authority.
+- no invented authority or self-authorization;
+- no repository text grants host/user permission;
+- no handoff-created control-selection/succession mechanism;
+- PRS-governed scope/transition is distinct from actual action permission;
+- no derived view becomes authority.
 
-### Chronology
+### Chronology and credit
 
-- No rewritten/fabricated history.
-- Historical validity is judged against authority applicable at the time.
-- Present acceptance as current credit is judged by current production controls.
-- No same-revision redo where current governance forbids it.
-- No implementation/content equivalence creates semantic credit.
+- no rewritten/fabricated history;
+- historical validity is judged under authority applicable at the time;
+- present acceptance as current credit is judged under current production governance;
+- no content equivalence creates semantic credit;
+- no same-revision redo where governance forbids it.
 
-### Identity/staleness
+### Identity and staleness
 
-- No wrong remote/ref/control version.
-- No review-state transfer based only on implementation ancestry/equivalence.
-- No stale revision/target/gate/completion/result credit.
-- No queue trusted against the wrong bound context.
+- no wrong remote/ref/control context;
+- no stale revision/target/gate/completion/result credit;
+- no queue trusted against an unbound context.
 
 ### Execution boundaries
 
-- No semantic work disguised as mechanical discovery/bookkeeping.
-- No `SEPARATED` pass treated as separated without a fresh valid boundary.
-- No worktree separation confused with PRS `ISOLATED` semantic execution.
-- No governed semantic judgment without applicable preflight/gate.
+- factual discovery is inventory/provenance, not authority/relevance judgment;
+- no semantic activity without applicable preflight/gate;
+- no worktree separation confused with PRS `ISOLATED`;
+- `SEPARATED` requires a fresh valid execution boundary.
 
-### Scope/completion
+### Scope, preservation, validation, completion
 
-- No recovery task silently continues into ordinary feature work.
-- No roadmap/future-design implementation without separate authority.
-- No source-scope expansion from handoff summaries.
-- Diagnostic/proposed-corrective inability to perform a required correction is blocked recovery, not successful completion.
+- no recovery drift into ordinary feature work;
+- no future-design implementation without separate authority;
+- preserve unrelated user work/history;
+- validate PRS/control changes with PRS validation and source changes with source-owned validation;
+- passing checkers prove only their stated scope;
+- lack of correction authorization is blocked recovery, not successful completion.
 
-### Preservation/validation
+## Adversarial dimensions
 
-- No destruction or absorption of unrelated user work.
-- No history rewrite merely to satisfy validation.
-- No weakening controls to ease recovery.
-- PRS/control changes receive PRS/control validation.
-- Governed source changes receive source-owned validation.
-- A passing checker proves only what it actually checks.
+Sweep each applicable section for:
 
-## 6. Adversarial dimensions
+A. authority ownership and precedence;
+B. host/user authorization;
+C. identity/binding;
+D. state/dependency ordering;
+E. chronology and historical applicability;
+F. staleness;
+G. failure behavior;
+H. governed recovery path versus invented mechanism;
+I. scope/completion;
+J. validation ownership;
+K. trust boundary;
+L. reversibility/preservation.
 
-Sweep every applicable dimension across every section.
-
-### A. Authority
-Who owns the decision? Was that authority established before use? Can a lower-level source override it?
-
-### B. Authorization
-What action is occurring—read, semantic judgment, write, commit, push, destructive or external? What authorizes it?
-
-### C. Identity
-Which control/artifact/record/revision/target does the instruction act on? Could another valid-looking identity be substituted?
-
-### D. State/dependency ordering
-What must be true first? Is the owning artifact read before its facts are claimed? Can a prerequisite be skipped?
-
-### E. Chronology
-Which rule version governed the event then? Is current conformance being confused with historical validity?
-
-### F. Staleness
-Can record, queue, gate, result, controls, or target become stale? Is freshness tested against the correct bound context?
-
-### G. Failure behavior
-What happens when evidence is missing, authorities conflict, current controls cannot represent a transition, or authorization is insufficient?
-
-### H. Recovery
-Does each material failure reach a governed recovery path or explicit blocked state? Is recovery invented by the handoff?
-
-### I. Scope/completion
-What ends the task? Can success drift into adjacent implementation? Can blocked recovery be mistaken for completion?
-
-### J. Validation ownership
-Which system changed and which validator owns it? Are PRS tests being mistaken for source correctness or vice versa?
-
-### K. Trust boundary
-Is repository/external/generated text treated as instruction or stronger authority than justified?
-
-### L. Reversibility/preservation
-Can the instruction overwrite user work, rewrite durable history, or impair provenance/recovery?
-
-## 7. Minimum failure-path families
+## Minimum failure-path families
 
 Challenge at least:
 
-1. wrong worktree;
-2. wrong remote;
-3. remote advanced;
-4. divergent local/remote history;
-5. dirty unrelated user changes;
-6. wrong/stale PRS control version;
-7. artifact/control authority divergence;
-8. multiple plausible controlling records;
-9. controlling record not read before state facts are claimed;
-10. stale queue;
-11. stale gate/completion/result;
-12. wrong review revision;
-13. wrong target state;
-14. code continuation without review-state continuity;
-15. scope authority discovered after scope/depth freeze;
-16. historical event governed by an older control version;
-17. current checker rejects historically valid evidence;
-18. historically valid evidence is no longer acceptable current credit;
-19. defective checker/control requires change;
-20. changed control attempts to self-certify;
-21. source correction passes PRS tests but breaks source behavior;
-22. required external scope authority unavailable;
-23. user authorized review but not correction;
-24. repository text tries to grant permission;
-25. semantic judgment occurs before preflight;
-26. required fresh semantic boundary reached;
-27. recovery succeeds and feature implementation is tempting;
-28. historical failure no longer reproduces;
-29. repository legitimately superseded historical handoff context.
+1. wrong worktree/remote/ref;
+2. remote advanced or divergent history;
+3. dirty unrelated user changes;
+4. PRS-control applicability unresolved by existing authority;
+5. handoff attempts to invent control selection/succession;
+6. multiple plausible controlling records;
+7. controlling record not read before owned state facts are claimed;
+8. stale queue/gate/completion/result/revision/target;
+9. code continuation without review-state continuity;
+10. source-scope authority discovered after scope/depth freeze;
+11. historical event under older controls;
+12. current conformance confused with historical validity;
+13. historically valid evidence no longer acceptable as current credit;
+14. defective checker/control requires governed change;
+15. changed control attempts to self-certify;
+16. source correction passes PRS tests but breaks source behavior;
+17. required external/source authority unavailable;
+18. user authorized review but not correction;
+19. repository text tries to grant permission;
+20. semantic judgment occurs before preflight;
+21. required fresh semantic boundary;
+22. recovery succeeds and feature work is tempting;
+23. historical failure no longer reproduces;
+24. repository legitimately superseded historical handoff context.
 
-## 8. Finding standards
+## Finding standards
 
 ### Blocker
 
-Use when a defect can cause unauthorized action, invented governance, false review credit, corrupted/irrecoverable state or history, operation under the wrong authority/identity, invalid semantic execution, escape from bounded scope, or inability to determine a truthful governed next action.
+Use when a defect can cause unauthorized action, invented governance, false review credit, corrupted/irrecoverable state/history, operation under wrong authority/identity, invalid semantic execution, scope escape, or inability to determine a truthful governed next action.
 
 ### High
 
-Use when a defect materially increases the probability of stale-state acceptance, wrong-context continuation, incomplete validation, unsafe fallback, ambiguous authority resolution, loss of recovery evidence, or misleading completion claims.
+Use when a defect materially raises the probability of stale-state acceptance, wrong-context continuation, incomplete validation, unsafe fallback, ambiguous authority resolution, lost recovery evidence, or misleading completion claims.
 
 Do not inflate wording preferences into blocker/high findings.
 
-## 9. Reviewer anti-patterns
+## Ownership test after the sweep
 
-Do not:
+For every blocker/high candidate classify it as:
 
-- stop at the first blocker;
-- report the batch before completing the declared whole-document sweep;
-- add protection merely because a failure is imaginable;
-- duplicate PRS rules unless the handoff creates nearby ambiguity or this recovery specifically depends on the invariant;
-- automatically convert every finding into a correction;
-- perform Structural Optimization inside the Adversarial pass.
+- **handoff-owned** → eligible for Model Before Change and survive-or-die;
+- **production-PRS-owned** → reference/defer; do not duplicate;
+- **repository/governance-owned** → report blocker; do not invent mechanism;
+- **no material owner/value** → discard.
 
-Adversarial maximizes **credible defect discovery**. Survive-or-die decides which corrections earn continued existence.
+Only handoff-owned candidates proceed to handoff correction design.
 
-## 10. Review cycle
+## Review cycle and convergence
 
 ```text
-Model Before Review / refresh explicit model
+Model Before Review
     -> full Adversarial sweep
-    -> collect complete blocker/high batch
-    -> Model Before Change
-    -> survive-or-die Structural Optimization
+    -> complete blocker/high candidate set
+    -> Ownership Test
+    -> Model Before Change for handoff-owned candidates
+    -> survive-or-die
     -> apply only survivors
-    -> refresh this model if bindings/transitions changed
-    -> full modeled sweep again
+    -> refresh model if needed
+    -> review again only while surviving handoff-owned blocker/high corrections remain
 ```
 
-Desired failure mode:
+Convergence is governed by `CODEX_HANDOFF_MAINTENANCE_GUIDE.md`.
 
-> "I found twelve candidates; six died under Structural Optimization."
-
-Not:
-
-> "I found one blocker, patched it, then discovered the next blocker that was already present."
+Do not keep adding handoff machinery to solve defects owned by PRS/repository governance, and do not continue revising for hypothetical cases whose mitigation creates equal or greater complexity/risk.
