@@ -24,9 +24,9 @@ Do not recreate those mechanisms in this handoff.
 
 If existing repository evidence does not determine which PRS controls or review state apply, stop and report the ambiguity rather than manufacturing a selection or succession rule.
 
-Use current PRS mechanisms to establish the authoritative review/change state, current revision/target, governed recovery scope, and next permitted PRS activity. Establish actual action authorization from the host/user task context separately from PRS-governed mode, scope, and transitions.
+Use current PRS mechanisms to establish the authoritative review/change state, current revision/target, and next permitted PRS activity. Establish actual action authorization from the host/user task context separately from PRS-governed mode, scope, and transitions.
 
-If frozen controller-core Slice 1 still constrains recovery, consult the actual source authority:
+Before finalizing governed recovery scope, determine from current source authority whether the frozen controller-core Slice 1 boundary still applies. If it does, read the actual source authority:
 
 - Issue #11 — `Implementation Phase 2: executable controller core and conformance harness`
 - clarification/comment ID `5229287324`
@@ -53,9 +53,9 @@ These are pointers, not proof that the repository is still in that historical st
 
 Reproduce the historical deterministic failure or establish its current governed disposition/replacement failure using current repository state and current PRS-required validation. Run the targeted pass-boundary checker using its repository-defined invocation/inputs.
 
-When historical review credit is disputed, distinguish:
+When historical review credit is disputed, establish the authority applicable to the disputed occurrence from durable repository chronology/provenance under current governance; if it cannot be established truthfully, report that limitation rather than infer it. Then distinguish:
 
-- whether an occurrence was valid under the authority applicable when it occurred; and
+- whether the occurrence was valid under the authority applicable when it occurred; and
 - whether current production governance accepts that evidence as current review credit.
 
 A current checker failure is evidence about current conformance; it does not by itself rewrite the authority that governed a historical occurrence. Historical evidence likewise does not create replacement authority or new review credit.
