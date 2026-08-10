@@ -1,0 +1,133 @@
+{
+  "id": "2026-08-10-git-blob-artifact-identity",
+  "summary": "Make governed artifact identity stable across checkout conversion and bind review credit to clean committed Git state.",
+  "changed_files": [
+    "skills/project-review-system/scripts/check_execution_gate.py",
+    "skills/project-review-system/tests/test_check_execution_gate.py",
+    "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json"
+  ],
+  "change_classes": ["tracker-or-completion"],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": ["execution-gate-enforcement"],
+  "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 switched to path-aware Git hashing but Adversarial review found a symlink identity defect. Revision 2 completed the full bounded Adversarial review and drove the clean committed-tree/mode-aware correction. Revision 3 completed another full bounded Adversarial pass and found four additional blocking edge cases: a staged new file whose worktree copy is removed can masquerade as committed ABSENT; ident and working-tree-encoding transformations can make materially different worktree bytes clean back to the committed blob; inherited GIT_* environment overrides and replace refs can redirect which repository/index/tree the checker observes; and core.filemode=false can suppress detection of a real POSIX owner-executable mismatch. Revision 3 receives no semantic credit. These findings are covered by the existing stale-state, intermediate-state, and durable-identity attack classes, so the Adversarial procedure itself does not change.",
+  "status": "in_progress",
+  "review_revision": 3,
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r3",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+        "review_revision": 3,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 3 revalidates one bounded artifact-state identity control after the full revision-2 correction set.",
+            "The complete bounded Adversarial pass can cover committed tree/index/worktree agreement, path canonicalization, file mode, line-ending conversion, absent paths, filter rejection, incomplete checkout, stale credit, and history preservation in one separated execution."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; complete the full bounded Adversarial pass before any further correction."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+        "review_revision": 3,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r3",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "b6872480c448dbadedeb37bf18a21ce495b0fe461671113284a45eaac18def4e",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25"
+    }
+  },
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+      "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
+          "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "BLOCKING — a path absent from HEAD but present as a staged new index entry can be deleted from the worktree and currently be accepted as committed ABSENT because the HEAD-absent branch does not inspect the index.",
+              "BLOCKING — ident and working-tree-encoding are path-aware Git content transformations not rejected by the current checker; materially different worktree bytes can clean back to the committed blob and receive the same target identity.",
+              "BLOCKING — Git subprocesses inherit ambient GIT_* environment variables and replacement refs; GIT_INDEX_FILE, GIT_DIR/GIT_WORK_TREE, namespace/object-directory variables, or replace refs can redirect which Git state the checker observes.",
+              "BLOCKING — core.filemode=false suppresses actual POSIX executable-bit validation even though committed mode is part of target identity and owner-executable state changes runtime behavior.",
+              "NON-BLOCKING ALIGNMENT — the POSIX mode comparison should use the owner execute bit rather than any execute bit because Git's regular-file mode distinction is 100644 versus 100755 and group/other-only execute changes are not represented as Git mode changes."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "revision-3 target sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+              "revision-3 gate sha256:1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+              "isolated Git fixture: ident expansion produced different worktree bytes while hash-object --path cleaned back to the committed blob",
+              "isolated Git fixture: git replace changed ls-tree HEAD interpretation unless replacement objects were disabled",
+              "isolated Git fixture: owner executable bit is the Git-relevant regular-file mode distinction"
+            ],
+            "unresolved_conditions": [
+              "Adversarial revision 3 failed; do not advance to Interdependency despite the canonical handoff consumer label.",
+              "Apply all blocking corrections together, increment review_revision once, and rerun the complete Adversarial pass on the corrected snapshot.",
+              "Mapped later stages and execution-gate-enforcement evaluation remain pending."
+            ],
+            "sha256": "e79c03252a7829a07159594c915a39846a64abd4538ed731fb6debaf781b4ad0"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {"Adversarial": "failed"},
+  "execution_occurrence_history": [
+    {
+      "review_revision": 2,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
+      "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r2-adversarial-full-1"},
+      "pass_evidence_sha256": "d98b61ccbd7577921b74fd74288b3678c70a3e76cf7d1d1b4310445fe9f04b79"
+    },
+    {
+      "review_revision": 3,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+      "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
+      "pass_evidence_sha256": "51604e938c40be0203da1d7a36713ca3fa33783edc50287d665137f16330fdb2"
+    }
+  ]
+}
