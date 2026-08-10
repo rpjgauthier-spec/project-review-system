@@ -84,6 +84,18 @@ This pattern may later deserve evaluation for canonical Project Review System us
 
 For now it is **deferred**. Do not treat it as production PRS authority, do not modify production PRS merely to adopt it, and do not let evaluation of the candidate interrupt the current handoff-maintenance stage sequence. Revisit it only as a separate method-evolution task after the current handoff review work reaches its appropriate stopping point.
 
+## Deferred stage-model completeness audit
+
+The five maintenance stage models themselves require a later completeness review before this maintenance method is treated as exhausted or evaluated for broader reuse.
+
+Use `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md` for that review.
+
+This audit was added after a skeptical End-to-end re-hunt exposed a terminal-report contract defect that the original broad End-to-end coverage language had allowed a reviewer to miss. Its purpose is to test whether each stage merely names broad dimensions or actually forces enough bounded decomposition to support a claim that material subcases were exhausted.
+
+Do **not** run this meta-review in the middle of an active stage correction loop. Run it after the current five-stage handoff review sequence reaches its appropriate stopping point and before claiming that the maintenance review method itself is complete enough for reuse or canonical-method evaluation.
+
+If the audit finds a stage-model completeness gap, collect the complete five-stage audit first, Ownership-Test and structurally cull the method findings, then update only the surviving maintenance models. Re-run affected semantic stages afterward as required by the resulting model delta.
+
 ## Canonical supporting design references
 
 Handoff-maintenance method artifacts:
@@ -94,6 +106,7 @@ Handoff-maintenance method artifacts:
 - `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`
 - `CODEX_HANDOFF_STRUCTURAL_OPTIMIZATION_REVIEW_MODEL.md`
 - `CODEX_HANDOFF_END_TO_END_REVIEW_MODEL.md`
+- `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md`
 
 When available, consult the roadmap-side living design notes:
 
