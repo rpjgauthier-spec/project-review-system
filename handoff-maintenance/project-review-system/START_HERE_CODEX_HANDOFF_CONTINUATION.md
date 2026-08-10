@@ -15,6 +15,9 @@ This directory maintains and reviews the Codex recovery handoff. It is not Proje
 - Mandatory pre-review method: `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`
 - Adversarial stage model: `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
 - Interdependency stage model: `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`
+- Normalization stage model: `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`
+- Structural Optimization stage model: `CODEX_HANDOFF_STRUCTURAL_OPTIMIZATION_REVIEW_MODEL.md`
+- End-to-end stage model: `CODEX_HANDOFF_END_TO_END_REVIEW_MODEL.md`
 
 Only the current Lean handoff remains in the live maintenance directory. Superseded Lean revisions are retained by Git history, not as parallel canonical-looking files.
 
@@ -33,35 +36,40 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 The corrected Lean v9 completed a fresh full modeled Adversarial review with no blocker/high handoff correction surviving Ownership Testing and Structural Optimization. The Adversarial maintenance cycle has converged.
 
-The maintenance method now includes a dedicated Interdependency Review Model. It derives the current dependency graph from Lean rather than storing a duplicate target flow, and tests producer/consumer edges, authority-to-action relationships, evidence bindings, propagation duties, handoffs, fallbacks, circularity, orphaning, and completion propagation. Findings remain subject to the same Ownership Test before they can become handoff changes.
+The first full modeled Interdependency review found two handoff-owned HIGH dependency defects that survived Ownership Testing and Structural Optimization:
 
-The prior culls remain in force:
+1. source-scope authority was consulted only after governed recovery scope had effectively been established, creating a circular dependency around whether frozen Slice 1 still applied;
+2. the historical-validity distinction consumed the authority applicable at the disputed occurrence without identifying a producer for that historical authority.
 
-- PRS-owned behavior is delegated to production `SKILL.md` rather than reimplemented in Lean;
-- obsolete Lean revisions live only in Git history;
-- the handoff remains recovery-specific navigation rather than a shadow PRS;
-- modeled findings do not imply handoff ownership;
-- maintenance converges when no blocker/high handoff correction survives Ownership Testing and Structural Optimization.
+Both survivors have now been applied to Lean v9 with minimal representation:
+
+- current source authority is consulted before finalizing governed recovery scope when determining whether the frozen controller-core Slice 1 boundary still applies;
+- disputed historical authority is established from durable repository chronology/provenance under current governance, with a truthful limitation reported if it cannot be established.
+
+No new authority-selection, succession, migration, revalidation, or state machinery was added.
+
+The complete five-stage maintenance model set now exists. The deferred `cull the herd` pattern remains a maintenance-method candidate only and is not production PRS authority.
 
 ## Exact next action
 
-Perform a fresh **full modeled Interdependency review of Lean v9**.
+Perform a fresh **full modeled Interdependency review of corrected Lean v9**.
 
 Mandatory method:
 
-1. Run Model Before Review for Lean v9 and derive the current recovery dependency graph.
+1. Run Model Before Review for the corrected Lean v9 and derive the current recovery dependency graph.
 2. Read and use `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`.
 3. Sweep the entire document; do not stop at the first broken edge.
 4. Collect the complete blocker/high candidate set.
 5. Ownership-Test every candidate.
-6. Report separately:
-   - handoff-owned candidates;
+6. Subject handoff-owned candidates to Structural Optimization / survive-or-die.
+7. Report separately:
+   - handoff-owned survivors;
    - production-PRS-owned findings;
    - repository/governance-owned blockers;
    - discarded low-value/redundant candidates.
-7. Do not edit Lean v9 in the same semantic pass.
+8. Do not edit Lean v9 in the same semantic pass.
 
-If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Interdependency maintenance cycle has converged.
+If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Interdependency maintenance cycle has converged and the next stage is Normalization.
 
 ## Fresh-chat prompt
 
