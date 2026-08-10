@@ -16,5 +16,8 @@
   ],
   "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. The correction hashes the actual governed file through Git's path-aware clean/EOL filters, preserves deterministic ABSENT state, keeps repository-containment checks, fails closed when Git identity cannot be established, and does not rewrite historical review evidence.",
   "status": "in_progress",
+  "review_revision": 1,
+  "execution_gates": {},
+  "execution_completions": {},
   "results": {}
 }
