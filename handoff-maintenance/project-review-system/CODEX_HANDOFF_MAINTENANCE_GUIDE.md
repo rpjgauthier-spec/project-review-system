@@ -66,6 +66,21 @@ In particular:
 
 Finding a missing relationship does not transfer ownership of that relationship to the handoff.
 
+## Deferred canonical-method candidate
+
+The maintenance workflow has produced a promising general review pattern informally described as **cull the herd**:
+
+```text
+broad modeled finding generation
+    -> Ownership Test
+    -> Structural Optimization / survive-or-die
+    -> only surviving owned corrections proceed
+```
+
+This pattern may later deserve evaluation for canonical Project Review System use because it separates exhaustive defect discovery from correction ownership and aggressively suppresses redundant or mis-owned machinery.
+
+For now it is **deferred**. Do not treat it as production PRS authority, do not modify production PRS merely to adopt it, and do not let evaluation of the candidate interrupt the current handoff-maintenance stage sequence. Revisit it only as a separate method-evolution task after the current handoff review work reaches its appropriate stopping point.
+
 ## Canonical supporting design references
 
 Handoff-maintenance method artifacts:
