@@ -34,16 +34,9 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-The corrected Lean v9 completed a fresh full modeled Adversarial review with no blocker/high handoff correction surviving Ownership Testing and Structural Optimization. The Adversarial maintenance cycle has converged.
+The corrected Lean v9 completed a full modeled Adversarial cycle with no surviving blocker/high handoff correction. A delta Adversarial review of the later Interdependency survivors also found no blocker/high handoff correction, so the Adversarial conclusion remains preserved.
 
-The first full modeled Interdependency review found two handoff-owned HIGH dependency defects that survived Ownership Testing and Structural Optimization:
-
-1. source-scope authority was consulted only after governed recovery scope had effectively been established;
-2. the historical-validity distinction consumed the authority applicable at the disputed occurrence without identifying a producer for that historical authority.
-
-Those two survivors were corrected minimally. A second full modeled Interdependency review then found one remaining handoff-owned HIGH dependency defect: Lean asked Codex to determine Slice-1 applicability from “current source authority” without first establishing which source-scope authority was current.
-
-That survivor has now been applied minimally. Lean v9 now requires this chain:
+The Interdependency cycle converged after three successive hunts. Its accepted corrections now provide these minimal recovery-specific edges:
 
 ```text
 existing repository authority
@@ -52,21 +45,32 @@ existing repository authority
     -> finalize governed recovery scope
 ```
 
-If Slice 1 remains controlling, Issue #11 and clarification/comment `5229287324` are read as controlling source material. No source-authority election, succession, migration, revalidation, or state machinery was added.
+and:
 
-The historical-authority provenance correction remains in place: disputed historical authority is established from durable repository chronology/provenance under current governance, with a truthful limitation reported if it cannot be established.
+```text
+durable repository chronology/provenance
+    -> establish authority applicable to disputed historical occurrence
+    -> assess historical validity
+    -> separately assess current-credit acceptability
+```
+
+The final source-scope producer correction was retroactively subjected to explicit Structural Optimization / survive-or-die and survived. No source-authority election, succession, migration, revalidation, or state machinery was added.
+
+The first full modeled Normalization review found one handoff-owned HIGH candidate: `target` was overloaded between the current PRS review-state identity (`current revision/target`) and the heading describing the historical pass-boundary problem (`Recovery target`). After Ownership Testing and explicit Structural Optimization, only a one-line rename survived.
+
+That correction has been applied: `## Recovery target` is now `## Historical recovery problem`. No glossary, new taxonomy, or other normalization machinery was added.
 
 The complete five-stage maintenance model set exists. The deferred `cull the herd` pattern remains a maintenance-method candidate only and is not production PRS authority.
 
 ## Exact next action
 
-Perform another fresh **full modeled Interdependency review of corrected Lean v9** as a convergence hunt.
+Perform a fresh **full modeled Normalization review of corrected Lean v9** as a convergence hunt.
 
 Mandatory method:
 
-1. Run Model Before Review for the corrected Lean v9 and derive the current recovery dependency graph.
-2. Read and use `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`.
-3. Sweep the entire document; do not stop at the first broken edge.
+1. Run Model Before Review for corrected Lean v9 and derive the current concept/representation families.
+2. Read and use `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`.
+3. Sweep the entire document; do not stop at the first inconsistency.
 4. Collect the complete blocker/high candidate set.
 5. Ownership-Test every candidate.
 6. Subject handoff-owned candidates to Structural Optimization / survive-or-die.
@@ -74,10 +78,10 @@ Mandatory method:
    - handoff-owned survivors;
    - production-PRS-owned findings;
    - repository/governance-owned blockers;
-   - discarded low-value/redundant candidates.
+   - discarded cosmetic/redundant candidates.
 8. Do not edit Lean v9 in the same semantic pass.
 
-If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Interdependency maintenance cycle has converged and the next stage is Normalization.
+If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Normalization maintenance cycle has converged. Before moving to Structural Optimization, perform any required delta review of the Normalization survivor(s) against earlier converged stages if the change materially affects those lenses.
 
 ## Fresh-chat prompt
 
