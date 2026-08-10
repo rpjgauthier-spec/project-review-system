@@ -25,11 +25,20 @@ A full End-to-end validation pass is complete only when:
 - authority, identity, authorization, evidence, and scope bindings have been checked at every material transition;
 - interruption/re-entry behavior has been considered where a journey can span executions;
 - every terminal class has been tested against its output/report obligations and the facts guaranteed to exist on that path;
+- all materially reachable journey × terminal/interruption combinations have been explicitly closed under the shared coverage rule from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`;
 - completion and blocker reporting have been traced to their consumers;
 - the complete blocker/high candidate set has been collected;
 - every blocker/high candidate has been Ownership-Tested.
 
 Do not stop after one successful happy path or the first failure.
+
+## End-to-end coverage closure
+
+Derive a bounded reachability inventory that crosses the applicable journey families with only those terminal and interruption classes actually reachable for the current target.
+
+For each material combination, trace entry, transitions, authority/identity bindings, interruption or terminal condition, reporting obligations, and re-entry needs where applicable. A journey family and a terminal class are not considered closed merely because each was tested separately.
+
+Do not construct a universal Cartesian product. Exclude combinations that are not materially reachable and record why they are outside the bounded inventory when that exclusion is non-obvious.
 
 ## Governing purpose
 
@@ -214,6 +223,6 @@ Prefer the smallest correction that restores the journey without duplicating the
 
 ## Convergence
 
-The End-to-end maintenance stage converges when every mandatory applicable journey and terminal contract has been traced and no blocker/high handoff correction survives both Ownership Testing and Structural Optimization.
+The End-to-end maintenance stage converges when every mandatory applicable journey, terminal contract, and materially reachable journey × terminal/interruption combination has been traced and no blocker/high handoff correction survives both Ownership Testing and Structural Optimization.
 
 A remaining production-PRS or repository/governance blocker does not justify additional handoff machinery merely to produce a clean handoff result.
