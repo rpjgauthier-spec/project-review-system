@@ -22,10 +22,20 @@ A full Structural Optimization pass is complete only when:
 - every material repeated concept or prohibition has been considered for merge or delegation;
 - every pointer, exception, special case, and report requirement has been tested for a current consumer;
 - every handoff-owned protection has been checked against deletion, compression, or replacement by an existing authoritative mechanism;
+- every material deletion/compression candidate has been tested against all target-derived consumer and terminal classes that could depend on it;
+- the bounded structure/consumer inventory is explicitly closed under the shared coverage rule from `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`;
 - the complete blocker/high structural candidate set has been collected;
 - every candidate has passed the mandatory Ownership Test before being treated as a proposed handoff correction.
 
 Do not stop after finding the first removable element.
+
+## Structural coverage closure
+
+For each material element or proposed deletion/compression, derive the current consumers and terminal/re-entry contexts that can depend on it. Include blocker, interruption, fresh-session re-entry, reporting, or success consumers only when the target makes them materially relevant.
+
+A removal verdict is not closed merely because the happy path still works. Verify that deleting, merging, compressing, or delegating the element does not remove the only protection or information needed by any target-derived material consumer or terminal class.
+
+Do not create a permanent removal matrix. Use the minimum bounded structure/consumer witness needed for the current review.
 
 ## Governing principle
 
@@ -152,7 +162,8 @@ That broader pattern remains non-authoritative maintenance methodology. Do not i
 
 ```text
 Model Before Review
-    -> derive current structural model
+    -> derive bounded current structure and material consumer/terminal inventory
+    -> close removal/compression candidates against those consumers
     -> full Structural Optimization sweep
     -> complete blocker/high structural candidate set
     -> Ownership Test
