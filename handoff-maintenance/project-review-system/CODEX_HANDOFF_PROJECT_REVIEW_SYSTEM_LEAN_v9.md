@@ -26,7 +26,7 @@ If existing repository evidence does not determine which PRS controls or review 
 
 Use current PRS mechanisms to establish the authoritative review/change state, current revision/target, and next permitted PRS activity. Establish actual action authorization from the host/user task context separately from PRS-governed mode, scope, and transitions.
 
-Before finalizing governed recovery scope, determine from current source authority whether the frozen controller-core Slice 1 boundary still applies. If it does, read the actual source authority:
+Before finalizing governed recovery scope, identify the current source-scope authority through existing repository authority, then determine from that source whether the frozen controller-core Slice 1 boundary still applies. If it does, read the controlling source material, including when still applicable:
 
 - Issue #11 — `Implementation Phase 2: executable controller core and conformance harness`
 - clarification/comment ID `5229287324`
