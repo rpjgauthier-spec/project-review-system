@@ -18,6 +18,7 @@ This directory maintains and reviews the Codex recovery handoff. It is not Proje
 - Normalization stage model: `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`
 - Structural Optimization stage model: `CODEX_HANDOFF_STRUCTURAL_OPTIMIZATION_REVIEW_MODEL.md`
 - End-to-end stage model: `CODEX_HANDOFF_END_TO_END_REVIEW_MODEL.md`
+- Deferred stage-model meta-audit: `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md`
 
 Only the current Lean handoff remains in the live maintenance directory. Superseded Lean revisions are retained by Git history, not as parallel canonical-looking files.
 
@@ -36,32 +37,45 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 Adversarial, Interdependency, Normalization, and Structural Optimization have converged on current Lean v9, including required backward-impact delta checks.
 
-The first End-to-end pass initially appeared to converge, but a skeptical re-hunt exposed a terminal-reporting defect: blocked journeys can terminate before an authoritative review state is established while the report contract asked for that state. The candidate survived Ownership Testing and Structural Optimization, and Lean v9 was minimally corrected to permit reporting which governing repository/ref or authoritative review state could not be established.
+The first End-to-end pass initially appeared to converge, but a skeptical re-hunt exposed a terminal-reporting defect: blocked journeys can terminate before some report facts are established or produced.
 
-That miss revealed a methodological blind spot: the End-to-end model traced journeys to terminal states but did not deterministically test whether each terminal state's output/report obligations were satisfiable from facts guaranteed to exist on that path.
+That miss exposed a methodological blind spot in the End-to-end model. The model has therefore been strengthened with **terminal-contract completeness**: for every success, blocker, and semantic-boundary terminal state, identify facts guaranteed to exist, facts that may remain unknown or not applicable, report obligations and their preconditions, and whether the next consumer can distinguish `not established` / `not applicable` from omission or fabrication.
 
-The End-to-end model has therefore been strengthened with **terminal-contract completeness**. Every terminal class must now identify guaranteed facts, facts that may remain unknown/not applicable, report obligations, their preconditions, and whether the next consumer can distinguish unknown/not-established/not-applicable from omission or fabrication.
+The first local Lean correction made only the authority/report-state field tolerant of early blockers. Re-running under the strengthened model showed that field-specific exceptions were too narrow because other report facts may also legitimately not exist on early terminal paths.
 
-A fresh End-to-end re-run under that strengthened model found a broader remaining HIGH candidate: the report contract still lists other facts that may legitimately not exist on an early blocked path, including failure/current-disposition, governed action taken, validation performed, and commits. The local authority-field correction therefore may be insufficient; a general truthful terminal-reporting rule may be the smaller and more complete representation.
+The broader terminal-reporting candidate was explicitly Ownership-Tested and subjected to Structural Optimization / survive-or-die. It survived as one general invariant rather than a collection of per-field exceptions.
 
-No additional Lean correction has been applied for this broader candidate yet.
+Lean v9 now states:
+
+> Report each applicable material recovery fact truthfully. When a valid terminal path ends before a fact can be established or produced, report it as `not established` or `not applicable` rather than infer or fabricate it.
+
+The previous local authority-field workaround was removed. No report schema, new state, or additional authority machinery was introduced.
+
+A separate deferred `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md` now exists to review whether any of the five stage models contain similar hidden coverage gaps, false exhaustiveness, weak completion proof, missing state/path combinations, or unchecked obligation preconditions. This meta-audit is maintenance-only and must not be treated as production PRS authority.
 
 ## Exact next action
 
-Perform **Ownership Test + Structural Optimization / survive-or-die** on the broader End-to-end terminal-reporting candidate only.
+Perform a fresh **full modeled End-to-end validation of corrected Lean v9 under the strengthened End-to-end model** as a convergence hunt.
 
-Candidate to test:
+Mandatory method:
 
-> The Expected recovery report should generally require each applicable material item to be reported truthfully, explicitly allowing `not established` / `not applicable` when a valid terminal path can end before that fact exists, rather than solving the problem field-by-field.
+1. Run Model Before Review and derive the current complete recovery journey graph.
+2. Read and use `CODEX_HANDOFF_END_TO_END_REVIEW_MODEL.md`, including terminal-contract completeness.
+3. Trace every applicable mandatory journey family from entry through terminal state.
+4. For every distinct success, blocker, and semantic-boundary terminal state, enumerate:
+   - facts guaranteed to exist;
+   - facts that may remain `not established` or `not applicable`;
+   - report/output obligations;
+   - preconditions for each obligation;
+   - whether the next consumer can distinguish unknown/not-applicable from omission or fabrication.
+5. Collect the complete blocker/high candidate set before reporting.
+6. Ownership-Test every candidate.
+7. Subject handoff-owned candidates to Structural Optimization / survive-or-die.
+8. Do not edit Lean v9 in the same semantic pass.
 
-If it survives:
+If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the End-to-end maintenance stage has converged under the strengthened model.
 
-1. perform Model Before Change;
-2. replace the local reporting workaround with the smallest general terminal-report rule that covers all report fields without adding a schema or new state machinery;
-3. commit only that correction;
-4. run a fresh full End-to-end validation under the strengthened model in a separate semantic pass.
-
-Do not perform another Lean edit before this candidate is explicitly weighed.
+After the five-stage sequence is settled, perform the deferred `CODEX_HANDOFF_STAGE_MODEL_COMPLETENESS_AUDIT.md` before treating the maintenance review method itself as exhausted or reusable.
 
 ## Fresh-chat prompt
 
