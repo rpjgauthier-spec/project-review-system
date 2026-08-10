@@ -31,9 +31,10 @@ Before every semantic review of the Codex recovery handoff:
 4. complete the entire declared modeled sweep before treating the pass as complete;
 5. ownership-test blocker/high candidates before treating them as proposed handoff corrections.
 
-For Adversarial review, use:
+Stage-specific models:
 
-`CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
+- Adversarial: `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
+- Interdependency: `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`
 
 This checkpoint is mandatory even when the immediate instruction merely says to perform another review.
 
@@ -71,6 +72,7 @@ Handoff-maintenance method artifacts:
 
 - `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`
 - `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
+- `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`
 
 When available, consult the roadmap-side living design notes:
 
