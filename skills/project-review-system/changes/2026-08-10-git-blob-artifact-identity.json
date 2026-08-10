@@ -1,0 +1,20 @@
+{
+  "id": "2026-08-10-git-blob-artifact-identity",
+  "summary": "Make governed artifact identity stable across Git line-ending conversion while binding dirty and untracked files to their actual Git-canonical content.",
+  "changed_files": [
+    "skills/project-review-system/scripts/check_execution_gate.py",
+    "skills/project-review-system/tests/test_check_execution_gate.py",
+    "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json"
+  ],
+  "change_classes": [
+    "tracker-or-completion"
+  ],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": [
+    "execution-gate-enforcement"
+  ],
+  "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. The correction hashes the actual governed file through Git's path-aware clean/EOL filters, preserves deterministic ABSENT state, keeps repository-containment checks, fails closed when Git identity cannot be established, and does not rewrite historical review evidence.",
+  "status": "in_progress",
+  "results": {}
+}
