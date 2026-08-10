@@ -22,7 +22,7 @@ This directory maintains and reviews the Codex recovery handoff. It is not Proje
 
 Only the current Lean handoff remains in the live maintenance directory. Superseded Lean revisions are retained by Git history, not as parallel canonical-looking files.
 
-## Mandatory read order
+## Mandatory read order for future handoff maintenance
 
 1. Read this file.
 2. Read `CODEX_HANDOFF_MAINTENANCE_GUIDE.md`.
@@ -36,65 +36,78 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-The maintenance method and all five stage maps have been strengthened with bounded target-derived coverage closure.
+**Lean v9 is converged and ready for use as the Codex recovery handoff.**
 
-Fresh Lean v9 re-evaluation under those maps completed these separated stages on handoff blob `0d5a3b926d78c7512322b477ea1b7babfa51773a`:
+The maintenance method and all five stage maps were strengthened with bounded target-derived coverage closure. Lean v9 was then re-evaluated through separated semantic stages.
+
+Initial strengthened-stage results:
 
 - Adversarial: converged, zero blocker/high handoff-owned survivors.
 - Interdependency: converged, zero blocker/high handoff-owned survivors.
 - Normalization: converged, zero blocker/high handoff-owned survivors.
 - Structural Optimization: converged, zero blocker/high handoff-owned survivors.
 
-End-to-end had not yet begun.
-
-A user-raised discoverability check then found that the local-first roadmap and living design notes were not deterministically reachable from Lean alone. Repository inspection established their current known navigation location on branch `review-local-first-refactor-roadmap`:
+A later discoverability check found that the local-first roadmap and living design notes were not deterministically reachable from Lean alone. Repository inspection established their current known navigation location on branch `review-local-first-refactor-roadmap`:
 
 - `skills/project-review-system/reviews/local-first-refactor-roadmap.md`
 - `skills/project-review-system/reviews/local-first-refactor-living-design-notes.md`
 
-Issue #11 consumes the frozen Issue #10 execution contract but does not itself name those two files. The roadmap states that it is a reviewed/disposable design artifact; the living notes explicitly state that they are non-authoritative refinements and do not override the reviewed roadmap/current validated PRS.
-
-Lean was therefore minimally corrected to add these two navigation pointers while explicitly requiring current repository location/applicability to be verified before use and preserving their non-authoritative relationship to repository/PRS authority.
+Lean was minimally corrected to add those navigation pointers while requiring current location/applicability to be verified and preserving their non-authoritative relationship to repository/PRS authority.
 
 Lean pointer-correction commit:
 
 `5b6fa7839534508c6dca97e72e8350d37751b000`
 
-Current Lean blob after correction:
+Current Lean blob:
 
 `db4e5295b91b5566bbba108d11d0b46300074a55`
 
-No semantic re-review was fused into the pointer-correction pass.
+The correction was then revalidated through the affected earlier lenses as separate execution boundaries:
 
-Because this correction changes Lean's navigation/authority surface after Adversarial, Interdependency, Normalization, and Structural Optimization had converged, those prior results require bounded backward-impact/delta revalidation before End-to-end begins.
+- Delta Adversarial: converged, zero blocker/high handoff-owned survivors.
+- Delta Interdependency: converged, zero blocker/high handoff-owned survivors.
+- Delta Normalization: converged, zero blocker/high handoff-owned survivors.
+- Delta Structural Optimization: converged, zero blocker/high handoff-owned survivors; the navigation block survived intact.
+
+Full strengthened End-to-end validation then traced all materially reachable recovery journeys, interruption/re-entry classes, terminal contracts, and journey × terminal combinations, including the roadmap/living-notes discovery path.
+
+End-to-end result:
+
+- zero blockers;
+- zero HIGH handoff-owned survivors;
+- reachable journey × terminal/interruption inventory closed;
+- terminal-report contracts closed;
+- no Lean correction required.
+
+Therefore the current Lean v9 handoff has converged under all five strengthened stage maps.
 
 ## Exact next action
 
-Perform a **delta Adversarial review only** of the roadmap/living-notes pointer correction on current Lean v9.
+**Deploy the handoff in a fresh Codex recovery run.**
 
-Delta scope:
+Give Codex the current Lean handoff as its recovery/navigation task and let it recover the actual current repository/PRS state. Do not preselect the implementation action beyond what Lean and current repository authority permit.
 
-- branch/path pointer staleness and identity binding;
-- roadmap/living-notes authority characterization;
-- whether navigation context can be mistaken for source-scope or PRS authority;
-- whether the pointer could broaden recovery scope improperly;
-- trust/chronology implications of reading artifacts from a non-current branch.
+Codex should:
 
-Mandatory boundary:
+1. read `handoff-maintenance/project-review-system/CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md`;
+2. recover repository identity, applicable repository authority, current PRS controls/state, and source-scope authority from durable repository evidence;
+3. use the roadmap/living-design-note pointers only as applicable upstream design context, never as replacement authority;
+4. continue only the governed controller-core recovery permitted by current PRS state and host/user authorization;
+5. stop at the next valid governed state, required fresh semantic execution boundary, or real blocker;
+6. report only facts actually established on the reached path.
 
-1. derive and close the bounded Adversarial delta inventory;
-2. collect and Ownership-Test any blocker/high candidates;
-3. do not edit Lean in the same semantic pass;
-4. do not begin Interdependency in the same pass.
+Do not perform additional handoff semantic review unless the handoff itself is changed or execution exposes a new handoff-owned defect.
 
-If Adversarial delta converges, continue with separate delta Interdependency, Normalization, and Structural Optimization passes as materially required. Only after the correction is revalidated through affected earlier lenses should full strengthened End-to-end validation begin.
+Do not modify production PRS merely because maintenance methodology suggests an improvement; production method evolution remains a separate task.
 
-Do not modify production PRS during this handoff re-evaluation. Production method evolution remains a separate later task.
+## Codex launch prompt
 
-## Fresh-chat prompt
+> In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md` and execute that recovery handoff against the repository's actual current state. Follow current repository and Project Review System authority, continue only the bounded governed recovery, and stop exactly where the handoff requires.
+
+## Fresh maintenance-chat prompt
 
 > In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md` and every file it marks mandatory. Continue from the exact next action.
 
 ## Update rule
 
-Update this manifest whenever the current handoff version, maintenance method/model, review stage, or exact next action changes.
+Update this manifest whenever the current handoff version, maintenance method/model, review stage, convergence state, or exact next action changes.
