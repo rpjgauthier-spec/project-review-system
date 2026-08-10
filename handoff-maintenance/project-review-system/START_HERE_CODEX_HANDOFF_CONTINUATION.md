@@ -10,12 +10,12 @@ This directory maintains and reviews the Codex recovery handoff. It is not Proje
 
 ## Current artifacts
 
-- Recovery handoff: `CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v8.md`
+- Recovery handoff: `CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md`
 - Maintenance guide: `CODEX_HANDOFF_MAINTENANCE_GUIDE.md`
 - Mandatory pre-review method: `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`
 - Adversarial stage model: `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
 
-Repository-side non-authoritative design references remain under `skills/project-review-system/reviews/` and must not be treated as production authority unless current PRS governance promotes them.
+Only the current Lean handoff remains in the live maintenance directory. Superseded Lean revisions are retained by Git history, not as parallel canonical-looking files.
 
 ## Mandatory read order
 
@@ -23,52 +23,46 @@ Repository-side non-authoritative design references remain under `skills/project
 2. Read `CODEX_HANDOFF_MAINTENANCE_GUIDE.md`.
 3. Read `CODEX_HANDOFF_MODEL_BEFORE_REVIEW.md`.
 4. Read `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md` before any new Adversarial review.
-5. Read `CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v8.md`.
-6. After a semantic sweep, ownership-test blocker/high candidates before proposing handoff corrections.
+5. Read `CODEX_HANDOFF_PROJECT_REVIEW_SYSTEM_LEAN_v9.md`.
+6. After a semantic sweep, Ownership-Test every blocker/high candidate before proposing handoff corrections.
 7. Before any nontrivial handoff-owned correction, perform Model Before Change.
 8. Run Structural Optimization / survive-or-die before editing.
 
 ## Current status
 
-Lean v8 is the current review target.
+A delta survive-or-die reweighed the accumulated handoff survivors under the Ownership Test.
 
-The latest correction deliberately **removed machinery** rather than adding more governance:
+The cull:
 
-- bootstrap is now non-destructive factual discovery, not a handoff-assigned PRS `Diagnostic` mode;
-- the handoff-created cross-ref PRS control-election/binding subsystem was removed;
-- applicable PRS controls must come from existing repository authority/provenance, otherwise recovery stops on unresolved applicability;
-- factual discovery is limited to inventory/provenance rather than authority/relevance judgment;
-- PRS-governed mode/scope/depth/transition is separated from host/user action authorization;
-- Model Before Review now contains a mandatory Ownership Test;
-- the Adversarial model was reframed so modeled defects are candidates, not automatic handoff features;
-- the Maintenance Guide now defines convergence and an anti-churn condition.
+- removed superseded Lean v6, v7, and v8 from the live tree;
+- replaced the shadow PRS state machine in Lean with a direct handoff to production `SKILL.md` for PRS-owned behavior;
+- removed duplicated Adaptive Execution, generic PRS validation, module-loading, and most duplicated authority-model machinery;
+- retained only recovery-specific navigation, historical failure/credit handling, minimal safety/autonomy boundaries, source-scope pointers, and reporting needs;
+- simplified the Adversarial scroll so it derives the target-specific flow during Model Before Review instead of storing a duplicate Lean state machine;
+- preserved the Ownership Test and convergence rule;
+- added live-artifact hygiene so Git history, rather than stale working-tree copies, archives superseded Lean revisions.
+
+The previously proposed explicit `shared-control-model.md` handoff pointer was culled as redundant because production `SKILL.md` already owns that requirement.
 
 ## Exact next action
 
-Perform a fresh **full Adversarial review of Lean v8** using the reframed model.
+Perform a fresh **full modeled Adversarial review of Lean v9**.
 
 Mandatory method:
 
-1. Run Model Before Review for Lean v8.
-2. Refresh the purpose/authority/identity/state/invariant/failure model.
-3. Use the refreshed Adversarial Review Model.
-4. Sweep the entire document; do not stop at the first blocker.
-5. Collect the complete blocker/high candidate set.
-6. Run the Ownership Test on every candidate.
-7. Report separately:
+1. Run Model Before Review for Lean v9 and derive the current recovery model from the target.
+2. Use the Adversarial Review Model to sweep the entire document.
+3. Do not stop at the first blocker.
+4. Collect the complete blocker/high candidate set.
+5. Ownership-Test every candidate.
+6. Report separately:
    - handoff-owned candidates;
    - production-PRS-owned findings;
    - repository/governance-owned blockers;
    - discarded low-value/redundant candidates.
-8. Do not edit Lean v8 in the same semantic pass.
+7. Do not edit Lean v9 in the same semantic pass.
 
-After findings, only surviving **handoff-owned** correction proposals proceed to Model Before Change and survive-or-die.
-
-## Convergence
-
-Handoff maintenance converges when a complete modeled semantic review produces no blocker/high handoff correction that survives both Ownership Testing and Structural Optimization.
-
-External PRS/repository blockers may remain without forcing new handoff machinery; report them at the owning layer.
+If no blocker/high handoff correction survives Ownership Testing and Structural Optimization, the Adversarial maintenance cycle has converged.
 
 ## Fresh-chat prompt
 
