@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -51,6 +52,17 @@ def completion_for(gate):
         "scratch_cleanup_status": "not_applicable",
         "retained_subpass_artifacts": [],
     }
+
+
+def init_git_repository(root: Path) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.name", "PRS Tests"], cwd=root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "config", "user.email", "prs-tests@example.invalid"], cwd=root, check=True, capture_output=True, text=True)
+
+
+def commit_all(root: Path, message: str = "fixture") -> None:
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "commit", "-q", "-m", message], cwd=root, check=True, capture_output=True, text=True)
 
 
 class ExecutionGateTests(unittest.TestCase):
@@ -134,15 +146,66 @@ class ExecutionGateTests(unittest.TestCase):
         ]
         checker.validate_execution_completion(completion, gate)
 
-    def test_artifact_state_changes_with_content(self) -> None:
+    def test_artifact_state_changes_with_dirty_content(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
+            init_git_repository(root)
             target = root / "a.txt"
-            target.write_text("one", encoding="utf-8")
+            target.write_text("one\n", encoding="utf-8")
+            commit_all(root)
             first = checker.repository_artifact_state_sha256(["a.txt"], root)
-            target.write_text("two", encoding="utf-8")
+            target.write_text("two\n", encoding="utf-8")
             second = checker.repository_artifact_state_sha256(["a.txt"], root)
             self.assertNotEqual(first, second)
+
+    def test_artifact_state_is_stable_across_line_ending_conversion(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            (root / ".gitattributes").write_text("*.txt text eol=lf\n", encoding="utf-8")
+            target = root / "a.txt"
+            target.write_bytes(b"one\n")
+            commit_all(root)
+            lf_state = checker.repository_artifact_state_sha256(["a.txt"], root)
+            target.write_bytes(b"one\r\n")
+            crlf_state = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertEqual(lf_state, crlf_state)
+
+    def test_untracked_artifact_identity_reflects_current_content(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            target = root / "a.txt"
+            target.write_text("one\n", encoding="utf-8")
+            first = checker.repository_artifact_state_sha256(["a.txt"], root)
+            target.write_text("two\n", encoding="utf-8")
+            second = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertNotEqual(first, second)
+
+    def test_absent_artifact_identity_is_deterministic(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            first = checker.repository_artifact_state_sha256(["missing.txt"], root)
+            second = checker.repository_artifact_state_sha256(["missing.txt"], root)
+            self.assertEqual(first, second)
+
+    def test_artifact_state_requires_git_repository_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "a.txt").write_text("one\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "cannot verify Git repository root"):
+                checker.repository_artifact_state_sha256(["a.txt"], root)
+
+    def test_nested_directory_is_not_accepted_as_repository_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            nested = root / "nested"
+            nested.mkdir()
+            (nested / "a.txt").write_text("one\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "is not the Git toplevel"):
+                checker.repository_artifact_state_sha256(["a.txt"], nested)
 
     def test_leading_dot_path_is_preserved(self) -> None:
         self.assertEqual(checker.normalize_repository_path(".github/workflow.yml"), ".github/workflow.yml")
