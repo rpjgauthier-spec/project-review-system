@@ -24,7 +24,7 @@ Do not recreate those mechanisms in this handoff.
 
 If existing repository evidence does not determine which PRS controls or review state apply, stop and report the ambiguity rather than manufacturing a selection or succession rule.
 
-Use current PRS mechanisms to establish the authoritative review/change state, current revision/target, governed recovery scope, and next permitted PRS activity. Establish actual permission for edits, commits, pushes, destructive actions, or other externally authorized actions separately from host/user task authority.
+Use current PRS mechanisms to establish the authoritative review/change state, current revision/target, governed recovery scope, and next permitted PRS activity. Establish actual action authorization from the host/user task context separately from PRS-governed mode, scope, and transitions.
 
 If frozen controller-core Slice 1 still constrains recovery, consult the actual source authority:
 
