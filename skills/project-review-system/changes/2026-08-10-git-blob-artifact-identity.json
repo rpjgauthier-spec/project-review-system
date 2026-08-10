@@ -1,6 +1,6 @@
 {
   "id": "2026-08-10-git-blob-artifact-identity",
-  "summary": "Make governed artifact identity stable across Git line-ending conversion while binding dirty and untracked files to their actual Git-canonical content.",
+  "summary": "Make governed artifact identity stable across checkout conversion and bind review credit to clean committed Git state.",
   "changed_files": [
     "skills/project-review-system/scripts/check_execution_gate.py",
     "skills/project-review-system/tests/test_check_execution_gate.py",
@@ -14,116 +14,12 @@
   "additional_evaluations": [
     "execution-gate-enforcement"
   ],
-  "reason": "The execution-gate target-state calculation is a completion control. Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 corrected that by hashing actual governed files through Git's path-aware clean/EOL filters, but Adversarial review found that git hash-object follows filesystem symlinks while Git stores symlink blobs as link-target text. Revision 2 then completed the full bounded Adversarial review and found additional blocking state-binding defects: local/non-versioned attributes can alter path-aware hashing for the same committed blob; Git tree mode is omitted; tracked-but-missing worktree paths are conflated with committed absence; path normalization is not fully host-independent; and creditable dirty/untracked snapshots are not durably reconstructable. Revision 2 receives no semantic credit. The next bounded correction will bind present governed artifacts to clean committed Git tree entries, include file mode, reject dirty/untracked/incomplete checkout state, preserve deterministic committed absence, and canonicalize repository paths before revision 3 reopens Adversarial.",
+  "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 switched to path-aware Git hashing but Adversarial review found a symlink identity defect. Revision 2 then completed the full bounded Adversarial review and found additional blocking defects: local/non-versioned attributes can alter path-aware hashing for the same committed blob; Git tree mode was omitted; tracked-but-missing worktree paths were conflated with committed absence; path normalization was not fully host-independent; and dirty/untracked target snapshots were not durably reconstructable. The correction now derives creditable target state from clean committed Git regular-file tree entries, includes Git mode plus object identity, canonicalizes repository paths, rejects dirty/staged/untracked/incomplete/symlink state, rejects external clean-filter paths before hashing, and represents ABSENT only for paths absent from both committed tree and worktree. The revision-2 completed pass was recorded with a structurally invalid handoff consumer; that immutable occurrence is preserved only as reservation evidence and receives no semantic credit. Revision 3 reopens from Adversarial with fresh execution identities.",
   "status": "in_progress",
-  "review_revision": 2,
-  "execution_gates": {
-    "Adversarial": {
-      "schema_version": 1,
-      "activity": "Adversarial",
-      "workload": {
-        "schema_version": 1,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r2",
-        "activity": "Adversarial",
-        "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
-        "review_revision": 2,
-        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
-        "stage_assessment": {
-          "single_pass_suitable": true,
-          "reasons": [
-            "The revision-2 correction remains bounded to artifact-state identity calculation and direct regression coverage.",
-            "This pass will inspect the complete bounded threat surface before any further correction: path normalization/containment, regular-file type handling, Git filter behavior, dirty and untracked content, absent paths, Git failure modes, stale credit, and replay or representability gaps."
-          ],
-          "subpasses": []
-        },
-        "fused_authorization": null,
-        "notes": "SEPARATED default; this pass must complete the full bounded Adversarial review before any correction is applied."
-      },
-      "capability": {
-        "schema_version": 1,
-        "profile_id": "default-separated-v1",
-        "subject_id": "unmeasured-reviewer-separated-default",
-        "validation_status": "DEFAULT_SEPARATED",
-        "benchmark_suite": "none-default-separated",
-        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
-        "fused_permissions": []
-      },
-      "decision": {
-        "schema_version": 1,
-        "activity": "Adversarial",
-        "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
-        "review_revision": 2,
-        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r2",
-        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
-        "selected_mode": "SEPARATED",
-        "plan_kind": "ONE_PASS",
-        "execution_plan": [
-          {
-            "pass_id": "stage-main",
-            "scope": "Adversarial",
-            "context_mode": "SEPARATED"
-          }
-        ],
-        "fused_permission_id": null,
-        "capability_profile_id": "default-separated-v1",
-        "capability_subject_id": "unmeasured-reviewer-separated-default",
-        "capability_validation_status": "DEFAULT_SEPARATED",
-        "capability_benchmark_suite": "none-default-separated",
-        "workload_sha256": "7d1ddf364c47b18a3ef9d5e093a2f51e762bdfd56e039c4758f7fe5cc1c3c3a0",
-        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
-        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
-      },
-      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2"
-    }
-  },
-  "execution_completions": {
-    "Adversarial": {
-      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
-      "target_state_id": "sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
-      "passes": [
-        {
-          "pass_id": "stage-main",
-          "context_mode": "SEPARATED",
-          "status": "complete",
-          "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
-          "boundary": {
-            "kind": "declared-execution-unit",
-            "id": "assistant-message-pr14-r2-adversarial-full-1"
-          },
-          "handoff": {
-            "consumer": "artifact-identity correction revision 3",
-            "findings": [
-              "BLOCKING — local/non-versioned Git attributes can change git hash-object --path output for the same committed blob, so target identity remains checkout-local rather than committed-state stable; a configured clean filter can also be invoked during identity calculation.",
-              "BLOCKING — artifact state records blob IDs but omits Git tree mode, so an executable-bit change can leave the target state unchanged.",
-              "BLOCKING — a governed path present in HEAD but missing from the worktree is currently represented as ABSENT, conflating committed absence with sparse/incomplete/dirty checkout state.",
-              "BLOCKING — repository path normalization is not fully canonical or host-independent; internal aliases and Windows drive-qualified forms can resolve differently across platforms.",
-              "BLOCKING DESIGN CONSEQUENCE — allowing dirty or untracked governed files to become creditable target snapshots makes review evidence potentially unreconstructable and complicates stable committed-state identity. The bounded corrective direction is to require clean committed regular-file entries for present governed paths and represent ABSENT only when both committed tree and worktree are absent."
-            ],
-            "evidence": [
-              "skills/project-review-system/scripts/check_execution_gate.py",
-              "skills/project-review-system/tests/test_check_execution_gate.py",
-              "skills/project-review-system/scripts/update_revalidation_queue.py",
-              "revision-2 target sha256:ca1b80e29f32901efd32bb612bdc04cda604144622ac308608662d35190d5765",
-              "revision-2 gate sha256:2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
-              "isolated Git fixture: .git/info/attributes plus a local clean filter changed hash-object --path output while HEAD blob stayed unchanged",
-              "isolated Git fixture: chmod-only change is reported by Git while blob ID remains unchanged"
-            ],
-            "unresolved_conditions": [
-              "Apply the full bounded correction set together, then increment review_revision once and rerun the complete Adversarial stage against the corrected snapshot.",
-              "Later mapped stages and execution-gate-enforcement evaluation remain pending."
-            ],
-            "sha256": "d585527481c866357d0e49dd4b7a15805c6b6c49e26740576d4ac57a0b23af02"
-          }
-        }
-      ],
-      "scratch_materialized": false,
-      "scratch_cleanup_status": "not_applicable",
-      "retained_subpass_artifacts": []
-    }
-  },
-  "results": {
-    "Adversarial": "failed"
-  },
+  "review_revision": 3,
+  "execution_gates": {},
+  "execution_completions": {},
+  "results": {},
   "execution_occurrence_history": [
     {
       "review_revision": 2,
