@@ -131,6 +131,22 @@ The persistent Codex goal should:
 - stop once the reviewed design has converged and an implementation-ready specification is durably recorded;
 - not cross into implementation of the new local deterministic engine.
 
+## Pending Goal-prompt finalization
+
+The persistent `/goal` execution contract is **not yet finalized for use**.
+
+The most recent full Goal prompt was adversarially reviewed after the stop-before-implementation boundary was added. That review found three material prompt risks that still require the requested cull-the-herd / survive-or-die pass before the prompt should be treated as final:
+
+1. the descriptive work checklist could accidentally become a second authority instead of remaining subordinate/disposable relative to current repository/PRS state;
+2. the requested implementation-ready specification could drift into implementation-by-proxy (production code, executable pseudocode, concrete implementation bodies, migration scripts, or file-by-file coding instructions);
+3. progress pressure needs an explicit fail-closed priority when continued advancement conflicts with uncertainty about authority, review credit, or semantic-boundary validity.
+
+The next maintenance-chat task is therefore:
+
+**Perform the cull-the-herd / survive-or-die review of the adversarially reviewed full persistent Goal prompt, produce the final reduced Goal prompt, and only then hand that prompt to Codex.**
+
+Do not reopen Lean v9 semantic review merely to finalize this deployment prompt; this is Goal-prompt/deployment bookkeeping unless the resulting prompt change exposes a new Lean handoff-owned defect.
+
 ## Fresh maintenance-chat prompt
 
 > In `rpjgauthier-spec/project-review-system`, read `handoff-maintenance/project-review-system/START_HERE_CODEX_HANDOFF_CONTINUATION.md` and every file it marks mandatory. Continue from the exact next action. Do not reopen handoff semantic review unless the handoff changed or a new handoff-owned defect was exposed.
