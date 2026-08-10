@@ -30,27 +30,25 @@ Only the current Lean handoff remains in the live maintenance directory. Superse
 
 ## Current status
 
-A delta survive-or-die reweighed the accumulated handoff survivors under the Ownership Test.
+A delta survive-or-die reweighed the accumulated handoff survivors under the Ownership Test and removed shadow PRS machinery. A subsequent full modeled Adversarial sweep of Lean v9 produced one handoff-owned survivor: Lean misstated the relationship between host/user task authority and actual action authorization.
 
-The cull:
+That survivor passed Ownership Testing and Structural Optimization and has now been applied. Lean v9 now states that actual action authorization comes from the host/user task context and is separate from PRS-governed mode, scope, and transitions.
+
+The prior cull also:
 
 - removed superseded Lean v6, v7, and v8 from the live tree;
-- replaced the shadow PRS state machine in Lean with a direct handoff to production `SKILL.md` for PRS-owned behavior;
+- delegated PRS-owned behavior to production `SKILL.md`;
 - removed duplicated Adaptive Execution, generic PRS validation, module-loading, and most duplicated authority-model machinery;
-- retained only recovery-specific navigation, historical failure/credit handling, minimal safety/autonomy boundaries, source-scope pointers, and reporting needs;
-- simplified the Adversarial scroll so it derives the target-specific flow during Model Before Review instead of storing a duplicate Lean state machine;
-- preserved the Ownership Test and convergence rule;
-- added live-artifact hygiene so Git history, rather than stale working-tree copies, archives superseded Lean revisions.
-
-The previously proposed explicit `shared-control-model.md` handoff pointer was culled as redundant because production `SKILL.md` already owns that requirement.
+- simplified the Adversarial scroll so it derives the target-specific flow during Model Before Review;
+- preserved the Ownership Test, convergence rule, and live-artifact hygiene.
 
 ## Exact next action
 
-Perform a fresh **full modeled Adversarial review of Lean v9**.
+Perform a fresh **full modeled Adversarial review of corrected Lean v9**.
 
 Mandatory method:
 
-1. Run Model Before Review for Lean v9 and derive the current recovery model from the target.
+1. Run Model Before Review for the corrected Lean v9 and derive the current recovery model from the target.
 2. Use the Adversarial Review Model to sweep the entire document.
 3. Do not stop at the first blocker.
 4. Collect the complete blocker/high candidate set.
