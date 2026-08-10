@@ -17,7 +17,65 @@
   "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 switched to path-aware Git hashing but Adversarial review found a symlink identity defect. Revision 2 then completed the full bounded Adversarial review and found additional blocking defects: local/non-versioned attributes can alter path-aware hashing for the same committed blob; Git tree mode was omitted; tracked-but-missing worktree paths were conflated with committed absence; path normalization was not fully host-independent; and dirty/untracked target snapshots were not durably reconstructable. The correction now derives creditable target state from clean committed Git regular-file tree entries, includes Git mode plus object identity, canonicalizes repository paths, rejects dirty/staged/untracked/incomplete/symlink state, rejects external clean-filter paths before hashing, and represents ABSENT only for paths absent from both committed tree and worktree. The revision-2 completed pass was recorded with a structurally invalid handoff consumer; that immutable occurrence is preserved only as reservation evidence and receives no semantic credit. Revision 3 reopens from Adversarial with fresh execution identities.",
   "status": "in_progress",
   "review_revision": 3,
-  "execution_gates": {},
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r3",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+        "review_revision": 3,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 3 revalidates one bounded artifact-state identity control after the full revision-2 correction set.",
+            "The complete bounded Adversarial pass can cover committed tree/index/worktree agreement, path canonicalization, file mode, line-ending conversion, absent paths, filter rejection, incomplete checkout, stale credit, and history preservation in one separated execution."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; complete the full bounded Adversarial pass before any further correction."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:17a2af0800e5fa3d3f0ed0065134f3124443c5101728aa73cd26be3a8e253832",
+        "review_revision": 3,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-pr14-artifact-identity-r3",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [
+          {
+            "pass_id": "stage-main",
+            "scope": "Adversarial",
+            "context_mode": "SEPARATED"
+          }
+        ],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "b6872480c448dbadedeb37bf18a21ce495b0fe461671113284a45eaac18def4e",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25"
+    }
+  },
   "execution_completions": {},
   "results": {},
   "execution_occurrence_history": [
