@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
 CHECKER_PATH = SKILL_ROOT / "scripts" / "check_execution_gate.py"
@@ -180,6 +181,17 @@ class ExecutionGateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "untracked governed artifact"):
                 checker.repository_artifact_state_sha256(["a.txt"], root)
 
+    def test_staged_new_artifact_missing_from_worktree_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            target = root / "a.txt"
+            target.write_text("one\n", encoding="utf-8")
+            subprocess.run(["git", "add", "a.txt"], cwd=root, check=True, capture_output=True, text=True)
+            target.unlink()
+            with self.assertRaisesRegex(ValueError, "index state does not match HEAD"):
+                checker.repository_artifact_state_sha256(["a.txt"], root)
+
     @unittest.skipIf(os.name == "nt", "symlink creation is not reliably available in Windows test environments")
     def test_symlink_artifact_path_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -228,10 +240,63 @@ class ExecutionGateTests(unittest.TestCase):
             target = root / "a.txt"
             target.write_text("one\n", encoding="utf-8")
             commit_all(root)
-            info_attributes = root / ".git" / "info" / "attributes"
-            info_attributes.write_text("a.txt filter=local-test\n", encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "external Git clean filter"):
+            (root / ".git" / "info" / "attributes").write_text("a.txt filter=local-test\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "unsupported Git content transformation"):
                 checker.repository_artifact_state_sha256(["a.txt"], root)
+
+    def test_ident_transformation_is_rejected_before_credit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            (root / ".gitattributes").write_text("a.txt ident\n", encoding="utf-8")
+            (root / "a.txt").write_text('value="$Id$"\n', encoding="utf-8")
+            commit_all(root)
+            with self.assertRaisesRegex(ValueError, "unsupported Git content transformation"):
+                checker.repository_artifact_state_sha256(["a.txt"], root)
+
+    def test_working_tree_encoding_transformation_is_rejected_before_credit(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            target = root / "a.txt"
+            target.write_text("one\n", encoding="utf-8")
+            commit_all(root)
+            (root / ".git" / "info" / "attributes").write_text(
+                "a.txt working-tree-encoding=UTF-16\n", encoding="utf-8"
+            )
+            with self.assertRaisesRegex(ValueError, "unsupported Git content transformation"):
+                checker.repository_artifact_state_sha256(["a.txt"], root)
+
+    def test_git_index_environment_override_is_ignored(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            (root / "a.txt").write_text("one\n", encoding="utf-8")
+            commit_all(root)
+            baseline = checker.repository_artifact_state_sha256(["a.txt"], root)
+            with mock.patch.dict(os.environ, {"GIT_INDEX_FILE": str(root / "bogus-index")}):
+                observed = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertEqual(observed, baseline)
+
+    def test_replace_refs_do_not_redirect_committed_state(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            target = root / "a.txt"
+            target.write_text("one\n", encoding="utf-8")
+            commit_all(root, "one")
+            old_sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+            ).stdout.strip()
+            target.write_text("two\n", encoding="utf-8")
+            commit_all(root, "two")
+            current_sha = subprocess.run(
+                ["git", "rev-parse", "HEAD"], cwd=root, check=True, capture_output=True, text=True
+            ).stdout.strip()
+            baseline = checker.repository_artifact_state_sha256(["a.txt"], root)
+            subprocess.run(["git", "replace", current_sha, old_sha], cwd=root, check=True, capture_output=True, text=True)
+            observed = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertEqual(observed, baseline)
 
     def test_committed_file_mode_changes_artifact_state(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -249,16 +314,30 @@ class ExecutionGateTests(unittest.TestCase):
             self.assertNotEqual(first, second)
 
     @unittest.skipIf(os.name == "nt", "POSIX executable-bit worktree semantics are not available on Windows")
-    def test_uncommitted_file_mode_change_is_rejected(self) -> None:
+    def test_uncommitted_file_mode_change_is_rejected_even_when_core_filemode_is_false(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             init_git_repository(root)
             target = root / "a.txt"
             target.write_text("one\n", encoding="utf-8")
             commit_all(root)
+            subprocess.run(["git", "config", "core.filemode", "false"], cwd=root, check=True, capture_output=True, text=True)
             os.chmod(target, 0o755)
             with self.assertRaisesRegex(ValueError, "worktree mode does not match committed Git mode"):
                 checker.repository_artifact_state_sha256(["a.txt"], root)
+
+    @unittest.skipIf(os.name == "nt", "POSIX executable-bit worktree semantics are not available on Windows")
+    def test_group_only_execute_bit_does_not_change_git_mode_semantics(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            init_git_repository(root)
+            target = root / "a.txt"
+            target.write_text("one\n", encoding="utf-8")
+            commit_all(root)
+            baseline = checker.repository_artifact_state_sha256(["a.txt"], root)
+            os.chmod(target, 0o654)
+            observed = checker.repository_artifact_state_sha256(["a.txt"], root)
+            self.assertEqual(observed, baseline)
 
     def test_artifact_state_requires_git_repository_root(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
