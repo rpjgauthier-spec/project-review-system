@@ -36,6 +36,7 @@ Stage-specific models:
 - Adversarial: `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
 - Interdependency: `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`
 - Normalization: `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`
+- Structural Optimization: `CODEX_HANDOFF_STRUCTURAL_OPTIMIZATION_REVIEW_MODEL.md`
 
 This checkpoint is mandatory even when the immediate instruction merely says to perform another review.
 
@@ -90,6 +91,7 @@ Handoff-maintenance method artifacts:
 - `CODEX_HANDOFF_ADVERSARIAL_REVIEW_MODEL.md`
 - `CODEX_HANDOFF_INTERDEPENDENCY_REVIEW_MODEL.md`
 - `CODEX_HANDOFF_NORMALIZATION_REVIEW_MODEL.md`
+- `CODEX_HANDOFF_STRUCTURAL_OPTIMIZATION_REVIEW_MODEL.md`
 
 When available, consult the roadmap-side living design notes:
 
