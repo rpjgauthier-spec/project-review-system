@@ -59,6 +59,7 @@ def init_git_repository(root: Path) -> None:
     subprocess.run(["git", "init", "-q"], cwd=root, check=True, capture_output=True, text=True)
     subprocess.run(["git", "config", "user.name", "PRS Tests"], cwd=root, check=True, capture_output=True, text=True)
     subprocess.run(["git", "config", "user.email", "prs-tests@example.invalid"], cwd=root, check=True, capture_output=True, text=True)
+    subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", "initial"], cwd=root, check=True, capture_output=True, text=True)
 
 
 def commit_all(root: Path, message: str = "fixture") -> None:
