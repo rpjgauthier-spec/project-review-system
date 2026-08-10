@@ -86,6 +86,14 @@ The recovery handoff should contain only what Codex needs to recover the reposit
 
 If a proposed addition mainly explains how the handoff should be edited, how future PRS should work, a speculative architecture, or a general review-method improvement, put it in maintenance/design material instead.
 
+## Live-artifact hygiene
+
+Keep only the current recovery handoff version in the live maintenance directory unless an older copy has a distinct current consumer that Git history cannot serve.
+
+Git history is the archive for superseded handoff revisions. Do not retain obsolete canonical-looking Lean files merely for version history; stale live copies increase selection ambiguity without adding recovery capability.
+
+The current continuation manifest must name exactly one live recovery handoff target.
+
 ## Convergence rule
 
 Handoff maintenance is **not** an instruction to revise forever.
