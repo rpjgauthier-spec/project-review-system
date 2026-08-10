@@ -4,32 +4,30 @@
 
 Use this method before every semantic review of the Codex recovery handoff.
 
-Its purpose is to prevent a reviewer from treating the handoff as prose alone. Before review begins, the reviewer must construct or refresh the minimum useful model of the handoff's purpose, authorities, identities, state transitions, invariants, dependencies, and failure paths, then use the applicable stage-specific review model to sweep the entire target.
+Its purpose is to prevent a reviewer from treating the handoff as prose alone. Before review begins, construct or refresh the minimum useful model of purpose, authorities, identities, state transitions, invariants, dependencies, and failure paths, then use the applicable stage-specific model to sweep the entire target.
 
 This is a handoff-maintenance method. It is not Project Review System authority.
 
 ## Mandatory trigger
 
-Before **every semantic review** of the Codex recovery handoff:
+Before every semantic review of the Codex recovery handoff:
 
 1. read this method;
-2. freeze the handoff's current governing purpose and task boundary;
-3. identify the current authority model;
-4. identify the current identity/binding model;
-5. identify the current state-flow/recovery model;
+2. freeze the current governing purpose and task boundary;
+3. identify the authority model;
+4. identify the identity/binding model;
+5. identify the state-flow/recovery model;
 6. identify protected invariants;
 7. identify material failure-path families;
 8. select the applicable stage-specific review model;
-9. update that model if the handoff revision changed any authority edge, identity, state transition, invariant, or failure path;
-10. only then begin the semantic review.
+9. refresh that model if the handoff revision changed an authority edge, identity, state transition, invariant, validation owner, task boundary, or material failure path;
+10. only then begin semantic review.
 
-Do not skip Model Before Review because the handoff revision appears small.
+Do not skip Model Before Review because a revision appears small.
 
 For a truly local mechanical correction that does not require semantic review, this method does not apply.
 
 ## Minimum review model
-
-Before semantic review, establish at least:
 
 ### Purpose
 
@@ -37,7 +35,7 @@ What exact job must the handoff accomplish, and where must it stop?
 
 ### Authorities
 
-Which source owns:
+Identify which source owns:
 
 - host/user authorization;
 - PRS review mode and governance;
@@ -45,11 +43,9 @@ Which source owns:
 - source-scope authority;
 - chronology/provenance evidence;
 - derived state;
-- non-authoritative handoff context?
+- non-authoritative handoff context.
 
 ### Identities and bindings
-
-Which identities must remain correctly bound?
 
 At minimum consider:
 
@@ -64,8 +60,6 @@ At minimum consider:
 - source-scope authority.
 
 ### State flow
-
-What states/transitions does the handoff direct?
 
 At minimum model:
 
@@ -84,8 +78,6 @@ discover
 
 ### Invariants
 
-What must remain true despite review/correction?
-
 Typical examples:
 
 - no invented authority;
@@ -100,8 +92,6 @@ Typical examples:
 
 ### Failure paths
 
-What material failure families must be attacked?
-
 Examples:
 
 - wrong remote/ref;
@@ -115,11 +105,28 @@ Examples:
 - required fresh semantic boundary;
 - recovery success followed by unwanted feature continuation.
 
+## Ownership test — mandatory before proposing a handoff correction
+
+A modeled defect does **not** automatically justify a new handoff feature or rule.
+
+For every blocker/high candidate, identify the owning layer before proposing correction:
+
+1. **Handoff-owned** — the handoff is ambiguous, incorrectly ordered, misleading, or missing navigation needed for this recovery. Correct the handoff with the smallest coherent change.
+2. **Production-PRS-owned** — current PRS already owns the behavior. Reference or defer to PRS; do not duplicate its mechanism in the handoff.
+3. **Repository/governance-owned** — the required authority, succession rule, transition, or mechanism is genuinely absent or unresolved in the repository. Report the blocker; do not manufacture the missing mechanism in the handoff.
+4. **No material owner/value** — the candidate is theoretical, redundant, or its mitigation adds equal or greater complexity/risk. Discard it.
+
+A missing relationship discovered by the model is evidence that something must be resolved; it is **not** evidence that the handoff owns the resolution.
+
+Before a correction survives, ask:
+
+> If this behavior disappeared from the handoff, which authoritative layer should still own it?
+
+If the answer is production PRS or repository governance, the handoff should point, defer, or stop—not implement a substitute.
+
 ## Stage-specific review models
 
-Model Before Review does not itself perform the semantic stage.
-
-It selects the appropriate stage-specific model.
+Model Before Review does not itself perform a semantic stage.
 
 ### Adversarial
 
@@ -129,93 +136,70 @@ Mandatory stage model:
 
 Use it to sweep the entire handoff across authority, authorization, identity, state, chronology, staleness, failure, recovery, scope, validation ownership, trust boundary, preservation, and completion.
 
-The Adversarial reviewer must finish the declared whole-document sweep before reporting its complete blocker/high set, unless the target becomes uninterpretable.
+The Adversarial reviewer must finish the declared whole-document sweep before reporting its complete blocker/high set unless the target becomes uninterpretable.
 
 ### Other stages
 
 Interdependency, Normalization, Structural Optimization, and End-to-end review may use stage-specific models as they are created.
 
-Until a dedicated model exists, the reviewer must still perform this Model-Before-Review step and derive the minimum stage-appropriate representation rather than reverting to an unmodeled linear prose read.
+Until a dedicated model exists, still perform this Model-Before-Review step and derive the minimum stage-appropriate representation rather than reverting to an unmodeled linear prose read.
 
 ## Update rule
 
-If a correction changes any of the following:
-
-- authority source or precedence;
-- identity or binding relationship;
-- state transition;
-- completion boundary;
-- failure/recovery path;
-- validation ownership;
-- trust boundary;
-- semantic execution behavior;
-
-then update the applicable review model before the next semantic review.
-
-Do not allow the review model to become stale relative to the handoff.
+If a correction changes authority source/precedence, identity/binding, state transition, completion boundary, failure/recovery path, validation ownership, trust boundary, or semantic execution behavior, refresh the applicable review model before the next semantic review.
 
 ## Relationship to Model Before Change
-
-These methods protect different boundaries.
 
 ```text
 before review
     -> MODEL BEFORE REVIEW
     -> semantic findings
+    -> OWNERSHIP TEST
 
 before correction
     -> MODEL BEFORE CHANGE
+    -> Structural Optimization / survive-or-die
     -> correction
 ```
 
-Model Before Review asks:
+Model Before Review asks what explicit system model should be attacked.
 
-> What explicit system model should the reviewer attack so it does not miss whole classes of defects?
+The Ownership Test asks which layer owns the discovered defect.
 
-Model Before Change asks:
-
-> Given the findings, what relationships/invariants could the proposed correction disturb?
-
-Both are mandatory for nontrivial handoff maintenance at their respective boundaries.
+Model Before Change asks what relationships/invariants a surviving proposed correction could disturb.
 
 ## Relationship to Structural Optimization
 
-Model Before Review maximizes systematic coverage.
+Model Before Review maximizes systematic coverage. It does not decide that every plausible correction deserves implementation.
 
-It does **not** decide that every plausible adversarial correction deserves implementation.
+After Adversarial findings:
 
-After Adversarial findings are produced:
+1. run the Ownership Test;
+2. perform Model Before Change only for surviving handoff-owned correction proposals;
+3. subject them to Structural Optimization / survive-or-die;
+4. apply only corrections retaining distinct justified value.
 
-1. perform Model Before Change on the proposed correction set;
-2. subject the proposed corrections to Structural Optimization / survive-or-die review;
-3. apply only corrections that retain distinct justified value.
-
-This keeps broad defect discovery from rebuilding unnecessary governance.
+This prevents broad defect discovery from rebuilding unnecessary governance inside the handoff.
 
 ## Completion evidence for a review pass
 
-Before declaring a semantic review pass complete, be able to state:
+Before declaring a semantic review complete, be able to state:
 
-- which handoff revision was reviewed;
-- which stage-specific review model was used;
-- whether the model was refreshed for the current revision;
+- handoff revision reviewed;
+- stage-specific model used;
+- whether the model was refreshed;
 - whether the whole declared sweep completed;
-- which blocker/high findings were collected.
+- complete blocker/high candidate set.
 
-Do not claim a full modeled sweep if only part of the document or part of the declared model was tested.
+Do not claim a full modeled sweep if only part of the target/model was tested.
 
 ## Anti-skip rule
 
-If a future handoff-maintenance instruction says only:
-
-> perform an adversarial/interdependency/normalization/structural/end-to-end review
-
-that instruction implicitly expands to:
+A future instruction to perform a semantic review implicitly expands to:
 
 ```text
 read Model Before Review
-    -> refresh/select applicable review model
-    -> perform the full stage review
+    -> refresh/select applicable model
+    -> perform full stage review
+    -> ownership-test resulting blocker/high candidates before proposing handoff changes
 ```
-
-A reviewer must not treat the absence of an explicit reminder in the immediate prompt as permission to skip this method.
