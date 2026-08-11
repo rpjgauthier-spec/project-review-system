@@ -1,0 +1,495 @@
+{
+  "id": "2026-08-10-git-blob-artifact-identity",
+  "summary": "Make governed artifact identity stable across checkout conversion and bind review credit to clean committed Git state.",
+  "changed_files": [
+    "skills/project-review-system/scripts/check_execution_gate.py",
+    "skills/project-review-system/tests/test_check_execution_gate.py",
+    "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
+  ],
+  "change_classes": ["tracker-or-completion"],
+  "claimed_earliest_stage": "Adversarial",
+  "additional_stages": [],
+  "additional_evaluations": ["execution-gate-enforcement"],
+  "reason": "Raw working-tree byte hashing made the same committed Git content acquire different identities after checkout line-ending conversion. Revision 1 found the symlink identity defect. Revision 2 completed the full bounded Adversarial review and drove the clean committed-tree/mode-aware correction. Revision 3 completed another full bounded pass and found staged-new ABSENT ambiguity, unsupported ident/working-tree-encoding transforms, ambient Git routing/replace-ref influence, and core.filemode suppression of POSIX executable mismatch. Those blocking findings were corrected together: HEAD-absent paths now require an empty index entry, unsupported content transforms fail closed, Git subprocess routing environment is sanitized with replacement objects disabled, and POSIX owner-executable state is checked directly regardless of core.filemode. Revision 4 reopens Adversarial against that corrected snapshot. Revision-2 malformed handoff evidence remains only as immutable reservation evidence and receives no semantic credit; revision-3 failure evidence is validly preserved.",
+  "status": "in_progress",
+  "review_revision": 4,
+  "execution_gates": {
+    "Adversarial": {
+      "schema_version": 1,
+      "activity": "Adversarial",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-recovery",
+        "activity": "Adversarial",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 revalidates the bounded artifact-state identity control after all blocking findings from the complete revision-3 Adversarial pass were corrected together.",
+            "The complete bounded pass covers committed tree/index/worktree agreement, staged-new absence, path canonicalization, line-ending conversion, unsupported content transforms, Git environment/replace isolation, file mode, symlinks, incomplete checkout, stale credit, and historical evidence preservation."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; complete the full bounded Adversarial pass before any further correction."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Adversarial",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-recovery",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Adversarial", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "8d021210aa9d964c07b5b3261ab75985a1a7ea956ec85dcf3b2ce5210ccd12ad",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559"
+    },
+    "Interdependency": {
+      "schema_version": 1,
+      "activity": "Interdependency",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-interdependency",
+        "activity": "Interdependency",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 Interdependency is a bounded review of the corrected artifact-state identity control and its direct consumers in execution-gate validation and revalidation-queue current-target enforcement.",
+            "The material dependency surface is limited to the checker, its regression contract, the change record, and the queue/gate consumers, so one separated pass can trace authority, propagation, stale-state, and fallback behavior without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume the revision-4 Adversarial handoff and complete only Interdependency."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Interdependency",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-interdependency",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Interdependency", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "2c20c20f428e6b237fac65f61f36ff7d71403b5b994940d11cb2d8071197f325",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89"
+    },
+    "Normalization": {
+      "schema_version": 1,
+      "activity": "Normalization",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-normalization",
+        "activity": "Normalization",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 Normalization is a bounded review of terminology, representation, target-state vocabulary, status/evidence distinctions, equivalent identity representations, and consistency across the checker, tests, queue, and change-record consumers.",
+            "The material scope is a single connected artifact-identity vocabulary and consumer surface, so one separated pass can compare equivalent concepts and preserve justified authority and lifecycle distinctions without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume the exact revision-4 Interdependency handoff and complete only Normalization."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Normalization",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-normalization",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Normalization", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "774bf9b93d8c7e3fa4520dcfad45952e4bef3de90c10909f8fa5f886b2152564",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b"
+    },
+    "End-to-end validation": {
+      "schema_version": 1,
+      "activity": "End-to-end validation",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-end-to-end-validation",
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 End-to-end validation is a bounded integrated check of the corrected artifact-identity producer, execution-gate and completion consumers, current-target queue validation, and the declared regression and chronology controls.",
+            "The integrated control path is a single bounded artifact-identity validation workload, so one separated pass can exercise the declared consumers and evidence boundaries without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume Normalization handoff sha256:67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7 and complete only End-to-end validation."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-end-to-end-validation",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "End-to-end validation", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "52d1fd3baccf2875b70c92d4d731b3d9f2fedaeb13a26afbd51dda1f53a78882",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac"
+    }
+  },
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-adversarial-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-adversarial-full-1"
+          },
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "SUPPORTED — the corrected artifact-state path now binds present governed files to the committed HEAD tree entry and matching index/worktree content, with Git mode included in target identity.",
+              "SUPPORTED — staged-new, staged-modified, dirty, untracked, missing/incomplete, symlink, unsupported content-transform, ambient Git-routing, replace-ref, and POSIX executable-mode bypasses reviewed in this bounded pass fail closed.",
+              "SUPPORTED — LF/CRLF checkout representation remains an intentionally accepted equivalence while the target identity itself is derived from the committed Git entry rather than checkout bytes.",
+              "NON-BLOCKING — local text/eol attribute sources can influence only the intentionally accepted line-ending equivalence; unsupported transforms are rejected and the committed target entry remains unchanged.",
+              "NON-BLOCKING — filesystem/index state can change in a narrow TOCTOU window between checks, but persistent changes are rejected by subsequent current-target validation; no atomic cross-platform worktree lock is introduced for this bounded fix."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "revision-4 target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+              "revision-4 gate sha256:b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+              "PR #15: changed-file coverage passed",
+              "PR #15: 128 Project Review System regression tests passed",
+              "PR #15: pass-boundary/handoff validation passed",
+              "PR #15: execution-occurrence history validation passed",
+              "Git documentation: hash-object --path applies path-selected filters; check-attr supports source/cached inspection and gitattributes defines filter, ident, encoding, and EOL effects"
+            ],
+            "unresolved_conditions": [
+              "Interdependency and later mapped semantic stages remain pending.",
+              "The execution-gate-enforcement evaluation remains pending.",
+              "The generated revalidation queue must be regenerated from the current record before stage advancement/final completion."
+            ],
+            "sha256": "c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "Interdependency": {
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-interdependency-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-interdependency-full-1"
+          },
+          "inbound_handoff_sha256": "c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d",
+          "handoff": {
+            "consumer": "Normalization",
+            "findings": [
+              "SUPPORTED — artifact-state authority is singular and coherent: the change record declares governed artifact paths, record_artifact_paths excludes coordination-only record/queue files, repository_artifact_state_sha256 derives the canonical target from committed Git regular-file entries, and update_revalidation_queue consumes that target for current-record gate/completion validation.",
+              "SUPPORTED — HEAD is the source-state authority for credited artifact identity while the index and worktree act only as admissible materializations; staged, dirty, untracked, missing, symlinked, transformed, redirected, or executable-mode-mismatched states fail closed instead of becoming competing authorities.",
+              "SUPPORTED — target-state propagation is consistent across producer and consumers: the same mode+blob-derived target binds execution gates and completions, and current in-progress records are rechecked against the current artifact target so stale stage credit cannot silently propagate.",
+              "SUPPORTED — review-state propagation remains separated from artifact-state identity: stage results, gates, completions, immutable occurrence history, and exact handoff consumption live in the change record, while the generated queue derives ordered remaining work without becoming an independent semantic authority.",
+              "NON-BLOCKING — the reported Git safe.directory failure in Codex's temporary linked checkout is an operational trust/setup dependency, not a semantic bypass: Git failure propagates closed through the artifact-state checker; regeneration must run in a trusted/owned checkout before further stage advancement.",
+              "NON-BLOCKING — the previously noted narrow filesystem/index TOCTOU and accepted text/EOL materialization equivalence do not create a broken producer-consumer contract because persistent mismatches are rejected on subsequent current-target validation and canonical target identity remains the committed Git entry."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/interdependency-review.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/tests/test_update_revalidation_queue.py",
+              "revision-4 Adversarial inbound handoff sha256:c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d",
+              "revision-4 Interdependency gate sha256:5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+              "queue refresh commit 646d0139053d63b1d458e3daf88193b948230194",
+              "Interdependency gate durable/repair state commit f7b549cb50740415f38c6ac6f1aab76f10eedc04",
+              "Codex bookkeeping report: changed-file impact and pass-boundary/handoff checks passed; queue regenerated; temporary linked-checkout queue --check was blocked by Git safe.directory permissions"
+            ],
+            "unresolved_conditions": [
+              "Normalization and End-to-end validation remain pending.",
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed Interdependency record before advancing to Normalization."
+            ],
+            "sha256": "a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "Normalization": {
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-normalization-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-normalization-full-1"
+          },
+          "inbound_handoff_sha256": "a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134",
+          "handoff": {
+            "consumer": "End-to-end validation",
+            "findings": [
+              "SUPPORTED — artifact-state terminology is internally consistent across the checker, tests, change record, and queue consumer: repository_artifact_state_sha256 names the derived governed artifact identity, while target_state_id consistently names the gate/completion binding that wraps that identity with the sha256: prefix.",
+              "SUPPORTED — committed Git entry identity is represented consistently as mode plus object/blob identifier; tests use artifact-state language for the aggregate digest and do not conflate it with raw worktree bytes, index state, or review-state metadata.",
+              "SUPPORTED — review-state concepts remain distinct from artifact-state concepts: stage results use semantic support/completion vocabulary, execution gates/completions carry target_state_id, and the generated queue remains a derived OPEN/CLEAR checklist rather than a competing stage verdict or authority.",
+              "SUPPORTED — changed_files now includes the generated queue for changed-file coverage while record_artifact_paths explicitly excludes the change record and generated queue from governed artifact identity; this is a justified lifecycle distinction, not inconsistent treatment.",
+              "RETAIN WITH JUSTIFICATION — PASS_RESULTS accepts passed, supported, and complete because evaluations and semantic stages use different canonical result verbs; normalizing them to one token would erase a legitimate distinction between evaluation result, semantic support, and completion state.",
+              "RETAIN WITH JUSTIFICATION — LF/CRLF materialization equivalence is intentionally normalized at the content-conversion boundary while executable mode, unsupported transforms, symlink state, and committed blob identity remain distinct because they materially affect artifact meaning or admissibility."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/shared-control-model.md",
+              "skills/project-review-system/references/normalization-review.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+              "revision-4 Interdependency inbound handoff sha256:a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134",
+              "revision-4 Normalization gate sha256:8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+              "governed target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea"
+            ],
+            "unresolved_conditions": [
+              "End-to-end validation remains pending.",
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed Normalization record before advancing to End-to-end validation."
+            ],
+            "sha256": "67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    },
+    "End-to-end validation": {
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-end-to-end-validation-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-end-to-end-validation-full-1"
+          },
+          "inbound_handoff_sha256": "67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7",
+          "handoff": {
+            "consumer": "review-completion",
+            "findings": [
+              "SUPPORTED — the normal path is coherent end to end: current governed files are canonicalized to repository-relative paths, bound to clean committed HEAD tree entries including Git mode, aggregated into one artifact-state digest, wrapped as target_state_id, and required to match execution gates/completions before stage credit is accepted.",
+              "SUPPORTED — failure paths terminate closed: dirty or staged content, untracked governed files, missing tracked files, symlink traversal, unsupported clean/ident/working-tree-encoding transforms, ambient Git routing overrides, replace refs, and POSIX executable-mode mismatches are rejected rather than silently producing review credit.",
+              "SUPPORTED — stale-state and reopening behavior remains coherent: current in-progress records are rebound to the current artifact target, stale gate/completion evidence is rejected, and ordered revalidation requires current queue state plus supported current/earlier stages before advancement.",
+              "SUPPORTED — review-state persistence and source-state identity remain separated: the change record owns gates, completions, results, immutable occurrence history, and handoff chaining; the generated queue is derived and may remain OPEN while later work remains.",
+              "SUPPORTED — the revision-4 chain traces Adversarial → Interdependency → Normalization → End-to-end validation against one unchanged target, consuming exact durable handoffs at each boundary and preserving prior occurrence evidence.",
+              "NON-BLOCKING — mapped evaluations remain unresolved, so this stage does not establish overall review completion or merge readiness."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/shared-control-model.md",
+              "skills/project-review-system/references/end-to-end-validation.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/scripts/check_pass_boundaries.py",
+              "skills/project-review-system/scripts/check_execution_identity_history.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+              "skills/project-review-system/reviews/revalidation-queue.md",
+              "revision-4 Normalization inbound handoff sha256:67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7",
+              "revision-4 End-to-end validation gate sha256:9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+              "governed target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+              "queue refresh commit 20c524a1013c06b3eae795fb5704f8482c66f582",
+              "PR #15 bookkeeping validation: changed-file impact coverage passed; pass-boundary/handoff/chronology passed; 128 regression tests passed with 3 skipped; queue remained OPEN only for End-to-end validation and mapped evaluations"
+            ],
+            "unresolved_conditions": [
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed End-to-end validation record before finalizing mapped evaluations.",
+              "Final completion or merge remains prohibited until all mapped evaluations pass and the current queue check is clear."
+            ],
+            "sha256": "dec1f76d67e7acb2701eceaab01fc0804ac2d223981c61732ba2b0620b7c8889"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {
+    "Adversarial": "supported",
+    "Interdependency": "supported",
+    "Normalization": "supported",
+    "End-to-end validation": "supported"
+  },
+  "execution_occurrence_history": [
+    {
+      "review_revision": 2,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "2002daf16474a7af2d2726682dd97de49a67ffbf6af817d51d961f3dfae781a2",
+      "execution_unit_id": "pr14-r2-adversarial-stage-main-full-1",
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r2-adversarial-full-1"},
+      "pass_evidence_sha256": "d98b61ccbd7577921b74fd74288b3678c70a3e76cf7d1d1b4310445fe9f04b79"
+    },
+    {
+      "review_revision": 3,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "1f24e59bbfe6b5c85c2ca48827caf88a63d65ef9e25cc0ab9283e1a3dd067b25",
+      "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
+      "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
+      "pass_evidence_sha256": "c110abe258242a8033a2ea7faa65bfd95824026fcadd9664668ec3d40197bd06"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+      "execution_unit_id": "pr15-r4-adversarial-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-adversarial-full-1"
+      },
+      "pass_evidence_sha256": "4e9da1f6f87fb66ef3a29bc572c4fade1b064a06288d4995839262b107d26764"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Interdependency",
+      "pass_id": "stage-main",
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+      "execution_unit_id": "pr15-r4-interdependency-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-interdependency-full-1"
+      },
+      "pass_evidence_sha256": "cd8ccd210e3ec6b43bacde2db901674c7f28a9f4f0fac503f98c1856b631c3cd"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Normalization",
+      "pass_id": "stage-main",
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+      "execution_unit_id": "pr15-r4-normalization-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-normalization-full-1"
+      },
+      "pass_evidence_sha256": "2b3e377fa971f756bf2f6abd9aa150e480c2e00856725dc465e9196636ac0c43"
+    },
+    {
+      "review_revision": 4,
+      "stage": "End-to-end validation",
+      "pass_id": "stage-main",
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+      "execution_unit_id": "pr15-r4-end-to-end-validation-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-end-to-end-validation-full-1"
+      },
+      "pass_evidence_sha256": "8c11161878d928c9253fbb9135a3f4054b5d88d4ca08bb1163f647e8c0e3115e"
+    }
+  ]
+}
