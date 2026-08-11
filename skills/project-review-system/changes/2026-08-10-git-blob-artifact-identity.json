@@ -4,7 +4,8 @@
   "changed_files": [
     "skills/project-review-system/scripts/check_execution_gate.py",
     "skills/project-review-system/tests/test_check_execution_gate.py",
-    "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json"
+    "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+    "skills/project-review-system/reviews/revalidation-queue.md"
   ],
   "change_classes": ["tracker-or-completion"],
   "claimed_earliest_stage": "Adversarial",
