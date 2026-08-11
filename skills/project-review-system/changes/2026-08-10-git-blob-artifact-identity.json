@@ -363,12 +363,66 @@
       "scratch_materialized": false,
       "scratch_cleanup_status": "not_applicable",
       "retained_subpass_artifacts": []
+    },
+    "End-to-end validation": {
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-end-to-end-validation-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-end-to-end-validation-full-1"
+          },
+          "inbound_handoff_sha256": "67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7",
+          "handoff": {
+            "consumer": "review-completion",
+            "findings": [
+              "SUPPORTED — the normal path is coherent end to end: current governed files are canonicalized to repository-relative paths, bound to clean committed HEAD tree entries including Git mode, aggregated into one artifact-state digest, wrapped as target_state_id, and required to match execution gates/completions before stage credit is accepted.",
+              "SUPPORTED — failure paths terminate closed: dirty or staged content, untracked governed files, missing tracked files, symlink traversal, unsupported clean/ident/working-tree-encoding transforms, ambient Git routing overrides, replace refs, and POSIX executable-mode mismatches are rejected rather than silently producing review credit.",
+              "SUPPORTED — stale-state and reopening behavior remains coherent: current in-progress records are rebound to the current artifact target, stale gate/completion evidence is rejected, and ordered revalidation requires current queue state plus supported current/earlier stages before advancement.",
+              "SUPPORTED — review-state persistence and source-state identity remain separated: the change record owns gates, completions, results, immutable occurrence history, and handoff chaining; the generated queue is derived and may remain OPEN while later work remains.",
+              "SUPPORTED — the revision-4 chain traces Adversarial → Interdependency → Normalization → End-to-end validation against one unchanged target, consuming exact durable handoffs at each boundary and preserving prior occurrence evidence.",
+              "NON-BLOCKING — mapped evaluations remain unresolved, so this stage does not establish overall review completion or merge readiness."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/shared-control-model.md",
+              "skills/project-review-system/references/end-to-end-validation.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/scripts/check_pass_boundaries.py",
+              "skills/project-review-system/scripts/check_execution_identity_history.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+              "skills/project-review-system/reviews/revalidation-queue.md",
+              "revision-4 Normalization inbound handoff sha256:67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7",
+              "revision-4 End-to-end validation gate sha256:9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+              "governed target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+              "queue refresh commit 20c524a1013c06b3eae795fb5704f8482c66f582",
+              "PR #15 bookkeeping validation: changed-file impact coverage passed; pass-boundary/handoff/chronology passed; 128 regression tests passed with 3 skipped; queue remained OPEN only for End-to-end validation and mapped evaluations"
+            ],
+            "unresolved_conditions": [
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed End-to-end validation record before finalizing mapped evaluations.",
+              "Final completion or merge remains prohibited until all mapped evaluations pass and the current queue check is clear."
+            ],
+            "sha256": "dec1f76d67e7acb2701eceaab01fc0804ac2d223981c61732ba2b0620b7c8889"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
     }
   },
   "results": {
     "Adversarial": "supported",
     "Interdependency": "supported",
-    "Normalization": "supported"
+    "Normalization": "supported",
+    "End-to-end validation": "supported"
   },
   "execution_occurrence_history": [
     {
@@ -424,6 +478,18 @@
         "id": "assistant-message-pr15-r4-normalization-full-1"
       },
       "pass_evidence_sha256": "2b3e377fa971f756bf2f6abd9aa150e480c2e00856725dc465e9196636ac0c43"
+    },
+    {
+      "review_revision": 4,
+      "stage": "End-to-end validation",
+      "pass_id": "stage-main",
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac",
+      "execution_unit_id": "pr15-r4-end-to-end-validation-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-end-to-end-validation-full-1"
+      },
+      "pass_evidence_sha256": "8c11161878d928c9253fbb9135a3f4054b5d88d4ca08bb1163f647e8c0e3115e"
     }
   ]
 }
