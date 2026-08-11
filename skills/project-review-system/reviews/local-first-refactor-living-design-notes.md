@@ -627,3 +627,147 @@ Every artifact should bind to exact input hashes and job identity. The physical 
 ## Status
 
 This document is intentionally unfinished. Continue appending/refining design decisions here during discussion. It is a design notebook, not evidence that the contained ideas have passed the Project Review System's governed semantic stages or implementation validation.
+
+## Converged design decision awaiting formal PRS review — shared multi-agent state and Git topology
+
+**Status:** Converged design decision from ChatGPT/Codex architectural discussion. This section is intentionally non-authoritative. It must be incorporated into an authoritative roadmap/specification only through the required governed PRS review and cutover process.
+
+### Agreed authority model
+
+The redesign should separate three identities that current Git-centric operation can conflate:
+
+- `workflow_lineage_id` — semantic workflow progression and credit lineage;
+- `snapshot_id` / snapshot descriptor — exact canonical governed source state produced and verified by the configured snapshot adapter;
+- Git locator — branch/ref/commit used to locate, publish, or audit source/state artifacts.
+
+Workflow progression is authoritative in the PRS state engine. Source/snapshot authority remains independently verifiable through the snapshot adapter. Neither Git nor the local transaction database may unilaterally assert the other's facts.
+
+### Minimal safe topology
+
+```text
+One active workflow lineage
+  ├─ canonical source snapshot descriptor
+  ├─ policy_descriptor_hash
+  ├─ compact canonical checkpoint
+  ├─ immutable hash-linked transition objects
+  ├─ local SQLite transaction/materialization engine
+  ├─ compare-and-swap successor publication
+  ├─ generated human-readable status/history projections
+  ├─ optional visible cross-environment reservation
+  ├─ one ordinary source integration branch/ref
+  └─ one dedicated machine-managed PRS state branch/ref
+```
+
+Routine semantic passes should not create new branches/worktrees merely to express stage progression. Separate branches/worktrees remain appropriate when genuine source/workspace isolation is required, including experiments, competing implementations, migrations, failed-lineage preservation, user-owned dirty work, or trust/credential isolation.
+
+### Portable state and local transactions
+
+SQLite is the selected reference transaction engine and local working materialization, not the canonical cross-machine exchange artifact. A compact deterministic canonical PRS bundle/checkpoint plus immutable hash-linked transitions is the portable authority artifact.
+
+An execution environment should conceptually:
+
+```text
+read canonical lineage head S42
+↓
+verify bundle, policy, and source snapshot
+↓
+materialize local transactional state
+↓
+perform one bounded operation
+↓
+produce candidate successor S43
+↓
+conditionally publish only if the expected predecessor state, snapshot, and policy still match
+```
+
+Git may transport and retain these bytes, but Git does not interpret them or grant semantic credit. For the first Git-backed design, use a dedicated machine-managed PRS state branch/ref per active lineage so state transport does not recursively perturb the governed source snapshot or clutter ordinary source history.
+
+### Compare-and-swap and stale work
+
+Cross-environment correctness is provided by conditional successor publication against the exact expected predecessor. Publication must validate at least:
+
+- expected `workflow_lineage_id`;
+- expected predecessor state version/hash;
+- expected canonical source snapshot descriptor/identity;
+- expected `policy_descriptor_hash`.
+
+If any of these differ, the proposed successor is stale or incompatible and must not receive semantic credit. Do not automatically merge or rebase semantic results onto the newer state.
+
+Useful stale semantic work may be retained as explicitly **uncredited evidence** bound to its original lineage, state, snapshot, policy, operation, and reviewer provenance. A later current reviewer may consume it as evidence, but the engine must never automatically promote it into current stage credit.
+
+### Policy binding is part of state compatibility
+
+Every canonical checkpoint and transition must bind the applicable PRS policy through `policy_descriptor_hash`.
+
+The policy descriptor must cover, at minimum, the workflow schema/version, canonical stage/evaluation mapping, stage-contract and breadth rules, and the snapshot-adapter contract version applicable to that transition. Additional policy/configuration elements that can change semantic eligibility or state-transition validity must also be included in the descriptor or its transitive hash closure.
+
+Compare-and-swap successor publication must require the expected policy hash in addition to predecessor state and snapshot identity. Two agents working from the same lineage and source snapshot but under different workflow/evaluation/eligibility rules must be treated as incompatible, not as valid competing successors of the same state.
+
+### Reservations and fencing
+
+Local state-changing operations should use an operation reservation/fencing mechanism so stale or concurrent local writers cannot commit against the same local materialization. Time-expiring leases are not required for correctness and should not be introduced by default.
+
+A visible cross-environment reservation may be added as an efficiency/coordination mechanism to reduce duplicated expensive semantic work. It is not the cross-environment correctness authority; conditional publication remains decisive even when a visible reservation is absent, stale, or ignored.
+
+### Git's reduced role
+
+Git remains important for:
+
+- canonical snapshot-adapter evidence where Git is the selected source adapter;
+- publication/transport of source and portable PRS state bundles;
+- human-auditable commit/ref locators;
+- Git-specific diff/coverage evidence;
+- optional host review/CI assurance.
+
+Git branch names, ancestry, PR state, and hosted CI are not semantic workflow-state authority. Rebase, squash, cherry-pick, or branch recreation should not by themselves destroy valid PRS credit when the canonical snapshot, lineage, policy, immutable evidence, and transition validity remain provably intact.
+
+### Human inspectability
+
+The engine should provide deterministic non-authoritative projections such as:
+
+```text
+prs status
+prs history
+prs show-occurrence <id>
+prs explain-next
+prs show-snapshot <id>
+prs show-transition <hash>
+prs export --human-readable
+prs verify-bundle <bundle>
+```
+
+Markdown/JSON exports remain useful for human inspection but should be derived views rather than editable workflow authority.
+
+### Migration/cutover
+
+The current validated PRS remains authority while the redesigned controller is implemented and validated under existing governance.
+
+Preferred cutover shape:
+
+```text
+current PRS remains authority
+→ implement redesigned controller under current PRS governance
+→ import existing records only as explicitly legacy evidence
+→ compare old/new controller behavior on representative paths
+→ old PRS explicitly authorizes cutover
+→ first new-engine lineage records its migration/import root and policy
+→ freeze legacy records as read-only history
+```
+
+The new engine must not certify its own authority transition. Cutover must preserve a rollback/read-only legacy path, and imported legacy evidence must not receive stronger assurance merely because it was imported.
+
+### Explicitly deferred or removed complexity
+
+Do not add the following to the baseline design without a demonstrated requirement:
+
+- shared/network-mounted SQLite;
+- time-based leases for correctness;
+- distributed synchronization services;
+- generalized Merkle databases/object stores;
+- signed checkpoints;
+- remote state services;
+- broad multi-VCS abstraction work;
+- routine per-stage branches/worktrees;
+- GitHub Actions as a core correctness dependency.
+
+A simple hash-linked transition log with compact checkpoints, local transactional materialization, snapshot verification, policy binding, and compare-and-swap publication is the intended baseline.
