@@ -167,6 +167,57 @@
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
       "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b"
+    },
+    "End-to-end validation": {
+      "schema_version": 1,
+      "activity": "End-to-end validation",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-end-to-end-validation",
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 End-to-end validation is a bounded integrated check of the corrected artifact-identity producer, execution-gate and completion consumers, current-target queue validation, and the declared regression and chronology controls.",
+            "The integrated control path is a single bounded artifact-identity validation workload, so one separated pass can exercise the declared consumers and evidence boundaries without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume Normalization handoff sha256:67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7 and complete only End-to-end validation."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "End-to-end validation",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-end-to-end-validation",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "End-to-end validation", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "52d1fd3baccf2875b70c92d4d731b3d9f2fedaeb13a26afbd51dda1f53a78882",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "9e128d1263a0a55c4ae205b7741faa9d312e80a1bf75bb74ca1f8e0c719fa3ac"
     }
   },
   "execution_completions": {
