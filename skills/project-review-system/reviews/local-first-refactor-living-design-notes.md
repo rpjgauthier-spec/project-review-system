@@ -118,6 +118,47 @@ For Git-backed operation, user-facing governed semantic-pass responses should su
 
 This is observability and chronology evidence, not a replacement for execution-unit identity, boundary identity, gate identity, handoff chaining, target-state binding, or deterministic history checks.
 
+### Durable pass finalization must be fail-closed
+
+Observed failure during artifact-identity dogfooding: a semantic Adversarial pass was completed and its completion/handoff evidence was calculated, but the execution unit terminated before that evidence was durably written. The semantic work was recoverable from transient context, but the authoritative repository contained no completed occurrence for the pass.
+
+This was an agent/operator execution error, but it exposed a deterministic lifecycle gap. The system already validates completed-pass chronology, handoff chaining, gate identity, target-state binding, and immutable occurrence evidence after those artifacts exist. It does not yet make **durable persistence a prerequisite for pass termination**.
+
+Redesign requirement:
+
+> A semantic pass is not complete when semantic judgment finishes. It is complete only after the controller has validated and atomically persisted the exact completion/handoff for the current occurrence and can read back that durable state.
+
+Preferred lifecycle:
+
+```text
+semantic pass executes
+        ↓
+semantic findings/verdict complete
+        ↓
+construct semantic-result payload
+        ↓
+controller validates current gate / revision / target / pass identity
+        ↓
+atomically persist completion + handoff + occurrence history
+        ↓
+read back / verify durable authoritative state
+        ↓
+ONLY NOW may the execution unit report pass completion
+```
+
+Fail-closed behavior:
+
+- if semantic work finishes but durable completion has not been persisted, authoritative pass status remains `INCOMPLETE`;
+- no later semantic stage may consume the transient result as prior-stage credit;
+- retrying `complete-pass` after interruption must be idempotent: exact already-durable completion returns `already completed`; incomplete persistence resumes or retries without creating a second logical occurrence;
+- the controller should expose a mechanically checkable finalization predicate such as: current gate exists, exact completion exists, completion validates against the gate/target/revision, and authoritative persistence confirms the occurrence;
+- when a Git observability adapter is enabled, the user-facing pass response should not claim durable Git completion until the corresponding commit is confirmed, but Git remains adapter evidence rather than the core state authority;
+- transient model context, scratch files, computed hashes, or a user-visible statement that the pass is done are never substitutes for durable authoritative completion.
+
+This should be implemented as part of transactional `complete-pass`, not as a new semantic review layer or a separate optional housekeeping command. The normal success path should make it difficult to express the invalid intermediate state “semantic pass finished; persistence still pending.”
+
+Host limitation: repository/controller logic cannot literally prevent an external chat host from ending a message or losing a model context. It can, however, ensure that such an interrupted execution remains mechanically **non-creditable and incomplete**, so lost transient work cannot masquerade as a completed governed pass.
+
 ### Bounded multi-finding semantic passes
 
 Observed failure mode during controller-core dogfooding: Adversarial review repeatedly stopped after the first blocker, causing a sequence of correction revisions in which the next independently discoverable blocker appeared only after the prior one was fixed. This preserved fail-fast semantics but created unnecessary revision churn and repeated review setup.
