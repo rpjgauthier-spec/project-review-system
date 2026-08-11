@@ -163,10 +163,60 @@
       "scratch_materialized": false,
       "scratch_cleanup_status": "not_applicable",
       "retained_subpass_artifacts": []
+    },
+    "Interdependency": {
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-interdependency-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-interdependency-full-1"
+          },
+          "inbound_handoff_sha256": "c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d",
+          "handoff": {
+            "consumer": "Normalization",
+            "findings": [
+              "SUPPORTED — artifact-state authority is singular and coherent: the change record declares governed artifact paths, record_artifact_paths excludes coordination-only record/queue files, repository_artifact_state_sha256 derives the canonical target from committed Git regular-file entries, and update_revalidation_queue consumes that target for current-record gate/completion validation.",
+              "SUPPORTED — HEAD is the source-state authority for credited artifact identity while the index and worktree act only as admissible materializations; staged, dirty, untracked, missing, symlinked, transformed, redirected, or executable-mode-mismatched states fail closed instead of becoming competing authorities.",
+              "SUPPORTED — target-state propagation is consistent across producer and consumers: the same mode+blob-derived target binds execution gates and completions, and current in-progress records are rechecked against the current artifact target so stale stage credit cannot silently propagate.",
+              "SUPPORTED — review-state propagation remains separated from artifact-state identity: stage results, gates, completions, immutable occurrence history, and exact handoff consumption live in the change record, while the generated queue derives ordered remaining work without becoming an independent semantic authority.",
+              "NON-BLOCKING — the reported Git safe.directory failure in Codex's temporary linked checkout is an operational trust/setup dependency, not a semantic bypass: Git failure propagates closed through the artifact-state checker; regeneration must run in a trusted/owned checkout before further stage advancement.",
+              "NON-BLOCKING — the previously noted narrow filesystem/index TOCTOU and accepted text/EOL materialization equivalence do not create a broken producer-consumer contract because persistent mismatches are rejected on subsequent current-target validation and canonical target identity remains the committed Git entry."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/interdependency-review.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/tests/test_update_revalidation_queue.py",
+              "revision-4 Adversarial inbound handoff sha256:c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d",
+              "revision-4 Interdependency gate sha256:5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+              "queue refresh commit 646d0139053d63b1d458e3daf88193b948230194",
+              "Interdependency gate durable/repair state commit f7b549cb50740415f38c6ac6f1aab76f10eedc04",
+              "Codex bookkeeping report: changed-file impact and pass-boundary/handoff checks passed; queue regenerated; temporary linked-checkout queue --check was blocked by Git safe.directory permissions"
+            ],
+            "unresolved_conditions": [
+              "Normalization and End-to-end validation remain pending.",
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed Interdependency record before advancing to Normalization."
+            ],
+            "sha256": "a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
     }
   },
   "results": {
-    "Adversarial": "supported"
+    "Adversarial": "supported",
+    "Interdependency": "supported"
   },
   "execution_occurrence_history": [
     {
@@ -198,6 +248,18 @@
         "id": "assistant-message-pr15-r4-adversarial-full-1"
       },
       "pass_evidence_sha256": "4e9da1f6f87fb66ef3a29bc572c4fade1b064a06288d4995839262b107d26764"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Interdependency",
+      "pass_id": "stage-main",
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89",
+      "execution_unit_id": "pr15-r4-interdependency-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-interdependency-full-1"
+      },
+      "pass_evidence_sha256": "cd8ccd210e3ec6b43bacde2db901674c7f28a9f4f0fac503f98c1856b631c3cd"
     }
   ]
 }
