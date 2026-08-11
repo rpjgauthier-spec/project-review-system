@@ -116,6 +116,57 @@
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
       "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89"
+    },
+    "Normalization": {
+      "schema_version": 1,
+      "activity": "Normalization",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-normalization",
+        "activity": "Normalization",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 Normalization is a bounded review of terminology, representation, target-state vocabulary, status/evidence distinctions, equivalent identity representations, and consistency across the checker, tests, queue, and change-record consumers.",
+            "The material scope is a single connected artifact-identity vocabulary and consumer surface, so one separated pass can compare equivalent concepts and preserve justified authority and lifecycle distinctions without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume the exact revision-4 Interdependency handoff and complete only Normalization."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Normalization",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-normalization",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Normalization", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "774bf9b93d8c7e3fa4520dcfad45952e4bef3de90c10909f8fa5f886b2152564",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b"
     }
   },
   "execution_completions": {
