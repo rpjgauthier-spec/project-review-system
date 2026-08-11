@@ -66,8 +66,57 @@
       "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559"
     }
   },
-  "execution_completions": {},
-  "results": {},
+  "execution_completions": {
+    "Adversarial": {
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-adversarial-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-adversarial-full-1"
+          },
+          "handoff": {
+            "consumer": "Interdependency",
+            "findings": [
+              "SUPPORTED — the corrected artifact-state path now binds present governed files to the committed HEAD tree entry and matching index/worktree content, with Git mode included in target identity.",
+              "SUPPORTED — staged-new, staged-modified, dirty, untracked, missing/incomplete, symlink, unsupported content-transform, ambient Git-routing, replace-ref, and POSIX executable-mode bypasses reviewed in this bounded pass fail closed.",
+              "SUPPORTED — LF/CRLF checkout representation remains an intentionally accepted equivalence while the target identity itself is derived from the committed Git entry rather than checkout bytes.",
+              "NON-BLOCKING — local text/eol attribute sources can influence only the intentionally accepted line-ending equivalence; unsupported transforms are rejected and the committed target entry remains unchanged.",
+              "NON-BLOCKING — filesystem/index state can change in a narrow TOCTOU window between checks, but persistent changes are rejected by subsequent current-target validation; no atomic cross-platform worktree lock is introduced for this bounded fix."
+            ],
+            "evidence": [
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "revision-4 target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+              "revision-4 gate sha256:b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+              "PR #15: changed-file coverage passed",
+              "PR #15: 128 Project Review System regression tests passed",
+              "PR #15: pass-boundary/handoff validation passed",
+              "PR #15: execution-occurrence history validation passed",
+              "Git documentation: hash-object --path applies path-selected filters; check-attr supports source/cached inspection and gitattributes defines filter, ident, encoding, and EOL effects"
+            ],
+            "unresolved_conditions": [
+              "Interdependency and later mapped semantic stages remain pending.",
+              "The execution-gate-enforcement evaluation remains pending.",
+              "The generated revalidation queue must be regenerated from the current record before stage advancement/final completion."
+            ],
+            "sha256": "c3ec2925e21a016ac038acd86b2d36a19323ddf1e99ac3c0f42165fc3873e03d"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
+    }
+  },
+  "results": {
+    "Adversarial": "supported"
+  },
   "execution_occurrence_history": [
     {
       "review_revision": 2,
@@ -86,6 +135,18 @@
       "execution_unit_id": "pr14-r3-adversarial-stage-main-full-1",
       "boundary": {"kind": "declared-execution-unit", "id": "assistant-message-pr14-r3-adversarial-full-1"},
       "pass_evidence_sha256": "c110abe258242a8033a2ea7faa65bfd95824026fcadd9664668ec3d40197bd06"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Adversarial",
+      "pass_id": "stage-main",
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+      "execution_unit_id": "pr15-r4-adversarial-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-adversarial-full-1"
+      },
+      "pass_evidence_sha256": "4e9da1f6f87fb66ef3a29bc572c4fade1b064a06288d4995839262b107d26764"
     }
   ]
 }
