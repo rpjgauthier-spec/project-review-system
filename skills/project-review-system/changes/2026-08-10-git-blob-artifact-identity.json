@@ -264,11 +264,60 @@
       "scratch_materialized": false,
       "scratch_cleanup_status": "not_applicable",
       "retained_subpass_artifacts": []
+    },
+    "Normalization": {
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+      "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+      "passes": [
+        {
+          "pass_id": "stage-main",
+          "context_mode": "SEPARATED",
+          "status": "complete",
+          "execution_unit_id": "pr15-r4-normalization-stage-main-full-1",
+          "boundary": {
+            "kind": "declared-execution-unit",
+            "id": "assistant-message-pr15-r4-normalization-full-1"
+          },
+          "inbound_handoff_sha256": "a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134",
+          "handoff": {
+            "consumer": "End-to-end validation",
+            "findings": [
+              "SUPPORTED — artifact-state terminology is internally consistent across the checker, tests, change record, and queue consumer: repository_artifact_state_sha256 names the derived governed artifact identity, while target_state_id consistently names the gate/completion binding that wraps that identity with the sha256: prefix.",
+              "SUPPORTED — committed Git entry identity is represented consistently as mode plus object/blob identifier; tests use artifact-state language for the aggregate digest and do not conflate it with raw worktree bytes, index state, or review-state metadata.",
+              "SUPPORTED — review-state concepts remain distinct from artifact-state concepts: stage results use semantic support/completion vocabulary, execution gates/completions carry target_state_id, and the generated queue remains a derived OPEN/CLEAR checklist rather than a competing stage verdict or authority.",
+              "SUPPORTED — changed_files now includes the generated queue for changed-file coverage while record_artifact_paths explicitly excludes the change record and generated queue from governed artifact identity; this is a justified lifecycle distinction, not inconsistent treatment.",
+              "RETAIN WITH JUSTIFICATION — PASS_RESULTS accepts passed, supported, and complete because evaluations and semantic stages use different canonical result verbs; normalizing them to one token would erase a legitimate distinction between evaluation result, semantic support, and completion state.",
+              "RETAIN WITH JUSTIFICATION — LF/CRLF materialization equivalence is intentionally normalized at the content-conversion boundary while executable mode, unsupported transforms, symlink state, and committed blob identity remain distinct because they materially affect artifact meaning or admissibility."
+            ],
+            "evidence": [
+              "skills/project-review-system/references/shared-control-model.md",
+              "skills/project-review-system/references/normalization-review.md",
+              "skills/project-review-system/scripts/check_execution_gate.py",
+              "skills/project-review-system/scripts/update_revalidation_queue.py",
+              "skills/project-review-system/tests/test_check_execution_gate.py",
+              "skills/project-review-system/changes/2026-08-10-git-blob-artifact-identity.json",
+              "revision-4 Interdependency inbound handoff sha256:a0779d38c185967ae9d4146c350e29f5e95e38bf2b90309dbc79f32912c49134",
+              "revision-4 Normalization gate sha256:8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+              "governed target sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea"
+            ],
+            "unresolved_conditions": [
+              "End-to-end validation remains pending.",
+              "The mapped evaluations execution-gate-enforcement, premature-completion, reopening-chain, and structural-validator remain pending.",
+              "Regenerate the derived revalidation queue from the completed Normalization record before advancing to End-to-end validation."
+            ],
+            "sha256": "67a423deb50f419a0f0cb61752bfb2e1261bbbb8d6b6e4b821356fa9107da0e7"
+          }
+        }
+      ],
+      "scratch_materialized": false,
+      "scratch_cleanup_status": "not_applicable",
+      "retained_subpass_artifacts": []
     }
   },
   "results": {
     "Adversarial": "supported",
-    "Interdependency": "supported"
+    "Interdependency": "supported",
+    "Normalization": "supported"
   },
   "execution_occurrence_history": [
     {
@@ -312,6 +361,18 @@
         "id": "assistant-message-pr15-r4-interdependency-full-1"
       },
       "pass_evidence_sha256": "cd8ccd210e3ec6b43bacde2db901674c7f28a9f4f0fac503f98c1856b631c3cd"
+    },
+    {
+      "review_revision": 4,
+      "stage": "Normalization",
+      "pass_id": "stage-main",
+      "gate_sha256": "8248bfb889daef0918625442fe47a8ee569c6ad54ec7dd28bc11b7a9c269ba4b",
+      "execution_unit_id": "pr15-r4-normalization-stage-main-full-1",
+      "boundary": {
+        "kind": "declared-execution-unit",
+        "id": "assistant-message-pr15-r4-normalization-full-1"
+      },
+      "pass_evidence_sha256": "2b3e377fa971f756bf2f6abd9aa150e480c2e00856725dc465e9196636ac0c43"
     }
   ]
 }
