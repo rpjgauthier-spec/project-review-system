@@ -64,6 +64,57 @@
         "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
       },
       "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559"
+    },
+    "Interdependency": {
+      "schema_version": 1,
+      "activity": "Interdependency",
+      "workload": {
+        "schema_version": 1,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-interdependency",
+        "activity": "Interdependency",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "stage_assessment": {
+          "single_pass_suitable": true,
+          "reasons": [
+            "Revision 4 Interdependency is a bounded review of the corrected artifact-state identity control and its direct consumers in execution-gate validation and revalidation-queue current-target enforcement.",
+            "The material dependency surface is limited to the checker, its regression contract, the change record, and the queue/gate consumers, so one separated pass can trace authority, propagation, stale-state, and fallback behavior without subdivision."
+          ],
+          "subpasses": []
+        },
+        "fused_authorization": null,
+        "notes": "SEPARATED default; consume the revision-4 Adversarial handoff and complete only Interdependency."
+      },
+      "capability": {
+        "schema_version": 1,
+        "profile_id": "default-separated-v1",
+        "subject_id": "unmeasured-reviewer-separated-default",
+        "validation_status": "DEFAULT_SEPARATED",
+        "benchmark_suite": "none-default-separated",
+        "benchmark_evidence": "Built-in separated default; not a claim of measured reviewer capability.",
+        "fused_permissions": []
+      },
+      "decision": {
+        "schema_version": 1,
+        "activity": "Interdependency",
+        "target_state_id": "sha256:409a96774ba0fa39c1b41d6fb0ea3f5c09f348a6c30304c5399fe8498fee85ea",
+        "review_revision": 4,
+        "reviewer_subject_id": "chatgpt-gpt-5.6-sol-web-artifact-identity-r4-interdependency",
+        "workload_class": "bounded-revalidation-artifact-identity-v0.1.12",
+        "selected_mode": "SEPARATED",
+        "plan_kind": "ONE_PASS",
+        "execution_plan": [{"pass_id": "stage-main", "scope": "Interdependency", "context_mode": "SEPARATED"}],
+        "fused_permission_id": null,
+        "capability_profile_id": "default-separated-v1",
+        "capability_subject_id": "unmeasured-reviewer-separated-default",
+        "capability_validation_status": "DEFAULT_SEPARATED",
+        "capability_benchmark_suite": "none-default-separated",
+        "workload_sha256": "2c20c20f428e6b237fac65f61f36ff7d71403b5b994940d11cb2d8071197f325",
+        "capability_sha256": "605e501e8a274e2caea0a072d3f48c8e0a2429a9a8f94c994786f49e622449e5",
+        "assurance_boundary": "Semantic judgment determines whether one pass is suitable and which bounded subpasses require isolation. Deterministic policy defaults to SEPARATED, converts declared isolation requirements into ISOLATED subpasses, and permits FUSED only through exact pre-existing VALIDATED capability permission. The gate and completion validator enforce the recorded plan but do not prove the semantic assessment itself was correct."
+      },
+      "gate_sha256": "5118f0cad33b5cd761479f0a235a5ccb6ac06e37bf16eb56a8037ab30a600c89"
     }
   },
   "execution_completions": {
@@ -140,7 +191,7 @@
       "review_revision": 4,
       "stage": "Adversarial",
       "pass_id": "stage-main",
-      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c0d4dce141b39022a8ac559",
+      "gate_sha256": "b69b861d3dff001419734143e0165b6fb5d5cdea0c4dce141b39022a8ac559",
       "execution_unit_id": "pr15-r4-adversarial-stage-main-full-1",
       "boundary": {
         "kind": "declared-execution-unit",
